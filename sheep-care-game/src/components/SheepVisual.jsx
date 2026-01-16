@@ -2,54 +2,87 @@
 import React from 'react';
 import './SheepVisual.css';
 
-export const SheepVisual = ({ type, state, status, health = 100 }) => {
-    // Determine color/style based on type/status
-    const isGolden = type === 'GOLDEN';
+export const SheepVisual = ({
+    x, y, state, direction,
+    status, visual = {},
+    health = 100,
+    scale = 1,
+    isStatic = false,
+    name = ''
+}) => {
+    const isDead = status === 'dead';
+    const { color = '#ffffff', accessory = 'none' } = visual;
+
+    const style = {
+        position: isStatic ? 'relative' : 'absolute',
+        left: isStatic ? 'auto' : `${x}%`,
+        top: isStatic ? 'auto' : `${y}%`,
+        transform: `scale(${scale})`,
+        zIndex: isStatic ? 1 : Math.floor(y),
+        '--sheep-color': color
+    };
+
+    const containerStyle = isStatic ? style : {
+        ...style,
+        transform: `scale(${scale}) scaleX(${direction})`
+    };
+
+    if (isDead) {
+        return (
+            <div className="sheep-visual-container" style={containerStyle}>
+                <div className="sheep-grave">🪦</div>
+            </div>
+        );
+    }
+
+    // --- Status Logic ---
     const isSick = status === 'sick';
     const isInjured = status === 'injured';
+    const isLowHealth = health < 50;
+    const isCritical = health < 30;
 
-    const bodyColor = isGolden ? '#ffd700' : isSick ? '#aaccbb' : '#ffffff';
-    const woolClass = isGolden ? 'wool-golden' : 'wool-white';
+    const statusClass = isSick ? 'sheep-sick' : (isInjured ? 'sheep-injured' : (isLowHealth ? 'sheep-low-health' : ''));
+    const animClass = (state === 'walking' && !isStatic) ? 'walking' : '';
+    const eyeClass = (isLowHealth || isSick || isInjured) ? 'eye-sad' : 'eye';
 
-    // Scale body width based on health
-    // Range: 100 health -> 1.0 scale
-    // Range: 0 health -> 0.7 scale (very skinny)
-    const healthScale = 0.7 + (health / 100) * 0.3;
+    let StatusIcon = null;
+    if (isSick) StatusIcon = '🦟'; // Sick/Bug
+    else if (isInjured) StatusIcon = '🤕'; // Bandage
+    else if (isCritical) StatusIcon = '😰'; // Sweat/Fear
+    else if (isLowHealth) StatusIcon = '💧'; // Tired
 
     return (
-        <div className={`sheep-visual-comp ${state} ${status}`}>
-            {/* Legs */}
-            <div className="leg leg-fl"></div>
-            <div className="leg leg-fr"></div>
-            <div className="leg leg-bl"></div>
-            <div className="leg leg-br"></div>
+        <div className={`sheep-visual-container ${animClass} ${statusClass}`} style={containerStyle}>
 
-            {/* Body - Scaled horizontally for thinness */}
-            <div
-                className="body"
-                style={{
-                    backgroundColor: bodyColor,
-                    transform: `scaleX(${healthScale}) scaleY(${healthScale > 0.9 ? 1 : 0.9})`, // Also slightly shorter if very weak
-                    transformOrigin: 'center center'
-                }}
-            >
-                <div className={`wool ${woolClass}`}></div>
+            {/* Status Float Icon */}
+            {StatusIcon && <div className="status-icon-float">{StatusIcon}</div>}
+
+            <div className="sheep-body-group">
+                <div className="sheep-leg leg-fl"></div>
+                <div className="sheep-leg leg-fr"></div>
+                <div className="sheep-leg leg-bl"></div>
+                <div className="sheep-leg leg-br"></div>
+                <div className="sheep-body"></div>
+
+                <div className="sheep-head-group">
+                    <div className="sheep-ear ear-left"></div>
+                    <div className="sheep-ear ear-right"></div>
+
+                    <div className="sheep-head">
+                        <div className="sheep-face">
+                            <div className="sheep-eyes">
+                                <div className={eyeClass}></div>
+                                <div className={eyeClass}></div>
+                            </div>
+                        </div>
+                        {/* Accessories */}
+                        {accessory === 'tie_red' && <div className="acc-tie acc-tie-red"></div>}
+                        {accessory === 'tie_blue' && <div className="acc-tie acc-tie-blue"></div>}
+                        {accessory === 'flower' && <div className="acc-flower">🌸</div>}
+                        {accessory === 'scarf_green' && <div className="acc-scarf"></div>}
+                    </div>
+                </div>
             </div>
-
-            {/* Head */}
-            <div className="head" style={{ backgroundColor: bodyColor }}>
-                <div className="eye eye-l"></div>
-                <div className="eye eye-r"></div>
-                <div className="ear ear-l"></div>
-                <div className="ear ear-r"></div>
-            </div>
-
-            {/* Tail */}
-            <div className="tail" style={{ backgroundColor: bodyColor }}></div>
-
-            {/* VFX */}
-            {isInjured && <div className="bandage">🤕</div>}
-            {isSick && <div className="bubbles">🫧</div>}
         </div>
     );
 };

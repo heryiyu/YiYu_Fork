@@ -21,11 +21,12 @@
   position: relative;
   overflow: hidden;
   background: #87CEEB;
-  /* Fallback */
 }
 
+/* --- Layout Tuning --- */
 .sky {
-  height: 60%;
+  height: 30%;
+  /* Less Sky */
   width: 100%;
   position: absolute;
   top: 0;
@@ -34,27 +35,16 @@
 }
 
 .grass {
-  height: 60%;
-  /* Taller grass area for more depth */
+  height: 70%;
+  /* More Grass */
   width: 100%;
   position: absolute;
   bottom: 0;
-
-  /* Rich grass gradient: Dark green at bottom, lighter at horizon */
   background: linear-gradient(to top, #228B22 0%, #7CFC00 80%, #90EE90 100%);
-
-  /* Texture overlay */
-  /* background-image: 
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1%, transparent 2%),
-    radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 1%, transparent 2%); */
-
-  /* "Hills" effect via border radius? maybe too complex. Linear gradient is good enough for depth. */
-
   z-index: 1;
-  /* Perspective transform container? No, simple 2D fake depth is better. */
 }
 
-/* Add some "Cloud" elements if possible? CSS clouds */
+/* Clouds optimization */
 .sky::after {
   content: '';
   position: absolute;
@@ -79,6 +69,16 @@
   }
 }
 
+/* --- Decorations --- */
+.decoration {
+  position: absolute;
+  font-size: 2rem;
+  z-index: 0;
+  /* Behind sheep usually */
+  transform-origin: bottom center;
+}
+
+/* ... Controls etc same ... */
 .controls-container {
   height: 120px;
   background: #fdf5e6;
@@ -89,10 +89,7 @@
   z-index: 20;
   padding: 10px;
   position: relative;
-  /* Ensure above field */
 }
-
-/* ... keep previous styles ... */
 
 .stats-panel {
   text-align: left;
@@ -124,7 +121,6 @@
 
 .adopt-btn:disabled {
   background-color: #ccc;
-  color: #666;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -175,23 +171,33 @@
   }
 }
 
-/* --- Sheep Wrapper (Updated for Depth is handled in JS mostly) --- */
+/* --- Sheep Wrapper --- */
 .sheep-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* transition moving to JS for smoother curve updates? Keeping CSS transition is fine for small updates but JS tick is fast now. */
+  /* If tick is 100ms, transform transition needs to match or be linear */
+  transition: left 0.1s linear, bottom 0.1s linear;
 }
 
+/* Name Tag Fix */
 .sheep-name-tag {
-  background: white;
+  background: rgba(255, 255, 255, 0.9);
   padding: 2px 8px;
   border-radius: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #999;
+  /* Darker border */
   font-size: 0.8rem;
   font-weight: bold;
+  color: #333;
   margin-bottom: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
+
+  /* Ensure on top */
+  position: relative;
+  z-index: 200;
 }
 
 .mini-health-bar {
@@ -226,15 +232,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  opacity: 0.8;
 }
 
 .sheep-wrapper:hover .icon-btn {
   opacity: 1;
 }
 
-/* --- Simple Editor --- */
 .simple-editor {
   width: 250px;
   background: #fff;
@@ -272,7 +276,8 @@
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
@@ -290,6 +295,20 @@
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
+  margin-top: 10px;
+}
+
+.pray-action-btn {
+  width: 100%;
+  background: #ffd700;
+  color: #5d4037;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
 .hint-text {
