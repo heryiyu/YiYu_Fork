@@ -6,8 +6,11 @@ import { SHEEP_TYPES } from '../data/sheepData';
 export const Sheep = ({ sheep, onPray, onShepherd, onSelect }) => {
     const isGolden = sheep.type === 'GOLDEN';
 
-    const bottomPos = 5 + (sheep.y || 0) * 0.45;
-    const depthScale = 1.0 - ((sheep.y || 0) / 250); // Minor scaling
+    // Map y (0-100) to bottom % (0-70 roughly, grass is 70%)
+    // Map y (0-100) to bottom % (25% base to shift up, to ~95% for horizon)
+    const bottomPos = 25 + (sheep.y || 0) * 0.7;
+    // Scale down as they go "back" (higher y). 
+    const depthScale = 1.0 - ((sheep.y || 0) / 300);
     const zIdx = Math.floor(1000 - (sheep.y || 0));
 
     return (

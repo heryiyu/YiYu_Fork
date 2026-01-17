@@ -66,7 +66,7 @@ export const Field = ({ onSelectSheep }) => {
                     );
                 })}
 
-                {sheep.map(s => (
+                {(sheep || []).map(s => (
                     <Sheep
                         key={s.id}
                         sheep={s}

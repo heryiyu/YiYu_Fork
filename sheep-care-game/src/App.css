@@ -14,6 +14,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .field-container {
@@ -89,6 +90,30 @@
   z-index: 20;
   padding: 10px;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.controls-container.collapsed {
+  height: 0;
+  padding: 0;
+  border-top: none;
+  overflow: visible;
+}
+
+.collapse-toggle-btn {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #deb887;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  padding: 5px 20px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 25;
 }
 
 .stats-panel {
@@ -381,3 +406,4 @@
       transform: translateX(-50%) scale(1) translateY(0);
     }
   }
+}

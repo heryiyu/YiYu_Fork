@@ -11,7 +11,7 @@ export const SheepVisual = ({
     name = ''
 }) => {
     const isDead = status === 'dead';
-    const { color = '#ffffff', accessory = 'none' } = visual;
+    const { color = '#ffffff', accessory = 'none' } = visual || {};
 
     const style = {
         position: isStatic ? 'relative' : 'absolute',
@@ -38,21 +38,30 @@ export const SheepVisual = ({
     // --- Status Logic ---
     const isSick = status === 'sick';
     const isInjured = status === 'injured';
-    const isLowHealth = health < 50;
-    const isCritical = health < 30;
 
-    const statusClass = isSick ? 'sheep-sick' : (isInjured ? 'sheep-injured' : (isLowHealth ? 'sheep-low-health' : ''));
+    // Health Stages
+    let healthStage = 'normal';
+    if (health >= 80) healthStage = 'super';
+    else if (health >= 50) healthStage = 'normal';
+    else if (health >= 30) healthStage = 'weak';
+    else healthStage = 'critical';
+
+    const statusClass = isSick ? 'sheep-sick' : (isInjured ? 'sheep-injured' : '');
     const animClass = (state === 'walking' && !isStatic) ? 'walking' : '';
-    const eyeClass = (isLowHealth || isSick || isInjured) ? 'eye-sad' : 'eye';
+
+    // Eyes logic based on health/status
+    const isSad = isSick || isInjured || healthStage === 'weak' || healthStage === 'critical';
+    const isHappy = healthStage === 'super' && !isSick && !isInjured;
+    const eyeClass = isSad ? 'eye-sad' : (isHappy ? 'eye-happy' : 'eye');
 
     let StatusIcon = null;
-    if (isSick) StatusIcon = '🦟'; // Sick/Bug
-    else if (isInjured) StatusIcon = '🤕'; // Bandage
-    else if (isCritical) StatusIcon = '😰'; // Sweat/Fear
-    else if (isLowHealth) StatusIcon = '💧'; // Tired
+    // Removed mosquito icon for sick status
+    if (isInjured) StatusIcon = '🤕'; // Bandage
+    else if (healthStage === 'critical') StatusIcon = '😰'; // Sweat/Fear
+    else if (healthStage === 'weak') StatusIcon = '💧'; // Tired drop
 
     return (
-        <div className={`sheep-visual-container ${animClass} ${statusClass}`} style={containerStyle}>
+        <div className={`sheep-visual-container ${animClass} ${statusClass} stage-${healthStage}`} style={containerStyle}>
 
             {/* Status Float Icon */}
             {StatusIcon && <div className="status-icon-float">{StatusIcon}</div>}

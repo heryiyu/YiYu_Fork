@@ -6,7 +6,7 @@ import { SheepVisual } from './SheepVisual';
 export const SheepList = ({ onSelect, onClose }) => {
     const { sheep } = useGame();
 
-    const sortedSheep = [...sheep].sort((a, b) => a.id - b.id);
+    const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
 
     return (
         <div className="debug-editor-overlay">

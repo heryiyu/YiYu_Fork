@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from './context/GameContext';
 import { Field } from './components/Field';
 import { Controls } from './components/Controls';
@@ -30,8 +30,18 @@ function App() {
     setSelectedSheepId(sheep.id);
   };
 
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
+
+  // 3. Reset state when user changes
+  useEffect(() => {
+    setSelectedSheepId(null);
+    setShowList(false);
+    setShowGuide(false);
+    setIsControlsCollapsed(false);
+  }, [currentUser]);
+
   return (
-    <div className="game-container">
+    <div className="game-container" key={currentUser}>
       {/* Help Button */}
       <button
         className="icon-btn"
@@ -46,7 +56,11 @@ function App() {
 
       <Field onSelectSheep={handleSelectSheep} />
 
-      <Controls onOpenList={() => setShowList(true)} />
+      <Controls
+        onOpenList={() => setShowList(true)}
+        isCollapsed={isControlsCollapsed}
+        onToggleCollapse={() => setIsControlsCollapsed(!isControlsCollapsed)}
+      />
 
       {/* Modals */}
       {showList && (

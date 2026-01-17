@@ -5,7 +5,7 @@ import { useGame } from '../context/GameContext';
 export const DebugEditor = ({ selectedSheepId, onClose }) => {
     const { sheep, updateSheep, prayForSheep } = useGame();
 
-    const target = sheep.find(s => s.id === selectedSheepId);
+    const target = (sheep || []).find(s => s.id === selectedSheepId);
     const [name, setName] = useState('');
     const [note, setNote] = useState('');
 

@@ -23,7 +23,8 @@ export const GameProvider = ({ children }) => {
         return fallback;
     };
 
-    const [sheep, setSheep] = useState(() => getLocalData('sheep', []));
+    const [sheep, setSheep] = useState(() => (getLocalData('sheep', []) || [])
+        .filter(s => s && s.type && SHEEP_TYPES[s.type]));
     const [inventory, setInventory] = useState(() => getLocalData('inventory', []));
     const [message, setMessage] = useState(null);
 
@@ -105,31 +106,36 @@ export const GameProvider = ({ children }) => {
     };
 
     // Helper for applying loaded data + decay
-    const applyLoadedData = (loadedData) => {
+    const applyLoadedData = (loadedData, targetUser) => {
         const now = Date.now();
         const lastSave = loadedData.lastSave || now;
         const diffHours = (now - lastSave) / (1000 * 60 * 60);
         const decayAmount = (diffHours / 24) * 80;
 
-        const decaySheep = (loadedData.sheep || []).map(s => {
-            if (s.status === 'dead') return s;
+        // Robust filtering: Exist AND have Type AND Type is valid
+        const decaySheep = (loadedData.sheep || [])
+            .filter(s => s && s.type && SHEEP_TYPES[s.type])
+            .map(s => {
+                if (s.status === 'dead') return s;
 
-            const newHealth = Math.max(0, s.health - decayAmount);
-            let newStatus = s.status;
+                const newHealth = Math.max(0, s.health - decayAmount);
+                let newStatus = s.status;
 
-            if (newHealth <= 0) {
-                newStatus = 'dead';
-            } else if (newHealth < 50 && s.status === 'healthy') {
-                if (Math.random() < 0.5) newStatus = 'sick';
-            }
-            return { ...s, health: newHealth, status: newStatus };
-        });
+                if (newHealth <= 0) {
+                    newStatus = 'dead';
+                } else if (newHealth < 50 && s.status === 'healthy') {
+                    if (Math.random() < 0.5) newStatus = 'sick';
+                }
+                // Ensure visual exists
+                const safeVisual = s.visual || generateVisuals();
+                return { ...s, health: newHealth, status: newStatus, visual: safeVisual };
+            });
 
         setSheep(decaySheep);
         setInventory(loadedData.inventory || []);
 
-        if (currentUser) {
-            localStorage.setItem(`sheep_game_data_${currentUser}`, JSON.stringify({
+        if (targetUser) {
+            localStorage.setItem(`sheep_game_data_${targetUser}`, JSON.stringify({
                 sheep: decaySheep,
                 inventory: loadedData.inventory || [],
                 lastSave: now
@@ -154,7 +160,7 @@ export const GameProvider = ({ children }) => {
 
                 const loaded = result.data;
                 if (loaded && loaded.sheep) {
-                    const diff = applyLoadedData(loaded);
+                    const diff = applyLoadedData(loaded, name);
                     // Guilt Trip on Login
                     if (diff > 12) {
                         showMessage(`💔 ${getRandomItem(GUILT_MESSAGES.login)} (離開 ${Math.round(diff)} 小時)`);
@@ -202,7 +208,7 @@ export const GameProvider = ({ children }) => {
                 if (cache) {
                     try {
                         const parsed = JSON.parse(cache);
-                        const diff = applyLoadedData(parsed);
+                        const diff = applyLoadedData(parsed, currentUser);
                         if (diff > 0.1) console.log(`Restored session decay: ${diff.toFixed(2)} hours`);
                     } catch (e) { }
                 }
@@ -221,70 +227,65 @@ export const GameProvider = ({ children }) => {
     // --- Game Loop ---
     useEffect(() => {
         if (!currentUser) return;
+
+        const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
         const tick = setInterval(() => {
-            setSheep(prevSheep => {
-                return prevSheep.map(s => {
-                    if (s.status === 'dead') return s;
+            setSheep(prev => prev.filter(s => s).map(s => {
+                if (s.status === 'dead') return s;
 
-                    let { x, y, state, angle, direction, message, messageTimer } = s;
+                let { x, y, state, angle, direction, message, messageTimer } = s;
 
-                    if (state === 'idle') {
-                        if (Math.random() < 0.1) state = 'walking';
-                    } else if (state === 'walking') {
-                        if (Math.random() < 0.1) { state = 'idle'; } else {
-                            if (y === undefined) y = Math.random() * 50;
-                            if (angle === undefined) angle = Math.random() * Math.PI * 2;
-                            const speed = 1.0;
-                            angle += (Math.random() - 0.5) * 0.5;
-                            x += Math.cos(angle) * speed * 1.5;
-                            y += Math.sin(angle) * speed;
-                            if (x < 5) { x = 5; angle = Math.PI - angle; }
-                            if (x > 95) { x = 95; angle = Math.PI - angle; }
-                            if (y < 0) { y = 0; angle = -angle; }
-                            if (y > 90) { y = 90; angle = -angle; }
-                        }
+                // 1. Movement Logic
+                if (state === 'walking') {
+                    if (Math.random() < 0.05) state = 'idle';
+                    else {
+                        y = y ?? Math.random() * 50;
+                        angle = angle ?? Math.random() * Math.PI * 2;
+
+                        // Smooth random turn
+                        angle += (Math.random() - 0.5) * 0.5;
+                        x += Math.cos(angle) * 1.5;
+                        y += Math.sin(angle);
+
+                        // Bounce off walls
+                        if (x < 5 || x > 95) { angle = Math.PI - angle; x = clamp(x, 5, 95); }
+                        if (y < 0 || y > 100) { angle = -angle; y = clamp(y, 0, 100); }
                     }
-                    direction = Math.cos(angle) > 0 ? 1 : -1;
+                } else {
+                    if (Math.random() < 0.05) state = 'walking';
+                }
+                direction = Math.cos(angle) > 0 ? 1 : -1;
 
-                    const decayRate = s.status === 'sick' ? 0.2 : s.status === 'injured' ? 0.1 : 0.02;
-                    const newHealth = Math.max(0, s.health - decayRate);
-                    let newStatus = s.status;
+                // 2. Health & Status Logic
+                const decayRate = s.status === 'sick' ? 0.2 : (s.status === 'injured' ? 0.1 : 0.02);
+                const newHealth = Math.max(0, s.health - decayRate);
+                let newStatus = s.status;
 
-                    if (newHealth <= 0) {
-                        newStatus = 'dead';
-                        showMessage(`🕊️ ${s.name} 不幸離世了...`);
-                    } else if (newHealth < 50 && s.status === 'healthy' && Math.random() < 0.005) {
-                        newStatus = 'sick';
-                    }
+                if (newHealth <= 0) {
+                    newStatus = 'dead';
+                    showMessage(`🕊️ ${s.name} 不幸離世了...`);
+                } else if (newHealth < 50 && s.status === 'healthy' && Math.random() < 0.005) {
+                    newStatus = 'sick';
+                }
 
-                    // --- Random Speech Bubble Logic ---
-                    let newMessage = message;
-                    let newTimer = messageTimer || 0;
+                // 3. Message Logic
+                let timer = messageTimer > 0 ? messageTimer - 0.1 : 0;
+                let msg = timer > 0 ? message : null;
 
-                    if (newTimer > 0) {
-                        newTimer -= 0.1;
-                        if (newTimer <= 0) newMessage = null;
-                    } else {
-                        // Chance to talk
-                        if (Math.random() < 0.003) {
-                            newTimer = 5;
-                            if (newHealth < 30) {
-                                newMessage = getRandomItem(GUILT_MESSAGES.critical);
-                            } else if (newHealth < 60) {
-                                newMessage = getRandomItem(GUILT_MESSAGES.neglected);
-                            } else if (Math.random() < 0.3) {
-                                newMessage = getRandomItem(GUILT_MESSAGES.happy);
-                            }
-                        }
-                    }
+                if (timer <= 0 && Math.random() < 0.003) {
+                    timer = 5;
+                    if (newHealth < 30) msg = getRandomItem(GUILT_MESSAGES.critical);
+                    else if (newHealth < 60) msg = getRandomItem(GUILT_MESSAGES.neglected);
+                    else if (Math.random() < 0.3) msg = getRandomItem(GUILT_MESSAGES.happy);
+                }
 
-                    return {
-                        ...s, x, y, angle, state, direction,
-                        health: newHealth, status: newStatus,
-                        message: newMessage, messageTimer: newTimer
-                    };
-                });
-            });
+                return {
+                    ...s, x, y, angle, state, direction,
+                    health: newHealth, status: newStatus,
+                    message: msg, messageTimer: timer
+                };
+            }));
         }, 100);
         return () => clearInterval(tick);
     }, [currentUser]);
@@ -297,7 +298,7 @@ export const GameProvider = ({ children }) => {
             state: 'idle', note: '', prayedCount: 0, lastPrayedDate: null,
             resurrectionProgress: 0,
             visual: generateVisuals(),
-            x: Math.random() * 80 + 10, y: Math.random() * 80 + 5,
+            x: Math.random() * 90 + 5, y: Math.random() * 90 + 5,
             angle: Math.random() * Math.PI * 2, direction: 1
         };
         setSheep(prev => [...prev, newSheep]);
