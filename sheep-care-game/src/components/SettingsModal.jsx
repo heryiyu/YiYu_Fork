@@ -25,27 +25,8 @@ export const SettingsModal = ({ onClose }) => {
 
                 <div className="editor-form">
                     <div className="form-group">
-                        <label>👤 使用者名稱</label>
+                        <label>👤 LINE 暱稱</label>
                         <input type="text" value={currentUser || '未登入'} disabled />
-                    </div>
-
-                    <div className="form-group">
-                        <label>🔑 帳號密碼</label>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                value="********"
-                                disabled
-                                style={{ flex: 1 }}
-                            />
-                            <button
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{ background: 'none', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer' }}
-                            >
-                                {showPassword ? '🙈' : '👁️'}
-                            </button>
-                        </div>
-                        <p style={{ fontSize: '0.7rem', color: '#999', margin: '5px 0' }}>注意: 密碼已加密，無法直接查看原始密碼。</p>
                     </div>
 
                     <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
