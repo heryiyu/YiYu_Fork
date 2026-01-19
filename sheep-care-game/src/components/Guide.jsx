@@ -18,9 +18,9 @@ export const Guide = ({ onClose }) => {
                         <li><strong>健康 (Health):</strong> 每次禱告恢復生命，主要依賴持續的關心。</li>
                         <li><strong>生命三階段 (關愛值):</strong>
                             <div style={{ background: '#e3f2fd', padding: '8px', borderRadius: '4px', margin: '5px 0', fontSize: '0.85rem' }}>
-                                🥚 <strong>小羊 (Lamb):</strong> 初始狀態 (Care 0~100)<br />
-                                🐏 <strong>強壯的羊 (Strong):</strong> 成長茁壯 (Care 100~300)<br />
-                                🧍 <strong>榮耀的羊 (Glory):</strong> 最終進化，這是一個榮耀的時刻！ (Care 300+)
+                                🥚 <strong>小羊 (Lamb):</strong> 需累積 100 關愛值，滿了將進化並歸零。<br />
+                                🐏 <strong>強壯的羊 (Strong):</strong> 需再累積 100 關愛值，將進化為榮耀的羊。<br />
+                                🧍 <strong>榮耀的羊 (Glory):</strong> 最終形態，充滿靈性的樣式。
                             </div>
                         </li>
                     </ul>

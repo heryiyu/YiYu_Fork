@@ -11,7 +11,7 @@ export const SHEEP_TYPES = {
     id: 'strong',
     name: '強壯的羊',
     description: '經歷了成長，變得強壯有力。',
-    growthThreshold: 300, // Grows after 300 more care
+    growthThreshold: 100, // Grows after 100 more care
     nextStage: 'human',
     icon: '🐏'
   },

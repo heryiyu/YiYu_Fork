@@ -35,18 +35,35 @@ export const SheepList = ({ onSelect, onClose }) => {
                                     opacity: isDead ? 0.7 : 1
                                 }}>
                                     {/* Mini Visual Preview */}
-                                    <div style={{ width: '60px', height: '60px', position: 'relative', marginRight: '15px' }}>
-                                        <SheepVisual
-                                            status={s.status}
-                                            visual={s.visual}
-                                            isStatic={true}
-                                            scale={0.8}
-                                            direction={1}
-                                        />
+                                    <div style={{
+                                        width: '70px', minWidth: '70px', // Fixed width to prevent squeezing
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                        marginRight: '15px'
+                                    }}>
+                                        <div style={{ width: '60px', height: '60px', position: 'relative' }}>
+                                            <SheepVisual
+                                                status={s.status}
+                                                visual={s.visual}
+                                                health={s.health}
+                                                type={s.type}
+                                                isStatic={true}
+                                                scale={0.65}
+                                                direction={1}
+                                            />
+                                        </div>
+                                        <div style={{
+                                            marginTop: '2px', fontSize: '0.7rem', color: '#fff',
+                                            background: isDead ? '#757575' : (s.type === 'HUMAN' ? '#ff9800' : (s.type === 'STRONG' ? '#2196f3' : '#8bc34a')),
+                                            padding: '2px 8px', borderRadius: '10px', whiteSpace: 'nowrap',
+                                            fontWeight: 'bold', boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                                            transform: 'translateY(-5px)', zIndex: 2
+                                        }}>
+                                            {isDead ? '陣亡' : (s.type === 'HUMAN' ? '榮耀' : (s.type === 'STRONG' ? '強壯' : '小羊'))}
+                                        </div>
                                     </div>
 
-                                    <div style={{ flex: 1, textAlign: 'left' }}>
-                                        <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isDead ? '#666' : '#333' }}>
+                                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left', marginRight: '10px' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isDead ? '#666' : '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {s.name} <small style={{ color: '#999', fontSize: '0.7rem' }}>#{String(s.id).slice(-4)}</small>
                                         </div>
                                         {s.spiritualMaturity && (
@@ -54,16 +71,17 @@ export const SheepList = ({ onSelect, onClose }) => {
                                                 🌱 {s.spiritualMaturity}
                                             </div>
                                         )}
-                                        <div style={{ fontSize: '0.8rem', color: isDead ? '#999' : (isSick ? 'red' : 'green') }}>
+                                        <div style={{ fontSize: '0.8rem', color: isDead ? '#999' : (isSick ? 'red' : 'green'), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {isDead ? '已離世 (需復活)' : (isSick ? '生病中' : '健康')}
                                             {!isDead && ` | HP: ${Math.round(s.health)}%`}
-                                            {!isDead && <span style={{ color: '#ff9800', marginLeft: '5px' }}>| ❤️ 關愛: {s.careLevel || 0}</span>}
+                                            {!isDead && <span style={{ color: '#ff9800', marginLeft: '5px' }}>| ❤️ ${s.careLevel || 0}</span>}
                                         </div>
                                         {/* Message Preview */}
                                         <div style={{
-                                            marginTop: '5px', background: '#f0f0f0', padding: '5px 10px',
-                                            borderRadius: '10px', fontSize: '0.85rem', color: '#555',
-                                            display: 'inline-block', fontStyle: 'italic'
+                                            marginTop: '4px', background: '#f5f5f5', padding: '4px 8px',
+                                            borderRadius: '6px', fontSize: '0.8rem', color: '#666',
+                                            display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                            fontStyle: 'italic', maxWidth: '100%'
                                         }}>
                                             💬 {s.message || getStableSheepMessage(s, isDead ? 'dead' : (isSick || s.health < 30 ? 'critical' : (s.health < 60 ? 'neglected' : 'happy')))}
                                         </div>
