@@ -108,11 +108,7 @@ export const Field = ({ onSelectSheep }) => {
                 )}
             </div>
 
-            {message && (
-                <div className="toast-message">
-                    {message}
-                </div>
-            )}
+
 
             <div className="grass">
                 {/* Graveyard Visual Zone (Fan Shape) */}

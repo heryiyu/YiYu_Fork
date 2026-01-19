@@ -373,35 +373,41 @@
 .toast-message {
   position: absolute;
   top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 80%;
+  background: rgba(0, 0, 0, 0.8);
   color: #fff;
   padding: 10px 20px;
   border-radius: 20px;
   z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
   animation: fadeInOut 3s forwards;
 }
 
 @keyframes fadeInOut {
   0% {
     opacity: 0;
-    transform: translate(-50%, -20px);
+    transform: translateY(-20px);
   }
 
   10% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 
   90% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 
   100% {
     opacity: 0;
-    transform: translate(-50%, -20px);
+    transform: translateY(-20px);
   }
 }
 

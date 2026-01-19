@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 
 export const SettingsModal = ({ onClose }) => {
-    const { currentUser, location, updateUserLocation, updateUserName, saveToCloud } = useGame();
+    const { currentUser, location, updateUserLocation, saveToCloud, nickname, updateNickname } = useGame();
     const [cityInput, setCityInput] = useState(location?.name || '');
-    const [nameInput, setNameInput] = useState(currentUser || '');
+    const [nickInput, setNickInput] = useState(nickname || '');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -16,9 +16,10 @@ export const SettingsModal = ({ onClose }) => {
         setIsLoading(false);
     };
 
-    const handleUpdateName = () => {
-        if (!nameInput.trim()) return;
-        updateUserName(nameInput.trim());
+    const handleUpdateNickname = () => {
+        if (!nickInput.trim()) return;
+        updateNickname(nickInput.trim());
+        alert("暱稱已更新！");
     };
 
     return (
@@ -31,16 +32,21 @@ export const SettingsModal = ({ onClose }) => {
 
                 <div className="editor-form">
                     <div className="form-group">
-                        <label>👤 您的稱呼 (暱稱)</label>
+                        <label>👤 LINE 帳號 (無法更改)</label>
+                        <input type="text" value={currentUser || '未登入'} disabled style={{ background: '#f5f5f5', color: '#888' }} />
+                    </div>
+
+                    <div className="form-group">
+                        <label>🏷️ 您的暱稱</label>
                         <div style={{ display: 'flex', gap: '5px' }}>
                             <input
                                 type="text"
-                                value={nameInput}
-                                onChange={(e) => setNameInput(e.target.value)}
-                                placeholder="輸入新的暱稱"
+                                value={nickInput}
+                                onChange={(e) => setNickInput(e.target.value)}
+                                placeholder="設定一個好聽的名字"
                             />
                             <button
-                                onClick={handleUpdateName}
+                                onClick={handleUpdateNickname}
                                 style={{
                                     background: '#4caf50', color: 'white', border: 'none', borderRadius: '4px',
                                     padding: '0 10px', cursor: 'pointer'

@@ -11,7 +11,7 @@ import { SheepList } from './components/SheepList';
 import './App.css';
 
 function App() {
-  const { currentUser, message, isLoading, needsNickname } = useGame();
+  const { currentUser, message, isLoading, nickname } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   const [showList, setShowList] = useState(false);
@@ -46,12 +46,12 @@ function App() {
     return <Login />;
   }
 
-  // 2. Needs Nickname -> Show Setup Screen
-  if (needsNickname) {
+  // 1.5. Logged In but No Nickname -> Show Nickname Setup
+  if (!nickname) {
     return <NicknameSetup />;
   }
 
-  // 3. Logged In -> Show Game
+  // 2. Logged In -> Show Game
   const handleSelectSheep = (sheep) => {
     setSelectedSheepId(sheep.id);
   };
@@ -63,7 +63,7 @@ function App() {
 
   return (
     <div className="game-container" key={currentUser}>
-      {message && <div className="toast-message">{message}</div>}
+      {message && <div key={message} className="toast-message">{message}</div>}
 
       {/* Help Button */}
       <button

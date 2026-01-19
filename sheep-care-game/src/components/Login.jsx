@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 
 export const Login = () => {
     const { loginWithLine, isLoading, message } = useGame();
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     return (
         <div className="debug-editor-overlay" style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }}>
@@ -37,9 +38,10 @@ export const Login = () => {
                         <button
                             onClick={loginWithLine}
                             className="line-login-btn"
+                            style={isLocal ? { background: '#666' } : {}}
                         >
-                            <span style={{ marginRight: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>LINE</span>
-                            Login 登入
+                            <span style={{ marginRight: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>{isLocal ? '🛠️' : 'LINE'}</span>
+                            {isLocal ? 'Test Login' : 'Login 登入'}
                         </button>
 
                         <p style={{ marginTop: '20px', fontSize: '0.8rem', color: '#999' }}>
