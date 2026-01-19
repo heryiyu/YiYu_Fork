@@ -26,7 +26,7 @@
 
 /* --- Layout Tuning --- */
 .sky {
-  height: 30%;
+  height: 25%;
   /* Less Sky */
   width: 100%;
   position: absolute;
@@ -36,7 +36,7 @@
 }
 
 .grass {
-  height: 70%;
+  height: 75%;
   /* More Grass */
   width: 100%;
   position: absolute;
@@ -70,6 +70,215 @@
   }
 }
 
+.cloud-extra {
+  position: absolute;
+  background: white;
+  border-radius: 50px;
+  opacity: 0.8;
+  box-shadow: 40px 20px 0 -10px white, 80px 0 0 -5px white;
+  z-index: 1;
+}
+
+.c1 {
+  top: 15%;
+  left: -150px;
+  width: 80px;
+  height: 30px;
+  animation: drift 50s linear infinite reverse;
+}
+
+.c2 {
+  top: 40%;
+  left: -200px;
+  width: 120px;
+  height: 50px;
+  animation: drift 75s linear infinite;
+  opacity: 0.6;
+}
+
+.bird {
+  position: absolute;
+  font-size: 1.5rem;
+  z-index: 2;
+  animation: birdFly 20s linear infinite;
+}
+
+.b1 {
+  top: 20%;
+  animation-duration: 25s;
+  animation-delay: 0s;
+}
+
+.b2 {
+  top: 35%;
+  animation-duration: 30s;
+  animation-delay: 5s;
+  font-size: 1.2rem;
+}
+
+.b3 {
+  top: 10%;
+  animation-duration: 22s;
+  animation-delay: 10s;
+}
+
+/* Weather States */
+.sky.sunny {
+  background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+}
+
+.sky.cloudy {
+  background: linear-gradient(to bottom, #757f9a 0%, #d7dde8 100%);
+}
+
+.sky.rain {
+  background: linear-gradient(to bottom, #203a43 0%, #2c5364 100%);
+}
+
+.sky.storm {
+  background: linear-gradient(to bottom, #0f2027 0%, #203a43 100%);
+}
+
+.sky.snow {
+  background: linear-gradient(to bottom, #e6dada 0%, #274046 100%);
+}
+
+/* Night Mode Override */
+.sky.night {
+  background: linear-gradient(to bottom, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+.sky.night .cloud-extra {
+  opacity: 0.3;
+}
+
+.sky.night .sun {
+  display: none;
+}
+
+/* Sun */
+.sun {
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at center, #ffd700, #ff8c00);
+  border-radius: 50%;
+  box-shadow: 0 0 40px #ffd700, 0 0 80px #ff8c00;
+  z-index: 1;
+  animation: sunPulse 4s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 40px #ffd700;
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 60px #ffd700;
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 40px #ffd700;
+    opacity: 1;
+  }
+}
+
+/* Rain Animation */
+.rain-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.rain-drop {
+  position: absolute;
+  top: -10px;
+  width: 2px;
+  height: 15px;
+  background: rgba(255, 255, 255, 0.6);
+  animation: fall 0.5s linear infinite;
+}
+
+.snow-drop {
+  position: absolute;
+  top: -20px;
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0.8;
+  animation: fall 5s linear infinite;
+}
+
+/* Night Mode Override */
+.sky.night {
+  background: linear-gradient(to bottom, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+.sky.night .cloud-extra {
+  opacity: 0.3;
+}
+
+/* Rain Animation */
+.rain-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.rain-drop {
+  position: absolute;
+  top: -10px;
+  width: 2px;
+  height: 15px;
+  background: rgba(255, 255, 255, 0.6);
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(120vh);
+  }
+}
+
+@keyframes birdFly {
+  0% {
+    left: -50px;
+    transform: scaleX(1) translateY(0);
+  }
+
+  25% {
+    transform: scaleX(1) translateY(-20px);
+  }
+
+  50% {
+    transform: scaleX(1) translateY(0);
+  }
+
+  51% {
+    left: 100vw;
+    transform: scaleX(-1);
+  }
+
+  /* Flip to return? Or just loop */
+  /* Simple loop from left to right */
+  100% {
+    left: 100vw;
+    transform: scaleX(1) translateY(-10px);
+  }
+}
+
 /* --- Decorations --- */
 .decoration {
   position: absolute;
@@ -81,7 +290,7 @@
 
 /* ... Controls etc same ... */
 .controls-container {
-  height: 120px;
+  height: 105px;
   background: #fdf5e6;
   border-top: 4px solid #deb887;
   display: flex;
@@ -404,5 +613,53 @@
   to {
     opacity: 1;
     transform: translateX(-50%) scale(1) translateY(0);
+  }
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .controls-container {
+    height: auto;
+    min-height: 100px;
+    flex-wrap: wrap;
+    padding: 15px 10px;
+    gap: 10px;
+  }
+
+  .stats-panel {
+    width: 100%;
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .actions-panel {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .action-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  /* Modals */
+  .simple-editor {
+    width: 90% !important;
+    /* Override inline styles if present */
+    max-width: 350px;
+  }
+
+  .sun {
+    width: 60px;
+    height: 60px;
+    top: 5%;
+    right: 5%;
+  }
+
+  .toast-message {
+    width: 80%;
+    font-size: 0.9rem;
+    top: 50px;
   }
 }

@@ -55,6 +55,42 @@ const SHEEP_MESSAGES = {
     ]
 };
 
+const MATURITY_MESSAGES = {
+    "新朋友": {
+        "學習中": [
+            "這裡是什麼地方？", "有點害羞...", "可以帶我去認識大家嗎？", "你好...", "想找人說說話..."
+        ],
+        "穩定": [
+            "這裡感覺很溫馨。", "我喜歡這裡的氛圍。", "今天也是美好的一天。", "認識新朋友真好。", "牧羊人對我很好。"
+        ],
+        "領袖": [
+            "我會帶新朋友一起來！", "這裡很棒，你也來看看！", "大家一起來參加！"
+        ]
+    },
+    "慕道友": {
+        "學習中": [
+            "我想更多認識牧羊人。", "這句話是什麼意思呢？", "正在思考信仰的問題...", "想聽更多故事。", "有點疑惑..."
+        ],
+        "穩定": [
+            "禱告讓我心裡平安。", "想要更穩定來這裡。", "牧羊人的聲音真好聽。", "覺得被安慰了。", "喜歡這裡的詩歌。"
+        ],
+        "領袖": [
+            "我也可以分享我的感動！", "帶了朋友一起來聽。", "這週要不要一起來？", "我被改變了！"
+        ]
+    },
+    "基督徒": {
+        "學習中": [
+            "主啊，教導我...", "正在學習順服。", "想要突破生命的關卡。", "求主修剪我...", "願我更像祢。"
+        ],
+        "穩定": [
+            "感謝主的恩典！", "凡事謝恩。", "喜樂的心乃是良藥。", "主是我的牧者。", "不住禱告。"
+        ],
+        "領袖": [
+            "我們一起為羊群禱告！", "去關心那隻迷途的小羊吧。", "主要使用我！", "看顧羊群是我的責任。", "願主的名得榮耀！"
+        ]
+    }
+};
+
 // --- Helpers ---
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -199,7 +235,28 @@ export const calculateTick = (s) => {
         if (s.status === 'dead') msg = getRandomItem(SHEEP_MESSAGES.dead);
         else if (newHealth < 30) msg = getRandomItem(SHEEP_MESSAGES.critical);
         else if (newHealth < 60) msg = getRandomItem(SHEEP_MESSAGES.neglected);
-        else if (Math.random() < 0.3) msg = getRandomItem(SHEEP_MESSAGES.happy);
+        else if (Math.random() < 0.4) {
+            // Maturity based messaging
+            let specificMsg = null;
+            const matString = s.spiritualMaturity || '';
+            const match = matString.match(/^(.+?)(?:\s*\((.+)\))?$/);
+            if (match) {
+                const level = match[1];
+                const stage = match[2] || '學習中'; // Default to learning if not specified
+                if (MATURITY_MESSAGES[level] && MATURITY_MESSAGES[level][stage]) {
+                    specificMsg = getRandomItem(MATURITY_MESSAGES[level][stage]);
+                }
+                // If only level is known (old data or simple input), try to pick from any stage or default
+                if (!specificMsg && MATURITY_MESSAGES[level]) {
+                    // Try '學習中' or random stage
+                    const stages = Object.values(MATURITY_MESSAGES[level]);
+                    const randomStage = getRandomItem(stages);
+                    specificMsg = getRandomItem(randomStage);
+                }
+            }
+
+            msg = specificMsg || getRandomItem(SHEEP_MESSAGES.happy);
+        }
     }
 
     return {

@@ -28,6 +28,55 @@ export const GameProvider = ({ children }) => {
         .filter(s => s && s.type && SHEEP_TYPES[s.type]));
     const [inventory, setInventory] = useState(() => getLocalData('inventory', []));
     const [message, setMessage] = useState(null);
+    const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
+
+    // User Location State (Persisted)
+    const [location, setLocation] = useState(() => {
+        const saved = localStorage.getItem('sheep_user_location');
+        return saved ? JSON.parse(saved) : { name: 'Taipei', lat: 25.0330, lon: 121.5654 };
+    });
+
+    // Save location changes
+    useEffect(() => {
+        localStorage.setItem('sheep_user_location', JSON.stringify(location));
+    }, [location]);
+
+    const updateUserLocation = async (cityName) => {
+        const importWeather = await import('../utils/weatherService');
+        const result = await importWeather.searchCity(cityName);
+        if (result) {
+            setLocation(result);
+            showMessage(`所在地已更新為: ${result.name}`);
+            // Trigger immediate weather update logic handled by useEffect dep? 
+            // Better to just let the effect run or call fetch directly.
+            // Let's rely on effect dependency.
+            return true;
+        } else {
+            showMessage("找不到該城市，請重試！");
+            return false;
+        }
+    };
+
+    // Weather Fetch Loop
+    useEffect(() => {
+        const fetchWeather = async () => {
+            const importWeather = await import('../utils/weatherService');
+            // Use current location state
+            const w = await importWeather.getWeather(location.lat, location.lon);
+            setWeather(w);
+            setGlobalMessage(`當地天氣 (${location.name}): ${w.type === 'snow' ? '下雪中 ❄️' : (w.type === 'rain' ? '下雨中 🌧️' : (w.type === 'cloudy' ? '多雲 ☁️' : '晴朗 ☀️'))} (${w.temp}°C)`);
+        };
+
+        fetchWeather(); // Initial run on mount or location change
+        const interval = setInterval(fetchWeather, 3600000); // 1 Hour
+
+        return () => clearInterval(interval);
+    }, [location]); // Re-run when location changes
+
+    const setGlobalMessage = (msg) => {
+        setMessage(msg);
+        setTimeout(() => setMessage(null), 5000); // Slightly longer for weather
+    };
 
     const showMessage = (msg) => {
         setMessage(msg);
@@ -179,12 +228,22 @@ export const GameProvider = ({ children }) => {
         }
     }, []);
 
+    // Auto-Save: Debounced on change + Unload
     useEffect(() => {
         if (!currentUser) return;
-        const saveInterval = setInterval(() => { saveToCloud(); }, 60000);
+
         const handleUnload = () => { saveToCloud(); };
         window.addEventListener('beforeunload', handleUnload);
-        return () => { clearInterval(saveInterval); window.removeEventListener('beforeunload', handleUnload); };
+
+        // Debounce save (2 seconds after last change)
+        const timeoutId = setTimeout(() => {
+            saveToCloud();
+        }, 2000);
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('beforeunload', handleUnload);
+        };
     }, [sheep, inventory, currentUser]);
 
     // --- Game Loop ---
@@ -203,10 +262,12 @@ export const GameProvider = ({ children }) => {
         return () => clearInterval(tick);
     }, [currentUser]);
 
-    const adoptSheep = () => {
+    const adoptSheep = (data = {}) => {
+        const { name = '小羊', spiritualMaturity = '' } = data;
         const newSheep = {
             id: Date.now(),
-            name: '小羊', type: 'LAMB',
+            name, type: 'LAMB',
+            spiritualMaturity,
             careLevel: 0, health: 100, strength: 0, status: 'healthy',
             state: 'idle', note: '', prayedCount: 0, lastPrayedDate: null,
             resurrectionProgress: 0,
@@ -296,8 +357,8 @@ export const GameProvider = ({ children }) => {
 
     return (
         <GameContext.Provider value={{
-            currentUser, sheep, inventory, message,
-            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep,
+            currentUser, sheep, inventory, message, weather, location,
+            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep, updateUserLocation,
             sendVerificationEntry, registerUser, loginUser, logout, saveToCloud
         }}>
             {children}

@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { Sheep } from './Sheep';
 
 export const Field = ({ onSelectSheep }) => {
-    const { sheep, prayForSheep, shepherdSheep, message } = useGame();
+    const { sheep, prayForSheep, shepherdSheep, message, weather } = useGame();
 
     // Generate static decorations once
     const decorations = useMemo(() => {
@@ -39,34 +39,32 @@ export const Field = ({ onSelectSheep }) => {
         // Let's simpler: Loop theta 0 to PI/2.
         // x = R * sin(theta) -> 0 to R
         // y = 100 - R * cos(theta) -> 100-R to 100
-        const R = 28;
-        for (let theta = 0; theta <= Math.PI / 2; theta += 0.12) {
-            // Create Gap for Gate (approx PI/4 = 0.78). Gate is bigger now.
-            if (theta > 0.65 && theta < 0.95) continue;
+        const R = 33; // Increased to be well away from graves (Logic Radius 25)
+        for (let theta = 0; theta <= Math.PI / 2; theta += 0.06) {
+            // Gap for Entrance (Mouth)
+            // Approx 45 degrees (PI/4 = 0.78). Gap from 0.7 to 0.9.
+            if (theta > 0.7 && theta < 0.9) continue;
 
             items.push({
                 id: `grave-wall-arc-${theta}`, type: 'rock', emoji: '🪨',
-                x: R * Math.sin(theta) + (Math.random() * 2),
-                y: 100 - R * Math.cos(theta) + (Math.random() * 2)
+                // Tighter line, less wobble
+                x: R * Math.sin(theta) + (Math.random() * 0.5),
+                y: 100 - R * Math.cos(theta) + (Math.random() * 0.5),
+                scale: 0.9 + Math.random() * 0.3 // Slight size var
             });
         }
 
         // Gate & Signboard
-        // Gate at theta ~ 0.8
-        const gateTheta = 0.8;
-        items.push({
-            id: 'grave-gate', type: 'gate', emoji: '⛩️',
-            x: R * Math.sin(gateTheta),
-            y: 100 - R * Math.cos(gateTheta),
-            scale: 2.5
-        });
+        // Gate removed as per request
 
-        // Signboard next to gate
+        // Signboard next to gate (Positioned at user red circle)
+
+        // Signboard next to gate (Positioned at user red circle)
         items.push({
             id: 'grave-sign', type: 'sign', emoji: '🪧',
-            x: R * Math.sin(gateTheta - 0.3) + 3, // Slightly to side
-            y: 100 - R * Math.cos(gateTheta - 0.3),
-            scale: 2.2,
+            x: 20,
+            y: 60,
+            scale: 2.5, // Reduced by 1 unit (3.5 -> 2.5)
             hasLabel: true,
             label: '安息之地'
         });
@@ -77,7 +75,38 @@ export const Field = ({ onSelectSheep }) => {
 
     return (
         <div className="field-container">
-            <div className="sky"></div>
+            <div className={`sky ${weather?.type || 'sunny'} ${weather?.isDay ? 'day' : 'night'}`}>
+                {/* Extra Clouds */}
+                <div className="cloud-extra c1"></div>
+                <div className="cloud-extra c2"></div>
+
+                {/* Sun - Only if Sunny and Day */}
+                {weather?.type === 'sunny' && weather?.isDay && (
+                    <div className="sun"></div>
+                )}
+
+                {/* Birds - Hide if raining or snowing */}
+                {weather?.type !== 'rain' && weather?.type !== 'storm' && weather?.type !== 'snow' && (
+                    // Birds were removed by request previously, but if user wants them back in future, logic is here.
+                    // Currently no birds code block exists here based on previous edit. 
+                    // I will leave this empty or skip re-adding birds.
+                    null
+                )}
+
+                {/* Rain Overlay */}
+                {(weather?.type === 'rain' || weather?.type === 'storm') && (
+                    <div className="rain-container">
+                        {[...Array(20)].map((_, i) => <div key={i} className="rain-drop" style={{ left: `${Math.random() * 100}%`, animationDelay: `${Math.random()}s`, animationDuration: `${0.5 + Math.random() * 0.5}s` }}></div>)}
+                    </div>
+                )}
+
+                {/* Snow Overlay */}
+                {weather?.type === 'snow' && (
+                    <div className="rain-container"> {/* Reuse container for full coverage */}
+                        {[...Array(30)].map((_, i) => <div key={i} className="snow-drop" style={{ left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 5}s`, animationDuration: `${3 + Math.random() * 2}s` }}>❄</div>)}
+                    </div>
+                )}
+            </div>
 
             {message && (
                 <div className="toast-message">
@@ -90,7 +119,7 @@ export const Field = ({ onSelectSheep }) => {
                 <div style={{
                     position: 'absolute',
                     top: 0, left: 0,
-                    width: '35%', height: '35%', // Roughly covers the arc area
+                    width: '40%', height: '40%', // Roughly covers the arc area (R=33)
                     background: 'radial-gradient(circle at top left, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.2) 60%, transparent 70%)',
                     zIndex: 0,
                     pointerEvents: 'none'
@@ -100,7 +129,8 @@ export const Field = ({ onSelectSheep }) => {
                 {/* Render Decorations */}
                 {decorations.map(d => {
                     const bottomPos = 5 + d.y * 0.9; // Map 0-100 Y to Screen%
-                    const scale = 1.0 - (d.y / 200);
+                    const baseScale = 1.0 - (d.y / 200);
+                    const finalScale = baseScale * (d.scale || 1);
                     const zIdx = Math.floor(1000 - d.y);
 
                     return (
@@ -111,12 +141,28 @@ export const Field = ({ onSelectSheep }) => {
                                 left: `${d.x}%`,
                                 bottom: `${bottomPos}%`,
                                 zIndex: zIdx,
-                                transform: `scale(${scale})`
+                                transform: `scale(${finalScale})`
                             }}
                         >
                             {d.emoji}
                             {d.hasLabel && (
-                                <div style={{
+                                <div style={d.id === 'grave-sign' ? {
+                                    // Special styling for Graveyard Sign (Inside the board)
+                                    position: 'absolute',
+                                    top: '45%', // Moved up by ~10% (User asked for 5 units, adjusting relative)
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    color: '#5d4037', // Dark brown
+                                    fontSize: '6px', // Compensated for smaller scale (2.5 * 6 = 15px)
+                                    fontWeight: '900',
+                                    whiteSpace: 'nowrap',
+                                    textShadow: '0 0.5px 0 rgba(255,255,255,0.4)',
+                                    pointerEvents: 'none',
+                                    fontFamily: 'serif',
+                                    width: '100%',
+                                    textAlign: 'center'
+                                } : {
+                                    // Default label styling (Floating above)
                                     position: 'absolute', top: '-25px', left: '50%', transform: 'translateX(-50%)',
                                     background: '#5d4037', color: '#ffecb3', padding: '1px 5px', borderRadius: '3px',
                                     fontSize: '0.5rem', whiteSpace: 'nowrap', border: '1px solid #3e2723', fontWeight: 'bold',

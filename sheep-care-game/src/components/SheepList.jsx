@@ -49,10 +49,15 @@ export const SheepList = ({ onSelect, onClose }) => {
                                         <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isDead ? '#666' : '#333' }}>
                                             {s.name} <small style={{ color: '#999', fontSize: '0.7rem' }}>#{String(s.id).slice(-4)}</small>
                                         </div>
+                                        {s.spiritualMaturity && (
+                                            <div style={{ fontSize: '0.8rem', color: '#66bb6a', marginBottom: '2px' }}>
+                                                🌱 {s.spiritualMaturity}
+                                            </div>
+                                        )}
                                         <div style={{ fontSize: '0.8rem', color: isDead ? '#999' : (isSick ? 'red' : 'green') }}>
                                             {isDead ? '已離世 (需復活)' : (isSick ? '生病中' : '健康')}
                                             {!isDead && ` | HP: ${Math.round(s.health)}%`}
-                                            {!isDead && <span style={{ color: '#ff9800', marginLeft: '5px' }}>| ❤️: {s.careLevel || 0}</span>}
+                                            {!isDead && <span style={{ color: '#ff9800', marginLeft: '5px' }}>| ❤️ 關愛: {s.careLevel || 0}</span>}
                                         </div>
                                         {/* Message Preview */}
                                         <div style={{

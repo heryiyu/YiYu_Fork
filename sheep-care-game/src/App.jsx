@@ -10,7 +10,7 @@ import { SheepList } from './components/SheepList';
 import './App.css';
 
 function App() {
-  const { currentUser } = useGame();
+  const { currentUser, message } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   const [showList, setShowList] = useState(false);
@@ -42,6 +42,8 @@ function App() {
 
   return (
     <div className="game-container" key={currentUser}>
+      {message && <div className="toast-message">{message}</div>}
+
       {/* Help Button */}
       <button
         className="icon-btn"

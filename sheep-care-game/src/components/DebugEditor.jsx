@@ -10,27 +10,51 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
     const [note, setNote] = useState('');
 
     // Admin States
-    const [selectedType, setSelectedType] = useState('LAMB');
+    // const [selectedType, setSelectedType] = useState('LAMB'); // removed manual control
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [deleteNameInput, setDeleteNameInput] = useState('');
     const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+
+    // Spiritual Maturity State
+    const [sLevel, setSLevel] = useState('');
+    const [sStage, setSStage] = useState('');
+
+    // Edit Mode State
+    const [isEditing, setIsEditing] = useState(false);
+    const [localMsg, setLocalMsg] = useState('');
 
     useEffect(() => {
         if (target) {
             setName(target.name);
             setNote(target.note || '');
-            setSelectedType(target.type || 'LAMB');
+            // Parse "Level (Stage)" or just "Level"
+            const mat = target.spiritualMaturity || '';
+            const match = mat.match(/^(.+?)(?:\s*\((.+)\))?$/);
+            if (match) {
+                setSLevel(match[1] || '');
+                setSStage(match[2] || '');
+            } else {
+                setSLevel(mat);
+                setSStage('');
+            }
             // Reset delete state when opening new sheep
             setDeleteConfirmOpen(false);
             setDeleteNameInput('');
+            setIsEditing(false); // Default to read-only
+            setLocalMsg('');
         }
     }, [target?.id]);
 
     if (!target) return null;
 
     const handleSave = () => {
-        updateSheep(target.id, { name, note, type: selectedType });
-        onClose();
+        let finalMaturity = sLevel;
+        if (sLevel && sStage) {
+            finalMaturity = `${sLevel} (${sStage})`;
+        }
+        updateSheep(target.id, { name, note, spiritualMaturity: finalMaturity });
+        setIsEditing(false); // Exit edit mode
+        // onClose(); // Removed to allow viewing changes
     };
 
     const handleResetHealth = () => {
@@ -45,7 +69,17 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
     };
 
     const handlePray = () => {
+        const todayStr = new Date().toDateString();
+        // Check if Dead and already prayed today
+        if (target.status === 'dead' && target.lastPrayedDate === todayStr) {
+            setLocalMsg("今天已經為這隻小羊禱告過了，請明天再來！🙏");
+            return;
+        }
+
         prayForSheep(target.id);
+        // Optional: Set success feedback? Global toast handles it.
+        // But if successful, maybe clear error msg?
+        setLocalMsg('');
     };
 
     const isDead = target.status === 'dead';
@@ -71,10 +105,14 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
         return '健康';
     };
 
+    const startMat = target?.spiritualMaturity || '';
+    let currentMat = sLevel;
+    if (sLevel && sStage) currentMat = `${sLevel} (${sStage})`;
+
     const hasChanges = target && (
         name !== target.name ||
         note !== (target.note || '') ||
-        selectedType !== (target.type || 'LAMB')
+        currentMat !== startMat
     );
 
     return (
@@ -94,6 +132,7 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                             onChange={(e) => setName(e.target.value)}
                             maxLength={10}
                             placeholder="名字..."
+                            disabled={!isEditing || isDead}
                         />
                     </div>
 
@@ -109,24 +148,45 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                             <div>
                                 {getStatusText(target.status)}
                                 {!isDead && <span style={{ marginLeft: '10px' }}>HP: {Math.round(target.health)}%</span>}
+                                {!isDead && <span style={{ marginLeft: '10px', color: '#ff9800' }}>❤️ 關愛: {target.careLevel || 0}</span>}
                             </div>
 
                         </div>
                     </div>
 
                     <div className="form-group">
-                        <label>階段 (進化)</label>
+                        <label>靈程 (Spiritual Maturity)</label>
                         <select
-                            value={selectedType}
-                            onChange={(e) => setSelectedType(e.target.value)}
-                            disabled={isDead}
-                            style={{ width: '100%', padding: '8px', borderRadius: '8px', opacity: isDead ? 0.6 : 1 }}
+                            value={sLevel}
+                            onChange={(e) => setSLevel(e.target.value)}
+                            disabled={!isEditing || isDead}
+                            style={{ width: '100%', padding: '8px', borderRadius: '8px', marginBottom: '5px' }}
                         >
-                            <option value="LAMB">🥚 小羊</option>
-                            <option value="STRONG">🐏 強壯的羊</option>
-                            <option value="HUMAN">🧍 榮耀的羊</option>
+                            <option value="">-- 請選擇 --</option>
+                            <option value="新朋友">新朋友</option>
+                            <option value="慕道友">慕道友</option>
+                            <option value="基督徒">基督徒</option>
                         </select>
-                        {isDead && <small style={{ color: '#999', fontSize: '0.8rem' }}>* 復活後才能改變階段</small>}
+
+                        {sLevel && (
+                            <select
+                                value={sStage}
+                                onChange={(e) => setSStage(e.target.value)}
+                                disabled={!isEditing || isDead}
+                                style={{ width: '100%', padding: '8px', borderRadius: '8px' }}
+                            >
+                                <option value="學習中">學習中</option>
+                                <option value="穩定">穩定</option>
+                                <option value="領袖">領袖</option>
+                            </select>
+                        )}
+                    </div>
+
+                    <div className="form-group">
+                        <label>屬性狀態 (系統自動變更)</label>
+                        <div style={{ padding: '8px', background: '#eee', borderRadius: '8px', color: '#555', fontSize: '0.9rem' }}>
+                            {target.type === 'LAMB' ? '🥚 小羊' : (target.type === 'STRONG' ? '🐏 強壯的羊' : '🧍 榮耀的羊')}
+                        </div>
                     </div>
 
                     <div className="form-group">
@@ -137,6 +197,7 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                             rows={3}
                             style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }}
                             placeholder={isDead ? "寫下對牠的負擔..." : "記錄這隻小羊的狀況..."}
+                            disabled={!isEditing && !isDead} // Allow editing note if dead? Probably not if global edit. let's stick to global isEditing.
                         />
                     </div>
 
@@ -152,6 +213,20 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                     >
                         {buttonText}
                     </button>
+
+                    {localMsg && (
+                        <div style={{
+                            marginTop: '10px',
+                            color: '#e65100',
+                            fontSize: '0.9rem',
+                            textAlign: 'center',
+                            background: '#fff3e0',
+                            padding: '8px',
+                            borderRadius: '5px'
+                        }}>
+                            {localMsg}
+                        </div>
+                    )}
 
                     <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
 
@@ -233,17 +308,17 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                     {!deleteConfirmOpen && !resetConfirmOpen && (
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <button
-                                onClick={handleSave}
-                                disabled={!hasChanges}
+                                onClick={isEditing ? handleSave : () => setIsEditing(true)}
                                 style={{
                                     flex: 1.5, height: '36px', padding: '0 5px',
-                                    background: hasChanges ? '#4caf50' : '#ccc',
+                                    background: isEditing ? (hasChanges ? '#4caf50' : '#ccc') : '#2196f3',
                                     color: 'white', border: 'none', borderRadius: '8px',
-                                    cursor: hasChanges ? 'pointer' : 'not-allowed',
+                                    cursor: (isEditing && !hasChanges) ? 'not-allowed' : 'pointer',
                                     whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem'
                                 }}
+                                disabled={isEditing && !hasChanges}
                             >
-                                儲存
+                                {isEditing ? '儲存' : '變更資料'}
                             </button>
 
                             <button
