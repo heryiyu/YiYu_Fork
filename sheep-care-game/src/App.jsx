@@ -6,11 +6,12 @@ import { Controls } from './components/Controls';
 import { DebugEditor } from './components/DebugEditor';
 import { Guide } from './components/Guide';
 import { Login } from './components/Login';
+import { NicknameSetup } from './components/NicknameSetup';
 import { SheepList } from './components/SheepList';
 import './App.css';
 
 function App() {
-  const { currentUser, message, isLoading } = useGame();
+  const { currentUser, message, isLoading, needsNickname } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   const [showList, setShowList] = useState(false);
@@ -45,7 +46,12 @@ function App() {
     return <Login />;
   }
 
-  // 2. Logged In -> Show Game
+  // 2. Needs Nickname -> Show Setup Screen
+  if (needsNickname) {
+    return <NicknameSetup />;
+  }
+
+  // 3. Logged In -> Show Game
   const handleSelectSheep = (sheep) => {
     setSelectedSheepId(sheep.id);
   };

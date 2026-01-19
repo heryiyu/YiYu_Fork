@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 
 export const SettingsModal = ({ onClose }) => {
-    const { currentUser, location, updateUserLocation, logout, saveToCloud } = useGame();
+    const { currentUser, location, updateUserLocation, updateUserName, saveToCloud } = useGame();
     const [cityInput, setCityInput] = useState(location?.name || '');
+    const [nameInput, setNameInput] = useState(currentUser || '');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -13,6 +14,11 @@ export const SettingsModal = ({ onClose }) => {
         setIsLoading(true);
         await updateUserLocation(cityInput);
         setIsLoading(false);
+    };
+
+    const handleUpdateName = () => {
+        if (!nameInput.trim()) return;
+        updateUserName(nameInput.trim());
     };
 
     return (
@@ -25,8 +31,24 @@ export const SettingsModal = ({ onClose }) => {
 
                 <div className="editor-form">
                     <div className="form-group">
-                        <label>👤 LINE 暱稱</label>
-                        <input type="text" value={currentUser || '未登入'} disabled />
+                        <label>👤 您的稱呼 (暱稱)</label>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            <input
+                                type="text"
+                                value={nameInput}
+                                onChange={(e) => setNameInput(e.target.value)}
+                                placeholder="輸入新的暱稱"
+                            />
+                            <button
+                                onClick={handleUpdateName}
+                                style={{
+                                    background: '#4caf50', color: 'white', border: 'none', borderRadius: '4px',
+                                    padding: '0 10px', cursor: 'pointer'
+                                }}
+                            >
+                                修改
+                            </button>
+                        </div>
                     </div>
 
                     <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
@@ -62,12 +84,6 @@ export const SettingsModal = ({ onClose }) => {
                             style={{ flex: 1, padding: '10px', background: '#ffa000', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                         >
                             ☁️ 手動備份
-                        </button>
-                        <button
-                            onClick={logout}
-                            style={{ flex: 1, padding: '10px', background: '#f44336', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                        >
-                            登出
                         </button>
                     </div>
 

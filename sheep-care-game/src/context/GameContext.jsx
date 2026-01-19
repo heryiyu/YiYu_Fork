@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SHEEP_TYPES } from '../data/sheepData';
 import { sanitizeSheep, calculateTick, generateVisuals, getSheepMessage } from '../utils/gameLogic';
@@ -84,6 +83,13 @@ export const GameProvider = ({ children }) => {
     useEffect(() => {
         const initLiff = async () => {
             try {
+                // Localhost Check
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                if (isLocalhost) {
+                    setIsLoading(false);
+                    return;
+                }
+
                 if (window.liff) {
                     await window.liff.init({ liffId: LIFF_ID });
                     if (window.liff.isLoggedIn()) {
@@ -105,6 +111,19 @@ export const GameProvider = ({ children }) => {
     }, []);
 
     const loginWithLine = () => {
+        // Localhost Admin Login
+        const host = window.location.hostname;
+        console.log("Login clicked. Hostname:", host);
+        if (host === 'localhost' || host === '127.0.0.1') {
+            console.log("Localhost detected. Logging in as Admin...");
+            handleLoginSuccess({
+                userId: 'admin',
+                displayName: 'Admin',
+                pictureUrl: ''
+            });
+            return;
+        }
+
         if (!window.liff) {
             showMessage("LIFF SDK 未載入");
             return;
@@ -114,13 +133,38 @@ export const GameProvider = ({ children }) => {
         }
     };
 
+    const [needsNickname, setNeedsNickname] = useState(false);
+
+    const updateUserName = (newName) => {
+        if (!newName || !newName.trim()) return;
+        setCurrentUser(newName);
+        localStorage.setItem('sheep_custom_nickname', newName); // Persist override
+        setNeedsNickname(false);
+        showMessage(`暱稱已更新為: ${newName}`);
+
+        // Force sync nickname to cloud
+        setTimeout(() => saveToCloud(newName), 100);
+    };
+
     const handleLoginSuccess = async (profile) => {
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
-        setCurrentUser(displayName);
+
+        // Check for custom nickname override
+        const savedNickname = localStorage.getItem('sheep_custom_nickname');
+
+        if (savedNickname) {
+            setCurrentUser(savedNickname);
+            setNeedsNickname(false);
+        } else {
+            setCurrentUser(displayName); // Fallback
+            setNeedsNickname(true);
+        }
+
         sessionStorage.setItem('sheep_current_session', userId); // Store LineID as session key
 
-        showMessage(`設定羊群中... (Hi, ${displayName})`);
+        const msgName = savedNickname || displayName;
+        showMessage(`設定羊群中... (Hi, ${msgName})`);
 
         // Sync with Cloud (Login/Register)
         try {
@@ -131,8 +175,6 @@ export const GameProvider = ({ children }) => {
                 return;
             }
 
-            // Sync with Cloud (Login/Register)
-            // Add Timeout to prevent infinite loading
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Request Timeout')), 10000)
             );
@@ -141,9 +183,11 @@ export const GameProvider = ({ children }) => {
                 fetch(API_URL, {
                     method: 'POST', body: JSON.stringify({
                         action: 'line_login',
-                        lineId: userId,
-                        name: displayName,
-                        avatar: pictureUrl
+                        LineUserId: userId,
+                        Name: displayName,
+                        Avatar: pictureUrl,
+                        NickName: savedNickname || "", // Send NickName if available
+                        LastLogin: Date.now()
                     })
                 }),
                 timeoutPromise
@@ -159,7 +203,7 @@ export const GameProvider = ({ children }) => {
                     else if (diff > 1) showMessage(`您離開了 ${Math.round(diff)} 小時，羊群狀態更新了...`);
                     else showMessage(`歡迎回來，${displayName}! 👋`);
                 } else {
-                    // New User or Empty Data
+                    // New User
                     if (result.isNew) showMessage("歡迎新加入的牧羊人！ 🎉");
                     setSheep([]); setInventory([]);
                 }
@@ -175,20 +219,6 @@ export const GameProvider = ({ children }) => {
             setIsLoading(false);
         }
     };
-
-    const logout = async () => {
-        await saveToCloud();
-        if (window.liff && window.liff.isLoggedIn()) {
-            window.liff.logout();
-        }
-        setCurrentUser(null);
-        setLineId(null);
-        sessionStorage.removeItem('sheep_current_session');
-        if (lineId) sessionStorage.removeItem(`sheep_game_data_${lineId}`);
-        setSheep([]); setInventory([]);
-        window.location.reload();
-    };
-
 
     // Helper for applying loaded data + decay
     const applyLoadedData = (loadedData, targetUser) => {
@@ -241,16 +271,25 @@ export const GameProvider = ({ children }) => {
         return diffHours;
     };
 
-    const saveToCloud = async () => {
+    const saveToCloud = async (forceName = null) => {
         if (!lineId || !API_URL) return;
         const dataToSave = { sheep, inventory, lastSave: Date.now() };
         sessionStorage.setItem(`sheep_game_data_${lineId}`, JSON.stringify(dataToSave));
+
+        // Use provided name or current state or default
+        const nameToSend = forceName || currentUser || 'Shepherd';
+
         try {
             await fetch(API_URL, {
                 method: 'POST', keepalive: true,
-                body: JSON.stringify({ action: 'save', user: lineId, data: dataToSave })
+                body: JSON.stringify({
+                    action: 'save',
+                    LineUserId: lineId,
+                    NickName: nameToSend,
+                    Data: dataToSave
+                })
             });
-            console.log("Auto-save success");
+            console.log("Auto-save success (with nickname)");
         } catch (e) { console.error("Auto-save failed", e); }
     };
 
@@ -353,14 +392,12 @@ export const GameProvider = ({ children }) => {
 
     const shepherdSheep = (id) => { };
     const deleteSheep = (id) => { setSheep(prev => prev.filter(s => s.id !== id)); };
-    const registerUser = () => { }; // Deprecated
-    const loginUser = () => { }; // Deprecated
 
     return (
         <GameContext.Provider value={{
-            currentUser, lineId, isLoading, sheep, inventory, message, weather, location,
-            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep, updateUserLocation,
-            loginWithLine, logout, saveToCloud
+            currentUser, lineId, isLoading, sheep, inventory, message, weather, location, needsNickname,
+            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep, updateUserLocation, updateUserName,
+            loginWithLine, saveToCloud
         }}>
             {children}
         </GameContext.Provider>
