@@ -33,11 +33,18 @@
 
 /* --- BODY PARTS --- */
 /* --- BODY PARTS --- */
+/* --- BODY PARTS --- */
 .sheep-body-group {
     position: relative;
     width: 100%;
     height: 100%;
     transition: transform 0.3s ease;
+    animation: breathe 3s infinite ease-in-out; /* Idle Breathing */
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
 /* Status Filters */

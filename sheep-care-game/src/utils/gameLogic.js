@@ -162,7 +162,7 @@ export const calculateTick = (s) => {
             // Do not update x, y, angle
         }
     } else if (state === 'walking') {
-        if (Math.random() < 0.05) state = 'idle';
+        if (Math.random() < 0.15) state = 'idle'; // Increased chance to stop (was 0.05)
         else {
             // Robust initialization (Double check even if sterilized on load)
             if (typeof y !== 'number' || isNaN(y)) y = Math.random() * 50;
@@ -170,9 +170,9 @@ export const calculateTick = (s) => {
             if (typeof x !== 'number' || isNaN(x)) x = Math.random() * 90 + 5;
 
             // Random turn
-            angle += (Math.random() - 0.5) * 0.5;
-            x += Math.cos(angle) * 1.5;
-            y += Math.sin(angle) * 1.5;
+            angle += (Math.random() - 0.5) * 1.0; // Sharper turns (was 0.5)
+            x += Math.cos(angle) * 2.5; // Slower steps (was 4.0)
+            y += Math.sin(angle) * 2.5;
 
             // Graveyard Collision Check (Fan Shape) with 20 unit buffer
             const distToCorner = Math.sqrt(x * x + (100 - y) * (100 - y));
@@ -183,8 +183,8 @@ export const calculateTick = (s) => {
                 // We want to go opposite
                 angle = Math.atan2(y - 100, x - 0);
 
-                x += Math.cos(angle) * 3.0; // Push out
-                y += Math.sin(angle) * 3.0;
+                x += Math.cos(angle) * 4.0; // Slower push out (was 6.0)
+                y += Math.sin(angle) * 4.0;
             }
 
             // Bounds Check
@@ -198,23 +198,23 @@ export const calculateTick = (s) => {
             }
         }
     } else {
-        if (Math.random() < 0.05) state = 'walking';
+        if (Math.random() < 0.15) state = 'walking'; // Increased chance to walk (was 0.05)
     }
     direction = Math.cos(angle) > 0 ? 1 : -1;
 
     // 2. Health Logic
     // Target: Max 20% per day (24h). 20 HP / 86400s = ~0.00023 HP/s
-    // Tick is 100ms (10/s), so ~0.000023 HP/tick is the MAX allowed speed.
-    // sick: 0.000023 (Max ~20%/day), injured: 0.00002, healthy: 0.000015 (Normal ~13%/day)
-    // protected: ~6% per day -> ~0.000007 HP/tick
+    // Tick is 500ms (2/s), so ~0.000115 HP/tick is the MAX allowed speed.
+    // sick: 0.000115 (Max ~20%/day), injured: 0.0001, healthy: 0.000075 (Normal ~13%/day)
+    // protected: ~6% per day -> ~0.000035 HP/tick
 
     const todayStr = new Date().toDateString();
     const isProtected = s.lastPrayedDate === todayStr;
 
-    let decayRate = 0.000015; // Default Healthy
-    if (s.status === 'sick') decayRate = 0.000023;
-    else if (isProtected) decayRate = 0.000007; // Protected
-    else if (s.status === 'injured') decayRate = 0.00002;
+    let decayRate = 0.000075; // Default Healthy
+    if (s.status === 'sick') decayRate = 0.000115;
+    else if (isProtected) decayRate = 0.000035; // Protected
+    else if (s.status === 'injured') decayRate = 0.0001;
     // Don't decay if dead
     let newHealth = s.status === 'dead' ? 0 : Math.max(0, s.health - decayRate);
     let newStatus = s.status;
@@ -235,7 +235,7 @@ export const calculateTick = (s) => {
     }
 
     // 3. Message Logic
-    let timer = messageTimer > 0 ? messageTimer - 0.1 : 0;
+    let timer = messageTimer > 0 ? messageTimer - 0.5 : 0; // Decrement by 0.5s (tick is 0.5s)
     let msg = timer > 0 ? message : null;
 
     // Dynamic speak chance

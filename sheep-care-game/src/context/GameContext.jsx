@@ -165,17 +165,12 @@ export const GameProvider = ({ children }) => {
         setIsLoading(true);
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
-        setCurrentUser(displayName);
+        // setCurrentUser(displayName); // MOVED TO END
         localStorage.setItem('sheep_current_session', userId);
 
         try {
             // Clear legacy session storage 
             sessionStorage.clear();
-            // Also Request: Clear Cache on Exit? 
-            // If user wants "Fresh state every time", maybe we shouldn't even use localStorage for `sheep_game_data_...`?
-            // But we need it for "Refresh Page" persistence?
-            // User said: "Success fetch -> Save" and "Clear on Exit".
-            // So on Login Success, we should probably IGNORE local cache and just overwrite.
         } catch (e) { }
 
         showMessage(`設定羊群中... (Hi, ${displayName})`);
@@ -282,6 +277,8 @@ export const GameProvider = ({ children }) => {
                 applyLoadedData({ sheep: hydratedSheep, inventory: loadedInventory, settings: loadedSettings, lastSave }, userId);
 
                 setIsDataLoaded(true);
+                // COMMIT LOGIN
+                setCurrentUser(displayName);
                 showMessage(`歡迎回來，${existingUser.nickname || displayName}! 👋`);
 
             } else {
@@ -306,10 +303,16 @@ export const GameProvider = ({ children }) => {
                 localStorage.removeItem(`sheep_game_data_${userId}`);
 
                 setIsDataLoaded(true);
+                // COMMIT LOGIN
+                setCurrentUser(displayName);
             }
         } catch (e) {
             alert(`⚠️ Connection Error: ${e.message}`);
             console.error(e);
+            // If error, do NOT set currentUser, let them try again?
+            // Or set it essentially? 
+            // If we don't set currentUser, App stays on Login screen.
+            // But we might be half-broken.
         } finally {
             setIsLoading(false);
         }
@@ -573,7 +576,7 @@ export const GameProvider = ({ children }) => {
                 }
                 return updated;
             }));
-        }, 100);
+        }, 500); // Optimized to 500ms (2 FPS) for low power mode
         return () => clearInterval(tick);
     }, [lineId]);
 

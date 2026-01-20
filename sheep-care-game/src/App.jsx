@@ -26,20 +26,20 @@ function App() {
   }, [currentUser]);
 
   // 0. Global Loading (Prevent empty blue screen during sync)
-  if (isLoading) {
-    return (
-      <div style={{
-        width: '100vw', height: '100vh',
-        display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center',
-        background: '#f0faff', color: '#555'
-      }}>
-        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>⏳</div>
-        <h2>正在同步羊群資料...</h2>
-        <p>Connecting to Cloud...</p>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div style={{
+  //       width: '100vw', height: '100vh',
+  //       display: 'flex', flexDirection: 'column',
+  //       justifyContent: 'center', alignItems: 'center',
+  //       background: '#f0faff', color: '#555'
+  //     }}>
+  //       <div style={{ fontSize: '3rem', marginBottom: '20px' }}>⏳</div>
+  //       <h2>正在同步羊群資料...</h2>
+  //       <p>Connecting to Cloud...</p>
+  //     </div>
+  //   );
+  // }
 
   // 1. Not Logged In -> Show Login Screen
   if (!currentUser) {
