@@ -216,9 +216,17 @@ export const GameProvider = ({ children }) => {
                 // --- MIGRATION CHECK ---
                 // If user has old JSON sheep but NO new relational sheep, migrate them!
                 let finalSheep = [];
-                if (existingUser.game_data?.sheep && (!sheepData || sheepData.length === 0)) {
-                    console.log("Migrating old JSON sheep to new table...");
-                    const oldSheep = existingUser.game_data.sheep;
+                // Check Cloud Backup OR Local Storage (if Cloud was wiped by race condition)
+                const localStr = localStorage.getItem(`sheep_game_data_${userId}`);
+                const localBackup = localStr ? JSON.parse(localStr).sheep : [];
+
+                const sourceForMigration = (existingUser.game_data?.sheep?.length > 0)
+                    ? existingUser.game_data.sheep
+                    : (localBackup.length > 0 ? localBackup : []);
+
+                if ((!sheepData || sheepData.length === 0) && sourceForMigration.length > 0) {
+                    console.log("Migrating sheep to new table...", { sourceLength: sourceForMigration.length });
+                    const oldSheep = sourceForMigration;
 
                     // Convert to DB format
                     const rowsToInsert = oldSheep.map(s => ({
@@ -470,7 +478,7 @@ export const GameProvider = ({ children }) => {
                 id: lineId,
                 nickname: nicknameToSave,
                 name: currentUser,
-                game_data: userData, // No sheep in here anymore
+                game_data: userData, // Correct: No sheep here.
                 last_login: new Date().toISOString()
             });
 
