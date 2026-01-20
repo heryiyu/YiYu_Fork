@@ -314,6 +314,8 @@ export const GameProvider = ({ children }) => {
                 if (insertError) throw insertError;
 
                 showMessage("歡迎新加入的牧羊人！ 🎉");
+                // Explicitly CLEAR local storage for fresh start (Server Authority)
+                localStorage.removeItem(`sheep_game_data_${userId}`);
                 setSheep([]); setInventory([]);
                 setNickname(null);
                 setIsDataLoaded(true);
@@ -407,7 +409,7 @@ export const GameProvider = ({ children }) => {
     };
 
     const saveToCloud = async (overrides = {}) => {
-        if (!lineId || !isDataLoaded) return;
+        if (!lineId || !isDataLoaded || isLoading) return; // Block save during loading/sync
 
         // 1. Prepare User Data (Inventory & Settings only)
         const userData = {
