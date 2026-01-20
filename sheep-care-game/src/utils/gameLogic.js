@@ -206,7 +206,15 @@ export const calculateTick = (s) => {
     // Target: Max 20% per day (24h). 20 HP / 86400s = ~0.00023 HP/s
     // Tick is 100ms (10/s), so ~0.000023 HP/tick is the MAX allowed speed.
     // sick: 0.000023 (Max ~20%/day), injured: 0.00002, healthy: 0.000015 (Normal ~13%/day)
-    const decayRate = s.status === 'sick' ? 0.000023 : ((s.status === 'injured') ? 0.00002 : 0.000015);
+    // protected: ~6% per day -> ~0.000007 HP/tick
+
+    const todayStr = new Date().toDateString();
+    const isProtected = s.lastPrayedDate === todayStr;
+
+    let decayRate = 0.000015; // Default Healthy
+    if (s.status === 'sick') decayRate = 0.000023;
+    else if (isProtected) decayRate = 0.000007; // Protected
+    else if (s.status === 'injured') decayRate = 0.00002;
     // Don't decay if dead
     let newHealth = s.status === 'dead' ? 0 : Math.max(0, s.health - decayRate);
     let newStatus = s.status;

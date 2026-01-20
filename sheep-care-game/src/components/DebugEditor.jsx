@@ -198,7 +198,7 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#006064' }}>🔧 管理員調整: {Math.round(target.health)}%</label>
                                 <input
                                     type="range"
-                                    min="0"
+                                    min="1"
                                     max="100"
                                     value={target.health}
                                     onChange={(e) => updateSheep(target.id, { health: Number(e.target.value) })}

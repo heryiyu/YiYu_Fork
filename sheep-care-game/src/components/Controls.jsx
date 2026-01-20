@@ -5,7 +5,7 @@ import { AddSheepModal } from './AddSheepModal';
 import { SettingsModal } from './SettingsModal';
 
 export const Controls = ({ onOpenList, isCollapsed, onToggleCollapse }) => {
-    const { adoptSheep, sheep, currentUser, nickname, saveToCloud } = useGame(); // Removed logout here
+    const { adoptSheep, sheep, currentUser, nickname, saveToCloud, notificationEnabled, toggleNotification } = useGame(); // Removed logout here
     const [showAddModal, setShowAddModal] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
@@ -18,8 +18,19 @@ export const Controls = ({ onOpenList, isCollapsed, onToggleCollapse }) => {
         setShowAddModal(false);
     };
 
+
+
     return (
         <div className={`controls-container ${isCollapsed ? 'collapsed' : ''}`}>
+            {/* Notification Toggle */}
+            <button
+                className="control-btn"
+                onClick={toggleNotification}
+                style={{ background: notificationEnabled ? '#ffeb3b' : '#e0e0e0', color: '#000' }}
+            >
+                {notificationEnabled ? '🔔' : '🔕'}
+            </button>
+
             {/* Toggle Button */}
             <button
                 className="collapse-toggle-btn"

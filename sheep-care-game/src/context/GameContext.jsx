@@ -40,6 +40,7 @@ export const GameProvider = ({ children }) => {
     const [sheep, setSheep] = useState([]);
     const [inventory, setInventory] = useState([]);
     const [message, setMessage] = useState(null);
+    const [notificationEnabled, setNotificationEnabled] = useState(false); // NEW: Reminder Setting
     const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
 
     // ... (Location state omitted for brevity, logic unchanged) ...
@@ -120,6 +121,15 @@ export const GameProvider = ({ children }) => {
         }
     }, []);
 
+    const toggleNotification = async () => {
+        const newState = !notificationEnabled;
+        setNotificationEnabled(newState);
+        showMessage(newState ? "🔔 牧羊提醒已開啟" : "🔕 牧羊提醒已關閉");
+
+        // Immediate Save
+        await saveToCloud({ notificationEnabled: newState });
+    };
+
     // --- LIFF & Login Logic ---
     useEffect(() => {
         const initLiff = async () => {
@@ -128,8 +138,13 @@ export const GameProvider = ({ children }) => {
                     await window.liff.init({ liffId: LIFF_ID });
                     if (window.liff.isLoggedIn()) {
                         const profile = await window.liff.getProfile();
-                        handleLoginSuccess(profile);
+                        // Don't turn off loading yet, wait for data sync
+                        await handleLoginSuccess(profile);
                     } else {
+                        // Only turn off loading if NOT logged in (and no session restored)
+                        // But wait... if session restored, currentUser is set.
+                        // If not logged in LIFF, we rely on session or show login.
+                        // Let's check currentUser before turning off loading to avoid flash
                         setIsLoading(false);
                     }
                 } else {
@@ -166,6 +181,7 @@ export const GameProvider = ({ children }) => {
     };
 
     const handleLoginSuccess = async (profile) => {
+        setIsLoading(true); // START LOADING to prevent "Nickname Setup" flash during DB fetch
         const { userId, displayName, pictureUrl } = profile;
         // userId, displayName are from LINE
         setLineId(userId);
@@ -269,9 +285,15 @@ export const GameProvider = ({ children }) => {
                 if (s.status === 'dead') return s;
 
                 // Decay Logic
-                let ratePerHour = 0.541;
-                if (s.status === 'sick') ratePerHour = 0.833;
-                else if (s.status === 'injured') ratePerHour = 0.708;
+                let ratePerHour = 0.541; // Normal (~13%/day)
+
+                // Prayer Protection Check (Offline)
+                const todayStr = new Date().toDateString();
+                const isProtected = s.lastPrayedDate === todayStr;
+
+                if (s.status === 'sick') ratePerHour = 0.833; // Sick (~20%/day)
+                else if (isProtected) ratePerHour = 0.25; // Protected (~6%/day) - User Request
+                else if (s.status === 'injured') ratePerHour = 0.708; // Injured (~17%/day)
 
                 const decayAmount = diffHours * ratePerHour;
 
@@ -289,12 +311,14 @@ export const GameProvider = ({ children }) => {
 
         setSheep(decaySheep);
         setInventory(loadedData.inventory || []);
+        setNotificationEnabled(loadedData.settings?.notify || false); // Load setting
 
         // Cache Locally
         if (targetUser) {
             sessionStorage.setItem(`sheep_game_data_${targetUser}`, JSON.stringify({
                 sheep: decaySheep,
                 inventory: loadedData.inventory || [],
+                settings: { notify: loadedData.settings?.notify || false }, // Save setting
                 lastSave: now
             }));
         }
@@ -309,9 +333,10 @@ export const GameProvider = ({ children }) => {
             return;
         }
 
-        const currentData = {
-            sheep,
-            inventory,
+        const gameData = {
+            sheep: overrides.sheep || sheep,
+            inventory: overrides.inventory || inventory,
+            settings: { notify: overrides.notificationEnabled ?? notificationEnabled }, // Save Setting
             lastSave: Date.now()
         };
 
@@ -319,7 +344,7 @@ export const GameProvider = ({ children }) => {
         const nicknameToSave = overrides.nickname !== undefined ? overrides.nickname : nickname;
 
         sessionStorage.setItem(`sheep_game_data_${lineId}`, JSON.stringify({
-            ...currentData,
+            ...gameData,
             nickname: nicknameToSave,
             name: currentUser
         }));
@@ -485,9 +510,13 @@ export const GameProvider = ({ children }) => {
 
     return (
         <GameContext.Provider value={{
-            currentUser, lineId, isLoading, sheep, inventory, message, weather, location, nickname,
-            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep, deleteMultipleSheep, updateUserLocation,
-            loginWithLine, logout, saveToCloud, updateNickname, forceLoadFromCloud, isAdmin
+            currentUser, nickname, setNickname, lineId, isAdmin,
+            sheep, inventory, message, weather,
+            location, updateUserLocation,
+            adoptSheep, interactWithMember,
+            checkCode, loginWithLine, logout,
+            prayForSheep, fixDuplicateIds, deleteMultipleSheep,
+            notificationEnabled, toggleNotification // Exposed
         }}>
             {children}
         </GameContext.Provider>

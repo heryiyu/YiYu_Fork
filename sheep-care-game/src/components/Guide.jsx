@@ -29,6 +29,7 @@ export const Guide = ({ onClose }) => {
                     <p>即使不在線上，時間仍在流動：</p>
                     <ul>
                         <li><strong>離線機制:</strong> 負擔會自然流失 (每天約 <strong>13%</strong>)。</li>
+                        <li><strong>守望保護:</strong> 當日有被禱告的小羊，流失大幅減緩至約 <strong>6%</strong>！</li>
                         <li><strong>狀態影響:</strong> 生病或受傷流失更快 (每天約 <strong>17-20%</strong>)。</li>
                     </ul>
 
