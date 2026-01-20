@@ -271,12 +271,22 @@ export const calculateTick = (s) => {
 export const getSheepMessage = (type) => getRandomItem(SHEEP_MESSAGES[type]);
 
 // Stable access (changes every 5 minutes)
+// Stable access (changes every 5 minutes)
 export const getStableSheepMessage = (s, type) => {
     const list = SHEEP_MESSAGES[type];
     if (!list || list.length === 0) return "...";
-    // Bucket time by 5 minutes (300000ms)
+
+    // Bucket time by 5 minutes
     const timeBucket = Math.floor(Date.now() / 300000);
-    // Use sheep ID + time as seed
-    const index = (Math.floor(s.id) + timeBucket) % list.length;
+
+    // Handle String IDs (Hash them) or Number IDs
+    let idVal = 0;
+    const idStr = String(s.id);
+    for (let i = 0; i < idStr.length; i++) {
+        idVal = ((idVal << 5) - idVal) + idStr.charCodeAt(i);
+        idVal |= 0; // Convert to 32bit integer
+    }
+
+    const index = Math.abs((idVal + timeBucket) % list.length);
     return list[index];
 };

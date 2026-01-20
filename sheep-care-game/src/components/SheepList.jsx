@@ -5,17 +5,91 @@ import { SheepVisual } from './SheepVisual';
 import { getSheepMessage, getStableSheepMessage } from '../utils/gameLogic';
 
 export const SheepList = ({ onSelect, onClose }) => {
-    const { sheep } = useGame();
-
+    const { sheep, deleteMultipleSheep } = useGame();
     const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
+
+    const [isSelectionMode, setIsSelectionMode] = React.useState(false);
+    const [selectedIds, setSelectedIds] = React.useState(new Set());
+
+    const toggleSelection = (id) => {
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) {
+            newSet.delete(id);
+        } else {
+            newSet.add(id);
+        }
+        setSelectedIds(newSet);
+    };
+
+    const handleSelectAll = () => {
+        if (selectedIds.size === sortedSheep.length) {
+            setSelectedIds(new Set()); // Deselect All
+        } else {
+            const allIds = new Set(sortedSheep.map(s => s.id));
+            setSelectedIds(allIds);
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        if (selectedIds.size === 0) return;
+        if (window.confirm(`確定要刪除這 ${selectedIds.size} 隻小羊嗎？\n此動作無法復原！`)) {
+            deleteMultipleSheep(Array.from(selectedIds));
+            setIsSelectionMode(false);
+            setSelectedIds(new Set());
+        }
+    };
 
     return (
         <div className="debug-editor-overlay" onClick={onClose}>
             <div className="simple-editor" onClick={(e) => e.stopPropagation()} style={{ width: '360px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-                <div className="editor-header">
-                    <h3>📖 小羊圖鑑 ({sheep.length})</h3>
-                    <button className="close-btn" onClick={onClose}>✖</button>
+                <div className="editor-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <h3>📖 小羊圖鑑 ({sheep.length})</h3>
+                    </div>
+                    <div>
+                        <button
+                            onClick={() => {
+                                setIsSelectionMode(!isSelectionMode);
+                                setSelectedIds(new Set());
+                            }}
+                            style={{
+                                background: 'transparent', border: '1px solid #ccc',
+                                borderRadius: '4px', padding: '5px 8px', fontSize: '0.8rem',
+                                cursor: 'pointer', marginRight: '5px',
+                                color: isSelectionMode ? '#2196f3' : '#666'
+                            }}
+                        >
+                            {isSelectionMode ? '取消選取' : '批次管理'}
+                        </button>
+                        <button className="close-btn" onClick={onClose}>✖</button>
+                    </div>
                 </div>
+
+                {isSelectionMode && (
+                    <div style={{ padding: '8px 10px', background: '#f5f5f5', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '0.9rem', color: 'black' }}>
+                            <input
+                                type="checkbox"
+                                checked={sortedSheep.length > 0 && selectedIds.size === sortedSheep.length}
+                                onChange={handleSelectAll}
+                                style={{ transform: 'scale(1.2)', marginRight: '8px' }}
+                            />
+                            全選 ({selectedIds.size}/{sortedSheep.length})
+                        </label>
+                        <button
+                            onClick={handleDeleteSelected}
+                            disabled={selectedIds.size === 0}
+                            style={{
+                                background: selectedIds.size > 0 ? '#f44336' : '#ddd',
+                                color: 'white', border: 'none', borderRadius: '4px',
+                                padding: '5px 10px', fontSize: '0.8rem',
+                                cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed'
+                            }}
+                        >
+                            刪除選取 ({selectedIds.size})
+                        </button>
+                    </div>
+                )}
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
                     {sortedSheep.length === 0 ? (
@@ -26,14 +100,34 @@ export const SheepList = ({ onSelect, onClose }) => {
                         sortedSheep.map(s => {
                             const isDead = s.status === 'dead';
                             const isSick = s.status === 'sick';
+                            const isSelected = selectedIds.has(s.id);
 
                             return (
-                                <div key={s.id} style={{
-                                    display: 'flex', alignItems: 'center',
-                                    padding: '10px', borderBottom: '1px solid #eee',
-                                    background: isDead ? '#f8f8f8' : (isSick ? '#fff0f0' : 'transparent'),
-                                    opacity: isDead ? 0.7 : 1
-                                }}>
+                                <div
+                                    key={s.id}
+                                    onClick={() => {
+                                        if (isSelectionMode) toggleSelection(s.id);
+                                    }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center',
+                                        padding: '10px', borderBottom: '1px solid #eee',
+                                        background: isSelectionMode && isSelected ? '#e3f2fd' : (isDead ? '#f8f8f8' : (isSick ? '#fff0f0' : 'transparent')),
+                                        opacity: isDead ? 0.7 : 1,
+                                        cursor: isSelectionMode ? 'pointer' : 'default'
+                                    }}
+                                >
+                                    {isSelectionMode && (
+                                        <div style={{ marginRight: '10px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleSelection(s.id)}
+                                                style={{ transform: 'scale(1.3)', cursor: 'pointer' }}
+                                                onClick={(e) => e.stopPropagation()} // Prevent double trigger
+                                            />
+                                        </div>
+                                    )}
+
                                     {/* Mini Visual Preview */}
                                     <div style={{
                                         width: '70px', minWidth: '70px', // Fixed width to prevent squeezing
@@ -79,7 +173,7 @@ export const SheepList = ({ onSelect, onClose }) => {
                                         {/* Message Preview */}
                                         <div style={{
                                             marginTop: '4px', background: '#f5f5f5', padding: '4px 8px',
-                                            borderRadius: '6px', fontSize: '0.8rem', color: '#666',
+                                            borderRadius: '6px', fontSize: '0.8rem', color: 'black',
                                             display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                             fontStyle: 'italic', maxWidth: '100%'
                                         }}>
@@ -87,17 +181,19 @@ export const SheepList = ({ onSelect, onClose }) => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        className="action-btn"
-                                        style={{
-                                            padding: '5px 12px', fontSize: '0.9rem',
-                                            background: isDead ? '#9c27b0' : '#4facfe',
-                                            color: 'white'
-                                        }}
-                                        onClick={() => onSelect(s)}
-                                    >
-                                        {isDead ? '復活' : '查看'}
-                                    </button>
+                                    {!isSelectionMode && (
+                                        <button
+                                            className="action-btn"
+                                            style={{
+                                                padding: '5px 12px', fontSize: '0.9rem',
+                                                background: isDead ? '#9c27b0' : '#4facfe',
+                                                color: 'white'
+                                            }}
+                                            onClick={() => onSelect(s)}
+                                        >
+                                            {isDead ? '復活' : '查看'}
+                                        </button>
+                                    )}
                                 </div>
                             );
                         })

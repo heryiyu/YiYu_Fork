@@ -472,6 +472,9 @@ export const GameProvider = ({ children }) => {
 
     const shepherdSheep = (id) => { };
     const deleteSheep = (id) => { setSheep(prev => prev.filter(s => s.id !== id)); };
+    const deleteMultipleSheep = (ids) => {
+        setSheep(prev => prev.filter(s => !ids.includes(s.id)));
+    };
     const registerUser = () => { }; // Deprecated
     const loginUser = () => { }; // Deprecated
 
@@ -483,7 +486,7 @@ export const GameProvider = ({ children }) => {
     return (
         <GameContext.Provider value={{
             currentUser, lineId, isLoading, sheep, inventory, message, weather, location, nickname,
-            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep, updateUserLocation,
+            adoptSheep, prayForSheep, shepherdSheep, updateSheep, deleteSheep, deleteMultipleSheep, updateUserLocation,
             loginWithLine, logout, saveToCloud, updateNickname, forceLoadFromCloud, isAdmin
         }}>
             {children}
