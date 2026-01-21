@@ -71,7 +71,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
         // 1. Creation Mode (Batch)
         if (isBatchMode && !editingSheep) {
-            const lines = batchInput.split('\n').filter(line => line.trim());
+            const lines = batchInput.trim().split('\n').filter(line => line.trim());
             const sheepData = lines.map(line => {
                 const parts = line.split(/[ \t,，]+/).map(p => p.trim());
                 // Generate RANDOM visual for each batch sheep
@@ -82,7 +82,9 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                     visual: { ...randomVisual, pattern: 'none' }, // Default random
                     skinId: null
                 };
-            });
+            }).filter(s => s.name); // Filter empty names
+
+            if (sheepData.length === 0) return; // Prevent empty submit
             onConfirm(sheepData);
             return;
         }
@@ -125,19 +127,22 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         }
 
         onConfirm({
-            name,
+            name: name.trim(), // Trim Name
             spiritualMaturity: finalMaturity,
             ...finalVisualData
         });
     };
 
     const handleCreateSkin = async () => {
-        if (!newSkinName) {
+        const trimmedName = newSkinName.trim();
+        const trimmedUrl = newSkinUrl.trim();
+
+        if (!trimmedName) {
             setUploadError("⚠️ 請輸入造型名稱！");
             return;
         }
         // Logic: specific file > specific url input
-        const payload = newSkinFile || newSkinUrl;
+        const payload = newSkinFile || trimmedUrl;
         if (!payload) {
             setUploadError("⚠️ 請上傳圖片或輸入網址！");
             return;
@@ -145,7 +150,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         setUploadError(''); // Clear if passing
 
         if (createSkin) {
-            const newSkin = await createSkin(newSkinName, payload);
+            const newSkin = await createSkin(trimmedName, payload);
             if (newSkin) {
                 setSelectedSkinId(newSkin.id);
                 setMode('skin');

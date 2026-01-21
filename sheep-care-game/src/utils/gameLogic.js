@@ -170,8 +170,8 @@ export const calculateSheepState = (currentHealth, currentStatus) => {
 };
 
 export const calculateTick = (s) => {
-    // Allow dead sheep to process message logic, but not movement/health
-    // if (s.status === 'dead') return s; // REMOVED to allow messages
+    // Allow dead sheep to process message logic
+    // if (s.status === 'dead') return s;
 
     let { x, y, state, angle, direction, message, messageTimer } = s;
 

@@ -64,7 +64,7 @@ export const Field = ({ onSelectSheep }) => {
             id: 'grave-sign', type: 'sign', emoji: '🪧',
             x: 20,
             y: 60,
-            scale: 2.5, // Reduced by 1 unit (3.5 -> 2.5)
+            scale: 3.5, // Increased size as requested
             hasLabel: true,
             label: '安息之地'
         });
@@ -145,18 +145,21 @@ export const Field = ({ onSelectSheep }) => {
                                 <div style={d.id === 'grave-sign' ? {
                                     // Special styling for Graveyard Sign (Inside the board)
                                     position: 'absolute',
-                                    top: '45%', // Moved up by ~10% (User asked for 5 units, adjusting relative)
+                                    top: '40%', // Slightly higher to hit board center
                                     left: '50%',
                                     transform: 'translate(-50%, -50%)',
-                                    color: '#5d4037', // Dark brown
-                                    fontSize: '6px', // Compensated for smaller scale (2.5 * 6 = 15px)
-                                    fontWeight: '900',
+                                    color: '#4e342e', // Deep Brown
+                                    fontSize: '5px', // Smaller to fit
+                                    fontWeight: 'bold', // Bold but not 900
                                     whiteSpace: 'nowrap',
-                                    textShadow: '0 0.5px 0 rgba(255,255,255,0.4)',
                                     pointerEvents: 'none',
-                                    fontFamily: 'serif',
-                                    width: '100%',
-                                    textAlign: 'center'
+                                    fontFamily: '"Varela Round", "Microsoft JhengHei", "Hiragino Maru Gothic ProN", sans-serif',
+                                    width: '55%', // Tighter width
+                                    textAlign: 'center',
+                                    background: '#d7ccc8', // Light brown background
+                                    borderRadius: '3px',
+                                    padding: '1px 0',
+                                    boxShadow: '0 0 1px rgba(0,0,0,0.1)'
                                 } : {
                                     // Default label styling (Floating above)
                                     position: 'absolute', top: '-25px', left: '50%', transform: 'translateX(-50%)',

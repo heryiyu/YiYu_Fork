@@ -294,6 +294,42 @@ export const GameProvider = ({ children }) => {
         }));
 
         const validUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const LIFF_ID = "2008919632-15fCJTqb";
+
+        // --- Session Init (SessionStorage for Auto-Logout on Close) ---
+        const [currentUser, setCurrentUser] = useState(null); // Line Name
+        const [nickname, setNickname] = useState(null); // User Nickname
+        const [lineId, setLineId] = useState(null); // Line User ID
+        const [isLoading, setIsLoading] = useState(true);
+
+        const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+        const getLocalData = (key, fallback) => {
+            // We only load data if we have a valid session user
+            const storedUser = localStorage.getItem('sheep_current_session');
+            if (storedUser) {
+                const cache = localStorage.getItem(`sheep_game_data_${storedUser}`);
+                if (cache) {
+                    try { return JSON.parse(cache)[key] || fallback; } catch (e) { }
+                }
+            }
+            return fallback;
+        };
+
+        // ... (Existing state)
+        const [sheep, setSheep] = useState([]);
+        const [inventory, setInventory] = useState([]);
+        const [message, setMessage] = useState(null);
+        const [notificationEnabled, setNotificationEnabled] = useState(false);
+        const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
+
+        const [skins, setSkins] = useState([]); // New Skins State
+
+        // ... (Existing useEffects)
+
+        // --- SKINS LOGIC ---
+        // ...
+
         const rowsToUpsert = sheepRows.filter(r => validUUID.test(r.id));
 
         localStorage.setItem(`sheep_game_data_${lineId}`, JSON.stringify({
@@ -341,11 +377,14 @@ export const GameProvider = ({ children }) => {
         // Add skinData to visual for preview
         if (skinData) safeVisual.skinData = skinData;
 
+        // Use Helper to determine initial state from raw health (60)
+        const { health: initHealth, status: initStatus, type: initType } = calculateSheepState(60, 'healthy');
+
         const newSheep = {
             id: tempId,
-            name, type: 'LAMB',
+            name, type: initType,
             spiritualMaturity,
-            careLevel: 0, health: 60, strength: 0, status: 'healthy',
+            careLevel: 0, health: initHealth, strength: 0, status: initStatus,
             state: 'idle', note: '', prayedCount: 0, lastPrayedDate: null,
             resurrectionProgress: 0,
             visual: safeVisual,
@@ -361,11 +400,11 @@ export const GameProvider = ({ children }) => {
             try {
                 const { data: inserted, error } = await supabase.from('sheep').insert([{
                     owner_id: lineId,
-                    name, status: 'healthy', health: 60,
+                    name, status: initStatus, health: initHealth,
                     spiritual_maturity: spiritualMaturity,
                     visual_data: {
                         x: newSheep.x, y: newSheep.y, angle: newSheep.angle,
-                        visual: safeVisual, type: 'LAMB'
+                        visual: safeVisual, type: initType
                     },
                     skin_id: skinId || null
                 }]).select().single();
