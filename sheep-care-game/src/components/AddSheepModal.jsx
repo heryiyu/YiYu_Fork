@@ -26,8 +26,6 @@ const PATTERNS = [
     { id: 'stripes', label: '條紋' },
 ];
 
-
-
 export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     const { skins = [], createSkin, isAdmin } = useGame();
     const [isBatchMode, setIsBatchMode] = useState(false);
@@ -50,6 +48,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     const [newSkinUrl, setNewSkinUrl] = useState('');
     const [newSkinFile, setNewSkinFile] = useState(null); // RAW FILE State
     const [isCreatingSkin, setIsCreatingSkin] = useState(false);
+    const [uploadError, setUploadError] = useState(''); // Inline Warning State
 
     const [batchInput, setBatchInput] = useState('');
 
@@ -119,8 +118,6 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         } else {
             // Creation Mode (Simple): Generate RANDOM Visuals
             const randomVisual = generateVisuals();
-            // ... (Creation usually implies CSS sheep or we'd need to add skin logic here too if we allowed creation skins)
-            // Current simple creation is random CSS.
             finalVisualData = {
                 visual: { ...randomVisual, pattern: 'none' },
                 skinId: null
@@ -136,15 +133,16 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
     const handleCreateSkin = async () => {
         if (!newSkinName) {
-            alert("請輸入造型名稱！");
+            setUploadError("⚠️ 請輸入造型名稱！");
             return;
         }
         // Logic: specific file > specific url input
         const payload = newSkinFile || newSkinUrl;
         if (!payload) {
-            alert("請上傳圖片或輸入網址！");
+            setUploadError("⚠️ 請上傳圖片或輸入網址！");
             return;
         }
+        setUploadError(''); // Clear if passing
 
         if (createSkin) {
             const newSkin = await createSkin(newSkinName, payload);
@@ -157,7 +155,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                 setNewSkinFile(null);
             }
         } else {
-            alert("Skin creation not supported yet");
+            setUploadError("Skin creation not supported yet");
         }
     };
 
@@ -183,7 +181,6 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                     <button className="close-btn" onClick={onCancel}>✖</button>
                 </div>
 
-                {/* Preview: Only show when Editing (so user can see changes) */}
                 {isEditing && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
                         <div style={{
@@ -191,7 +188,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
                         }}>
                             <SheepVisual
-                                centered={true} // Use new centering prop
+                                centered={true}
                                 isStatic={true}
                                 scale={0.65}
                                 visual={{
@@ -219,7 +216,6 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
                     {(!isBatchMode || isEditing) ? (
                         <>
-                            {/* Visual Controls: ONLY Show if Editing */}
                             {isEditing && (
                                 <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px' }}>
                                     <div style={{ display: 'flex', borderBottom: '1px solid #ddd', gap: '10px', marginBottom: '10px' }}>
@@ -271,7 +267,6 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                             </div>
                                         </div>
                                     ) : (
-                                        // Skin Mode (Admin Only implicitly if button hidden, but safe to guard render too if needed, though button hiding is sufficient for UX)
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {!isCreatingSkin ? (
                                                 <>
@@ -291,7 +286,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                                             type="text"
                                                             placeholder="例: 香蕉羊"
                                                             value={newSkinName}
-                                                            onChange={e => setNewSkinName(e.target.value)}
+                                                            onChange={e => { setNewSkinName(e.target.value); if (uploadError) setUploadError(''); }}
                                                             style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9rem' }}
                                                         />
                                                     </div>
@@ -302,12 +297,11 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                                             type="text"
                                                             placeholder="https://..."
                                                             value={newSkinUrl}
-                                                            onChange={e => setNewSkinUrl(e.target.value)}
+                                                            onChange={e => { setNewSkinUrl(e.target.value); if (uploadError) setUploadError(''); }}
                                                             style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9rem' }}
                                                         />
                                                     </div>
 
-                                                    {/* File Upload (Storage) */}
                                                     <div style={{ marginBottom: '12px' }}>
                                                         <label style={{ display: 'block', fontSize: '0.85rem', color: '#555', marginBottom: '4px', fontWeight: '500' }}>或是上傳本地圖片:</label>
                                                         <input
@@ -317,16 +311,15 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                                                 const file = e.target.files[0];
                                                                 if (file) {
                                                                     if (file.size > 2 * 1024 * 1024) {
-                                                                        alert("圖片大小請小於 2MB");
+                                                                        setUploadError("❌ 圖片大小請小於 2MB");
                                                                         return;
                                                                     }
-                                                                    // Store RAW file for upload
                                                                     setNewSkinFile(file);
+                                                                    if (uploadError) setUploadError('');
 
-                                                                    // Preview immediately
                                                                     const reader = new FileReader();
                                                                     reader.onloadend = () => {
-                                                                        setNewSkinUrl(reader.result); // Helper for preview logic
+                                                                        setNewSkinUrl(reader.result);
                                                                     };
                                                                     reader.readAsDataURL(file);
                                                                 }
@@ -336,19 +329,24 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                                         <small style={{ color: '#999', fontSize: '0.75rem' }}>支援 JPG, PNG, GIF (上限 2MB)</small>
                                                     </div>
 
+                                                    {uploadError && (
+                                                        <div style={{ color: '#d32f2f', fontSize: '0.85rem', marginBottom: '8px', fontWeight: 'bold' }}>
+                                                            {uploadError}
+                                                        </div>
+                                                    )}
+
                                                     <div style={{ display: 'flex', gap: '8px' }}>
                                                         <button
                                                             type="button"
                                                             onClick={handleCreateSkin}
-                                                            disabled={!newSkinName || (!newSkinUrl && !newSkinFile)}
                                                             style={{
                                                                 flex: 1,
-                                                                background: (!newSkinName || (!newSkinUrl && !newSkinFile)) ? '#ccc' : '#4caf50',
+                                                                background: '#4caf50',
                                                                 color: 'white',
                                                                 border: 'none',
                                                                 padding: '8px',
                                                                 borderRadius: '5px',
-                                                                cursor: (!newSkinName || (!newSkinUrl && !newSkinFile)) ? 'not-allowed' : 'pointer',
+                                                                cursor: 'pointer',
                                                                 fontWeight: '500'
                                                             }}
                                                         >
@@ -377,7 +375,6 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                 </div>
                             )}
 
-                            {/* Name & Maturity (Creation Only) */}
                             {!isEditing && (
                                 <>
                                     <div>
@@ -412,7 +409,6 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                             )}
                         </>
                     ) : (
-                        // Batch Mode (Creation Only)
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>批量輸入</label>
                             <label style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>* 將會隨機分配每隻羊的外觀</label>
@@ -458,4 +454,3 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         </div>
     );
 };
-

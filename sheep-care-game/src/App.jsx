@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from './context/GameContext';
 import { Field } from './components/Field';
@@ -9,24 +8,27 @@ import { Login } from './components/Login';
 import { NicknameSetup } from './components/NicknameSetup';
 import { SheepList } from './components/SheepList';
 import { SettingsModal } from './components/SettingsModal';
+import { SkinManager } from './components/SkinManager';
 import './App.css';
 
 function App() {
-  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep } = useGame();
+  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   const [showList, setShowList] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSkinManager, setShowSkinManager] = useState(false);
+
   // Reset state when user changes
   useEffect(() => {
     setSelectedSheepId(null);
     setShowList(false);
     setShowGuide(false);
     setShowSettings(false);
+    setShowSkinManager(false);
   }, [currentUser]);
 
-  // 0. Global Loading (Prevent empty blue screen during sync)
-  // 0. Global Loading (Prevent empty blue screen during sync)
+  // 0. Global Loading
   if (isLoading) {
     return (
       <div style={{
@@ -50,23 +52,22 @@ function App() {
     );
   }
 
-  // 1. Not Logged In -> Show Login Screen
+  // 1. Not Logged In
   if (!currentUser) {
     return <Login />;
   }
 
-  // 1.5. Logged In but No Nickname -> Show Nickname Setup
+  // 1.5. No Nickname
   if (!nickname) {
     return <NicknameSetup />;
   }
 
-  // 2. Logged In -> Show Game
+  // 2. Main Game
   const handleSelectSheep = (sheep) => {
     setSelectedSheepId(sheep.id);
   };
 
   const handleSelectFromList = (sheep) => {
-    // setShowList(false); // Changed: Keep list open in background to preserve scroll positions
     setSelectedSheepId(sheep.id);
   };
 
@@ -104,13 +105,25 @@ function App() {
           📖
         </button>
 
-        {/* Settings (Moved from Controls) */}
+        {/* Settings */}
         <button
           className="hud-btn"
           onClick={() => setShowSettings(true)}
         >
           ⚙️
         </button>
+
+        {/* Admin Skin Manager Button */}
+        {isAdmin && (
+          <button
+            className="hud-btn"
+            style={{ background: '#e3f2fd', border: '1px solid #90caf9' }}
+            onClick={() => setShowSkinManager(true)}
+            title="皮膚管理"
+          >
+            🎨
+          </button>
+        )}
       </div>
 
       <Field onSelectSheep={handleSelectSheep} />
@@ -130,10 +143,7 @@ function App() {
       {selectedSheepId && (
         <DebugEditor
           selectedSheepId={selectedSheepId}
-          onClose={() => {
-            setSelectedSheepId(null);
-            // setShowList(true); // Changed: Don't force list open, rely on existing state
-          }}
+          onClose={() => setSelectedSheepId(null)}
         />
       )}
 
@@ -143,6 +153,10 @@ function App() {
 
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+
+      {showSkinManager && (
+        <SkinManager onClose={() => setShowSkinManager(false)} />
       )}
     </div>
   );

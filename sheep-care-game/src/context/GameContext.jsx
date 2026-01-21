@@ -50,10 +50,14 @@ export const GameProvider = ({ children }) => {
     // --- SKINS LOGIC ---
     const loadSkins = async (userId) => {
         try {
-            const { data, error } = await supabase
-                .from('sheep_skins')
-                .select('*')
-                .or(`is_public.eq.true,created_by.eq.${userId}`);
+            let query = supabase.from('sheep_skins').select('*');
+
+            // If Admin, load ALL skins. If normal user, load public OR own.
+            if (userId !== 'admin') {
+                query = query.or(`is_public.eq.true,created_by.eq.${userId}`);
+            }
+
+            const { data, error } = await query;
 
             if (error) {
                 // If table doesn't exist yet, just ignore
@@ -62,6 +66,25 @@ export const GameProvider = ({ children }) => {
             }
             if (data) setSkins(data);
         } catch (e) { console.error("Load Skins Error", e); }
+    };
+
+    const toggleSkinPublic = async (skinId, isPublic) => {
+        if (!lineId || !isAdmin) return;
+        try {
+            const { error } = await supabase
+                .from('sheep_skins')
+                .update({ is_public: isPublic })
+                .eq('id', skinId);
+
+            if (error) throw error;
+
+            // Update Local State
+            setSkins(prev => prev.map(s => s.id === skinId ? { ...s, is_public: isPublic } : s));
+            showMessage(isPublic ? "已設為公開 ✅" : "已設為私有 🔒");
+        } catch (e) {
+            console.error("Toggle Public Error", e);
+            showMessage("設定失敗 ❌");
+        }
     };
 
     const createSkin = async (name, fileOrUrl) => {
@@ -712,7 +735,7 @@ export const GameProvider = ({ children }) => {
             isLoading, // Exposed for App.jsx loading screen
             sheep, skins, inventory, message, weather, // skins exposed
             location, updateUserLocation,
-            adoptSheep, updateSheep, createSkin, // createSkin exposed
+            adoptSheep, updateSheep, createSkin, toggleSkinPublic, // createSkin exposed
             loginWithLine, logout,
             prayForSheep, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed
