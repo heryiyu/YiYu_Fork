@@ -818,7 +818,6 @@
   }
 }
 
-
 /* Modal Overlay - Full Screen with Dimming */
 .debug-editor-overlay {
   position: fixed;
@@ -834,4 +833,99 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
+}
+
+
+/* --- Profile HUD Widget (Revamped) --- */
+.profile-hud-widget {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+
+  /* Visuals */
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+
+  /* Layout: Inline-flex hugs content */
+  display: inline-flex;
+  flex-direction: column;
+  padding: 8px 12px;
+
+  /* Interaction */
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+
+  /* Default width: Auto (hugs text) */
+  width: auto;
+  max-width: 90vw;
+}
+
+.profile-hud-widget.expanded {
+  /* Key change: NO fixed width, NO min-width */
+  width: auto;
+  padding: 20px;
+  /* Comfort padding */
+  cursor: default;
+}
+
+/* Header Row */
+.profile-hud-widget .widget-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  /* Fill container */
+}
+
+/* Collapsed Info Row */
+.profile-hud-widget .widget-collapsed-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Expanded Content */
+.profile-hud-widget .widget-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+  /* Ensure children don't force width unexpectedly */
+  width: max-content;
+  min-width: 100%;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Base Icon */
+.profile-hud-widget .icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Text Styles */
+.profile-hud-widget .text-bold {
+  font-weight: bold;
+  color: #555;
+  white-space: nowrap;
+}
+
+.profile-hud-widget .text-label {
+  font-size: 0.9rem;
+  color: #666;
+  white-space: nowrap;
 }
