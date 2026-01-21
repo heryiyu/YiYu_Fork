@@ -49,6 +49,14 @@ export const SheepVisual = ({
 
     // Dynamic Sizing
     let transformString = `scale(${scale}) scaleX(${direction})`;
+
+    // Sick Effect: Lying Down (Rotate 90deg)
+    let rotateString = '';
+    if (status === 'sick') {
+        rotateString = 'rotate(90deg)';
+        transformString += ' translateY(10px)'; // Adjust position to look grounded
+    }
+
     // Note: If centered (relative), we don't need translate(-50%, -50%) because Flexbox handles position.
     // We just need to ensure origin is center for scaling.
 
@@ -56,7 +64,7 @@ export const SheepVisual = ({
         position: centered ? 'relative' : 'absolute',
         left: centered ? 'auto' : `${x}%`,
         top: centered ? 'auto' : `${y}%`,
-        transform: transformString,
+        transform: `${transformString} ${rotateString}`,
         transformOrigin: 'center center', // Ensure scaling happens from center
         zIndex: Math.floor(y), // Depth sorting
         '--sheep-color': color,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { SheepVisual } from './SheepVisual'; // Import for preview
+import { generateVisuals } from '../utils/gameLogic';
 
 const COLORS = [
     { name: '雪白', value: '#f5f5f5' },
@@ -25,7 +26,7 @@ const PATTERNS = [
     { id: 'stripes', label: '條紋' },
 ];
 
-import { generateVisuals } from '../utils/gameLogic';
+
 
 export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     const { skins = [], createSkin, isAdmin } = useGame();

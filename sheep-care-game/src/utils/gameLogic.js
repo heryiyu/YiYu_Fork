@@ -2,6 +2,16 @@
 // --- Constants ---
 const BOUNDS = { minX: 5, maxX: 95, minY: 0, maxY: 100 };
 const GRAVEYARD_RADIUS = 25; // Fan shape from Top-Left (x=0, y=100)
+
+// Configuration for game balance
+const SHEEP_CONFIG = {
+    SPEED: { NORMAL: 2.5, SICK: 0.8, PUSH_BACK: 4.0 },
+    CHANCE: {
+        STOP_NORMAL: 0.15, STOP_SICK: 0.4,
+        WALK_NORMAL: 0.15, WALK_SICK: 0.05
+    }
+};
+
 const SHEEP_MESSAGES = {
     login: [
         "你終於回來了！好開心！✨",
@@ -134,6 +144,31 @@ export const sanitizeSheep = (s) => {
  * Processes a single game tick for one sheep.
  * Handles movement, wall bouncing, health decay, and random messages.
  */
+/**
+ * Centralized logic for determining Status and Type based on Health.
+ * Used by Game Loop, Offline Calculation, and Debug Editor.
+ */
+export const calculateSheepState = (currentHealth, currentStatus) => {
+    let newHealth = Math.max(0, currentHealth);
+    let newStatus = currentStatus;
+
+    if (newHealth <= 0 && currentStatus !== 'dead') {
+        newStatus = 'dead';
+        newHealth = 0;
+    } else if (newHealth < 40 && currentStatus === 'healthy') {
+        // Deterministic Sick Rule
+        newStatus = 'sick';
+    } else if (newHealth >= 40 && currentStatus === 'sick') {
+        // Auto-recover
+        newStatus = 'healthy';
+    }
+
+    // Enforce Type
+    const newType = (newHealth >= 80) ? 'STRONG' : 'LAMB';
+
+    return { health: newHealth, status: newStatus, type: newType };
+};
+
 export const calculateTick = (s) => {
     // Allow dead sheep to process message logic, but not movement/health
     // if (s.status === 'dead') return s; // REMOVED to allow messages
@@ -162,29 +197,36 @@ export const calculateTick = (s) => {
             // Do not update x, y, angle
         }
     } else if (state === 'walking') {
-        if (Math.random() < 0.15) state = 'idle'; // Increased chance to stop (was 0.05)
+        // Stop Chance
+        let stopChance = SHEEP_CONFIG.CHANCE.STOP_NORMAL;
+        if (s.status === 'sick') stopChance = SHEEP_CONFIG.CHANCE.STOP_SICK;
+
+        if (Math.random() < stopChance) state = 'idle';
         else {
             // Robust initialization (Double check even if sterilized on load)
             if (typeof y !== 'number' || isNaN(y)) y = Math.random() * 50;
             if (typeof angle !== 'number' || isNaN(angle)) angle = Math.random() * Math.PI * 2;
             if (typeof x !== 'number' || isNaN(x)) x = Math.random() * 90 + 5;
 
+            // Speed
+            let speed = SHEEP_CONFIG.SPEED.NORMAL;
+            if (s.status === 'sick') speed = SHEEP_CONFIG.SPEED.SICK;
+
             // Random turn
-            angle += (Math.random() - 0.5) * 1.0; // Sharper turns (was 0.5)
-            x += Math.cos(angle) * 2.5; // Slower steps (was 4.0)
-            y += Math.sin(angle) * 2.5;
+            angle += (Math.random() - 0.5) * 1.0;
+            x += Math.cos(angle) * speed;
+            y += Math.sin(angle) * speed;
 
             // Graveyard Collision Check (Fan Shape) with 20 unit buffer
             const distToCorner = Math.sqrt(x * x + (100 - y) * (100 - y));
             if (distToCorner < GRAVEYARD_RADIUS + 20) {
                 // Bounce back (Normal vector is direction from corner to sheep)
                 // Simply reverse for now or push away from corner
-                const angleFromCorner = Math.atan2(100 - y, 0 - x); // Vector to corner
                 // We want to go opposite
                 angle = Math.atan2(y - 100, x - 0);
 
-                x += Math.cos(angle) * 4.0; // Slower push out (was 6.0)
-                y += Math.sin(angle) * 4.0;
+                x += Math.cos(angle) * SHEEP_CONFIG.SPEED.PUSH_BACK;
+                y += Math.sin(angle) * SHEEP_CONFIG.SPEED.PUSH_BACK;
             }
 
             // Bounds Check
@@ -198,7 +240,11 @@ export const calculateTick = (s) => {
             }
         }
     } else {
-        if (Math.random() < 0.15) state = 'walking'; // Increased chance to walk (was 0.05)
+        // Start Walk Chance
+        let walkChance = SHEEP_CONFIG.CHANCE.WALK_NORMAL;
+        if (s.status === 'sick') walkChance = SHEEP_CONFIG.CHANCE.WALK_SICK;
+
+        if (Math.random() < walkChance) state = 'walking';
     }
     direction = Math.cos(angle) > 0 ? 1 : -1;
 
@@ -215,25 +261,14 @@ export const calculateTick = (s) => {
     if (s.status === 'sick') decayRate = 0.000115;
     else if (isProtected) decayRate = 0.000035; // Protected
     else if (s.status === 'injured') decayRate = 0.0001;
-    // Don't decay if dead
-    let newHealth = s.status === 'dead' ? 0 : Math.max(0, s.health - decayRate);
-    let newStatus = s.status;
-    let newCare = s.careLevel; // Kept for backend compatibility but not used for evolution
 
-    // Enforce Type based on Health
-    // < 80: LAMB (Weak or Healthy), >= 80: STRONG
-    let newType = (newHealth >= 80) ? 'STRONG' : 'LAMB';
+    // Decay
+    let rawHealth = s.status === 'dead' ? 0 : (s.health - decayRate);
 
-    if (newHealth <= 0 && s.status !== 'dead') {
-        newStatus = 'dead';
-        newHealth = 0;
-    } else if (newHealth < 40 && s.status === 'healthy') {
-        // Always become sick when health drops below 40%
-        newStatus = 'sick';
-    } else if (newHealth >= 40 && s.status === 'sick') {
-        // Auto-recover from sickness if health is restored (e.g. by Admin or other means)
-        newStatus = 'healthy';
-    }
+    // Use Helper
+    const { health: newHealth, status: newStatus, type: newType } = calculateSheepState(rawHealth, s.status);
+
+    let newCare = s.careLevel;
 
     // 3. Message Logic
     let timer = messageTimer > 0 ? messageTimer - 0.5 : 0; // Decrement by 0.5s (tick is 0.5s)

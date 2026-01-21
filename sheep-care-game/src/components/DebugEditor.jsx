@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { calculateSheepState } from '../utils/gameLogic';
 
 export const DebugEditor = ({ selectedSheepId, onClose }) => {
     const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin } = useGame();
@@ -206,9 +207,8 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                                         value={target.health}
                                         onChange={(e) => {
                                             const newHealth = Number(e.target.value);
-                                            const newType = newHealth >= 80 ? 'STRONG' : 'LAMB';
-                                            const newStatus = newHealth < 40 ? 'sick' : (target.status === 'sick' && newHealth >= 40 ? 'healthy' : target.status);
-                                            updateSheep(target.id, { health: newHealth, type: newType, status: newStatus });
+                                            const { health, status, type } = calculateSheepState(newHealth, target.status);
+                                            updateSheep(target.id, { health, type, status });
                                         }}
                                         style={{ flex: 1, cursor: 'pointer' }}
                                     />

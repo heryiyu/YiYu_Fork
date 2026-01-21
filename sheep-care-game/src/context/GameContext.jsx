@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { SHEEP_TYPES } from '../data/sheepData';
-import { sanitizeSheep, calculateTick, generateVisuals, getSheepMessage } from '../utils/gameLogic';
+import { sanitizeSheep, calculateTick, generateVisuals, getSheepMessage, calculateSheepState } from '../utils/gameLogic';
 
 const GameContext = createContext();
 
@@ -528,14 +528,13 @@ export const GameProvider = ({ children }) => {
 
                 const decayAmount = diffHours * ratePerHour;
 
-                let newHealth = Math.max(0, s.health - decayAmount);
-                let newStatus = s.status;
-                let newType = s.type;
-                let newCare = s.careLevel;
+                // Decay
+                let rawHealth = s.status === 'dead' ? 0 : (s.health - decayAmount);
 
-                if (newHealth <= 0) {
-                    newStatus = 'dead'; newHealth = 0;
-                } else if (newHealth < 50 && s.status === 'healthy' && Math.random() < 0.5) newStatus = 'sick';
+                // Use Helper for consistent state logic
+                const { health: newHealth, status: newStatus, type: newType } = calculateSheepState(rawHealth, s.status);
+
+                let newCare = s.careLevel;
 
                 return sanitizeSheep({ ...s, health: newHealth, status: newStatus, type: newType, careLevel: newCare });
             });
@@ -679,14 +678,15 @@ export const GameProvider = ({ children }) => {
                 showMessage("這隻小羊今天已經接受過 3 次禱告了，讓牠休息一下吧！🙏");
                 return s;
             }
-            const newHealth = Math.min(100, s.health + 6);
-            const newStatus = (s.status !== 'healthy') ? 'healthy' : s.status;
+            const rawNewHealth = Math.min(100, s.health + 6);
+
+            // Use Centralized Helper to update Status & Type based on new Health
+            const { health, status, type } = calculateSheepState(rawNewHealth, s.status);
+
             const newCare = s.careLevel + 10;
-            // Type is handled in calculateTick based on health
-            let newType = s.type;
 
             return {
-                ...s, status: newStatus, health: newHealth, type: newType, careLevel: newCare,
+                ...s, status, health, type, careLevel: newCare,
                 lastPrayedDate: today, prayedCount: count + 1
             };
         }));
