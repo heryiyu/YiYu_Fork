@@ -45,6 +45,24 @@ export const GameProvider = ({ children }) => {
 
     const [skins, setSkins] = useState([]); // New Skins State
 
+    // --- SETTINGS (Device Specific) ---
+    const [settings, setSettings] = useState(() => {
+        try {
+            const saved = localStorage.getItem('sheep_game_settings');
+            return saved ? JSON.parse(saved) : { maxVisibleSheep: 15 };
+        } catch {
+            return { maxVisibleSheep: 15 };
+        }
+    });
+
+    const updateSetting = (key, value) => {
+        setSettings(prev => {
+            const next = { ...prev, [key]: value };
+            localStorage.setItem('sheep_game_settings', JSON.stringify(next));
+            return next;
+        });
+    };
+
     // ... (Existing useEffects)
 
     // --- SKINS LOGIC ---
@@ -146,24 +164,18 @@ export const GameProvider = ({ children }) => {
         showMessage(`設定羊群中... (Hi, ${displayName})`);
 
         try {
-            // 0. Load Skins
-            await loadSkins(userId);
+            // PARALLEL LOADING OPTIMIZATION
+            // Start all requests simultaneously instead of waiting sequentially
+            const [_, userResult, sheepResult] = await Promise.all([
+                loadSkins(userId),
+                supabase.from('users').select('*').eq('id', userId).single(),
+                supabase.from('sheep').select('*, skin_data:sheep_skins(*)').eq('owner_id', userId)
+            ]);
 
-            // 1. Fetch User (Settings, Inventory)
-            const { data: existingUser, error: fetchError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single();
+            const { data: existingUser, error: fetchError } = userResult;
+            const { data: sheepData, error: sheepError } = sheepResult;
 
             if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
-
-            // 2. Fetch Sheep (Relational Table) - JOIN with Skins
-            const { data: sheepData, error: sheepError } = await supabase
-                .from('sheep')
-                .select('*, skin_data:sheep_skins(*)')
-                .eq('owner_id', userId);
-
             if (sheepError) throw sheepError;
 
             if (existingUser) {
@@ -742,7 +754,8 @@ export const GameProvider = ({ children }) => {
             prayForSheep, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed
             notificationEnabled, toggleNotification, // Exposed
-            updateNickname // Exposed
+            updateNickname, // Exposed
+            settings, updateSetting // Exposed Settings
         }}>
             {children}
         </GameContext.Provider>

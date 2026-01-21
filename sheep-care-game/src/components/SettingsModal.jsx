@@ -1,99 +1,74 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useGame } from '../context/GameContext';
 
 export const SettingsModal = ({ onClose }) => {
-    const { currentUser, location, updateUserLocation, saveToCloud, nickname, updateNickname } = useGame();
-    const [cityInput, setCityInput] = useState(location?.name || '');
-    const [nickInput, setNickInput] = useState(nickname || '');
-    const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
+    const { settings, updateSetting } = useGame();
 
-    const handleUpdateLocation = async () => {
-        if (!cityInput.trim()) return;
-        setIsLoading(true);
-        await updateUserLocation(cityInput);
-        setIsLoading(false);
-    };
-
-    const handleUpdateNickname = () => {
-        if (!nickInput.trim()) return;
-        updateNickname(nickInput.trim());
-        alert("暱稱已更新！");
+    const handleChange = (e) => {
+        updateSetting('maxVisibleSheep', parseInt(e.target.value));
     };
 
     return (
         <div className="debug-editor-overlay" onClick={onClose}>
-            <div className="debug-editor simple-editor" onClick={(e) => e.stopPropagation()} style={{ width: '350px' }}>
-                <div className="editor-header">
-                    <h3>⚙️ 設定</h3>
-                    <button className="close-btn" onClick={onClose}>✖</button>
+            <div
+                className="simple-editor"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    width: '320px',
+                    padding: '20px',
+                    borderRadius: '15px',
+                    background: '#fff',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                }}
+            >
+                <div className="editor-header" style={{ marginBottom: '20px', textAlign: 'center' }}>
+                    <h3>⚙️ 顯示設定</h3>
                 </div>
 
-                <div className="editor-form">
-                    <div className="form-group">
-                        <label>👤 LINE 帳號 (無法更改)</label>
-                        <input type="text" value={currentUser || '未登入'} disabled style={{ background: '#f5f5f5', color: '#888' }} />
+                <div style={{ marginBottom: '25px' }}>
+                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: '#555' }}>
+                        畫面顯示小羊數量
+                        <span style={{ float: 'right', color: '#2196f3' }}>
+                            {settings.maxVisibleSheep} 隻
+                        </span>
+                    </label>
+
+                    <input
+                        type="range"
+                        min="10"
+                        max="50"
+                        step="5"
+                        value={settings.maxVisibleSheep}
+                        onChange={handleChange}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                    />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>
+                        <span>10 (效能)</span>
+                        <span>50 (豐富)</span>
                     </div>
 
-                    <div className="form-group">
-                        <label>🏷️ 您的暱稱</label>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            <input
-                                type="text"
-                                value={nickInput}
-                                onChange={(e) => setNickInput(e.target.value)}
-                                placeholder="設定一個好聽的名字"
-                            />
-                            <button
-                                onClick={handleUpdateNickname}
-                                style={{
-                                    background: '#4caf50', color: 'white', border: 'none', borderRadius: '4px',
-                                    padding: '0 10px', cursor: 'pointer'
-                                }}
-                            >
-                                修改
-                            </button>
-                        </div>
-                    </div>
-
-                    <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
-
-                    <div className="form-group">
-                        <label>📍 所在地城市 (天氣資料)</label>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            <input
-                                type="text"
-                                value={cityInput}
-                                onChange={(e) => setCityInput(e.target.value)}
-                                placeholder="輸入城市名稱 (例如: Taipei, Tokyo)"
-                            />
-                            <button
-                                onClick={handleUpdateLocation}
-                                disabled={isLoading}
-                                style={{
-                                    background: '#2196f3', color: 'white', border: 'none', borderRadius: '4px',
-                                    padding: '0 10px', cursor: isLoading ? 'wait' : 'pointer'
-                                }}
-                            >
-                                {isLoading ? '⏳' : '更新'}
-                            </button>
-                        </div>
-                        <p style={{ fontSize: '0.7rem', color: '#999', margin: '5px 0' }}>目前位置: {location?.name} ({location?.lat?.toFixed(2)}, {location?.lon?.toFixed(2)})</p>
-                    </div>
-
-                    <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
-
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button
-                            onClick={async () => { await saveToCloud(); alert("已手動備份至雲端！"); }}
-                            style={{ flex: 1, padding: '10px', background: '#ffa000', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                        >
-                            ☁️ 手動備份
-                        </button>
-                    </div>
-
+                    <p style={{ fontSize: '0.8rem', color: '#777', marginTop: '10px', background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
+                        💡 當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
+                    </p>
                 </div>
+
+                <button
+                    onClick={onClose}
+                    style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: '#2196f3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    確定
+                </button>
             </div>
         </div>
     );

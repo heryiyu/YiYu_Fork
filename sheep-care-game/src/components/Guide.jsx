@@ -3,7 +3,7 @@ import React from 'react';
 
 export const Guide = ({ onClose }) => {
     return (
-        <div className="debug-editor-overlay">
+        <div className="debug-editor-overlay" onClick={onClose}>
             <div className="simple-editor" style={{ width: '400px', textAlign: 'left' }}>
                 <div className="editor-header">
                     <h3>📖 牧羊人手冊</h3>

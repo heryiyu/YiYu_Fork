@@ -9,6 +9,7 @@ import { NicknameSetup } from './components/NicknameSetup';
 import { SheepList } from './components/SheepList';
 import { SettingsModal } from './components/SettingsModal';
 import { SkinManager } from './components/SkinManager';
+import { UserProfile } from './components/UserProfile';
 import './App.css';
 
 function App() {
@@ -75,15 +76,8 @@ function App() {
     <div className="game-container" key={currentUser}>
       {message && <div key={message} className="toast-message">{message}</div>}
 
-      {/* --- HUD: Top Left User Info --- */}
-      <div className="hud-left">
-        <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#555' }}>
-          👤 {nickname || currentUser}
-        </div>
-        <div style={{ fontSize: '0.9rem', color: '#777', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          🐑 {sheep?.length || 0} 隻
-        </div>
-      </div>
+      {/* --- Unified Top Left Widget --- */}
+      <UserProfile />
 
       {/* --- HUD: Top Right System Buttons --- */}
       <div className="hud-right">
@@ -105,7 +99,7 @@ function App() {
           📖
         </button>
 
-        {/* Settings */}
+        {/* Display Settings (Sheep Count) */}
         <button
           className="hud-btn"
           onClick={() => setShowSettings(true)}

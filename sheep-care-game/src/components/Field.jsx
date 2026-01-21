@@ -1,10 +1,61 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { Sheep } from './Sheep';
 
 export const Field = ({ onSelectSheep }) => {
-    const { sheep, prayForSheep, message, weather } = useGame();
+    const { sheep, prayForSheep, message, weather, settings } = useGame();
+
+    // Rotation Logic (Visible Subset)
+    const [visibleIds, setVisibleIds] = useState(new Set());
+
+    // 1. Initial & Periodic Rotation
+    useEffect(() => {
+        const updateVisible = () => {
+            if (!sheep || sheep.length === 0) return;
+
+            const max = settings?.maxVisibleSheep || 15;
+
+            // If total sheep is within limit, show all (no IDs needed, just special marker or handled below)
+            if (sheep.length <= max) {
+                setVisibleIds(new Set(sheep.map(s => s.id)));
+                return;
+            }
+
+            // Otherwise, pick random IDs
+            const allIds = sheep.map(s => s.id);
+            // Fisher-Yates Shuffle for IDs
+            for (let i = allIds.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allIds[i], allIds[j]] = [allIds[j], allIds[i]];
+            }
+
+            const selected = new Set(allIds.slice(0, max));
+            setVisibleIds(selected);
+        };
+
+        // Run immediately when sheep list length significantly changes (e.g. initial load or massive add)
+        // Actually, just run if visibleIds is empty.
+        // We want to re-shuffle every 60s.
+        updateVisible();
+        const interval = setInterval(updateVisible, 60000); // 60s Rotation
+
+        return () => clearInterval(interval);
+    }, [settings?.maxVisibleSheep, sheep?.length]); // Re-run if limit changes or total count changes
+
+    // 2. Filter Logic
+    // We want the LATEST sheep objects (with updated x/y), but only those whose IDs are in visibleIds.
+    // However, if we just added a new sheep, it might not be in visibleIds yet until next 60s or length change triggers update.
+    // The dependency [sheep?.length] handles new adds so they get a chance to appear immediately.
+
+    const visibleSheep = useMemo(() => {
+        if (!settings) return sheep;
+        if (sheep.length <= (settings.maxVisibleSheep || 15)) return sheep;
+
+        // Filter by the cached random IDs
+        return sheep.filter(s => visibleIds.has(s.id));
+    }, [sheep, visibleIds, settings]);
+
 
     // Generate static decorations once
     const decorations = useMemo(() => {
@@ -159,7 +210,7 @@ export const Field = ({ onSelectSheep }) => {
                     );
                 })}
 
-                {(sheep || []).map(s => (
+                {(visibleSheep || []).map(s => (
                     <Sheep
                         key={s.id}
                         sheep={s}
@@ -167,6 +218,18 @@ export const Field = ({ onSelectSheep }) => {
                         onSelect={onSelectSheep}
                     />
                 ))}
+
+                {/* Show total count if hidden */}
+                {sheep.length > visibleSheep.length && (
+                    <div style={{
+                        position: 'absolute', top: '10px', right: '10px',
+                        background: 'rgba(0,0,0,0.5)', color: 'white',
+                        padding: '4px 8px', borderRadius: '10px',
+                        fontSize: '0.8rem', pointerEvents: 'none', zIndex: 10
+                    }}>
+                        👁️ 顯示: {visibleSheep.length} / {sheep.length}
+                    </div>
+                )}
 
                 {sheep.length === 0 && (
                     <div className="empty-state">

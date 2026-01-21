@@ -45,7 +45,7 @@ export const Controls = ({ onOpenList }) => {
                     style={{
                         background: '#66bb6a', /* Green */
                         color: 'white',
-                        minWidth: '160px',
+                        minWidth: '160px', /* Shrink slightly to fit 3 icons if needed */
                         height: '60px',
                         borderRadius: '30px',
                         fontSize: '1.2rem',
@@ -53,7 +53,7 @@ export const Controls = ({ onOpenList }) => {
                         boxShadow: '0 4px 0 #388e3c'
                     }}
                 >
-                    <span style={{ fontSize: '1.5rem' }}>➕</span> 新增小羊
+                    <span style={{ fontSize: '1.5rem' }}>➕</span> 新增
                 </button>
 
             </div>
