@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { SHEEP_TYPES } from '../data/sheepData';
 import { sanitizeSheep, calculateTick, generateVisuals, getSheepMessage, calculateSheepState } from '../utils/gameLogic';
+import { initDB, getData, saveData, clearData } from '../utils/db';
 
 const GameContext = createContext();
 
@@ -158,14 +159,26 @@ export const GameProvider = ({ children }) => {
         setIsLoading(true);
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
-        localStorage.setItem('sheep_current_session', userId);
-        try { sessionStorage.clear(); } catch (e) { }
+        setCurrentUser(displayName);
+
+        // 1. FAST LOAD: Try IndexedDB First
+        let localTimestamp = 0;
+        try {
+            const localData = await getData(userId);
+            if (localData) {
+                console.log("✅ IndexedDB Loaded Fast");
+                applyLoadedData(localData, userId);
+                setIsDataLoaded(true);
+                localTimestamp = localData.lastSave || 0;
+                setNickname(localData.nickname || null);
+            }
+        } catch (e) { console.error("IDB Load Error", e); }
 
         showMessage(`設定羊群中... (Hi, ${displayName})`);
 
         try {
-            // PARALLEL LOADING OPTIMIZATION
-            // Start all requests simultaneously instead of waiting sequentially
+            // 2. BACKGROUND SYNC
+            // Start all requests simultaneously
             const [_, userResult, sheepResult] = await Promise.all([
                 loadSkins(userId),
                 supabase.from('users').select('*').eq('id', userId).single(),
@@ -179,92 +192,91 @@ export const GameProvider = ({ children }) => {
             if (sheepError) throw sheepError;
 
             if (existingUser) {
-                if (existingUser.nickname) setNickname(existingUser.nickname);
-                else setNickname(null);
+                // Conflict Resolution: Timestamp Check
+                const cloudData = existingUser.game_data || {};
+                const cloudTimestamp = cloudData.lastSave || 0;
 
-                let finalSheep = [];
-
-                // MIGRATION LOGIC (Legacy JSON -> Relational)
-                if (existingUser.game_data?.sheep?.length > 0 && (!sheepData || sheepData.length === 0)) {
-                    console.log("Migrating Legacy Cloud JSON...");
-                    const oldSheep = existingUser.game_data.sheep;
-                    const rowsToInsert = oldSheep.map(s => ({
-                        owner_id: userId,
-                        name: s.name,
-                        status: s.status,
-                        health: s.health,
-                        care_level: s.careLevel || 0,
-                        spiritual_maturity: s.spiritualMaturity,
-                        visual_data: { x: s.x, y: s.y, angle: s.angle, visual: s.visual, type: s.type },
-                        prayed_count: s.prayedCount || 0,
-                        resurrection_progress: s.resurrectionProgress || 0,
-                        last_prayed_date: s.lastPrayedDate,
-                        note: s.note
-                    }));
-
-                    if (rowsToInsert.length > 0) {
-                        const { data: migrated, error: migErr } = await supabase.from('sheep').insert(rowsToInsert).select();
-                        if (!migErr) finalSheep = migrated;
+                // Helper for Hydration
+                const hydrateCloudSheep = (jsonSheep, relationalSheep) => {
+                    // 1. If we have Relational Data, Use it (Truth)
+                    if (relationalSheep && relationalSheep.length > 0) {
+                        return relationalSheep.map(row => {
+                            const visuals = row.visual_data || {};
+                            const skinData = row.skin_data;
+                            if (skinData) { visuals.skinData = skinData; visuals.skinId = skinData.id; }
+                            return {
+                                id: row.id, name: row.name, status: row.status,
+                                health: parseFloat(row.health), careLevel: parseFloat(row.care_level),
+                                spiritualMaturity: row.spiritual_maturity,
+                                x: visuals.x, y: visuals.y, angle: visuals.angle,
+                                visual: visuals.visual || {}, type: visuals.type || 'LAMB',
+                                skinId: row.skin_id, prayedCount: row.prayed_count,
+                                resurrectionProgress: row.resurrection_progress,
+                                lastPrayedDate: row.last_prayed_date, note: row.note,
+                                state: 'idle', direction: 1, message: null
+                            };
+                        });
                     }
-                } else {
-                    finalSheep = sheepData || [];
+                    // 2. Fallback to Legacy JSON if Relational is empty
+                    if (jsonSheep && jsonSheep.length > 0) {
+                        console.log("Using Legacy JSON Source...");
+                        return jsonSheep;
+                    }
+                    return [];
+                };
+
+                // Case A: Cloud is Newer (by > 1 min) -> OVERWRITE LOCAL
+                if (cloudTimestamp > localTimestamp + 60000) {
+                    showMessage("☁️ 發現雲端有新進度，同步中...");
+                    const finalSheep = hydrateCloudSheep(cloudData.sheep, sheepData);
+                    applyLoadedData({ ...cloudData, sheep: finalSheep }, userId);
+                    if (existingUser.nickname) setNickname(existingUser.nickname);
+                    setIsDataLoaded(true);
                 }
+                // Case B: Local is Newer -> UPLOAD TO CLOUD (Background)
+                else if (localTimestamp > cloudTimestamp) {
+                    console.log("Local is newer, pushing to cloud...");
+                    saveToCloud();
+                }
+                // Case C: No Local Data at all -> Load Cloud
+                else if (!isDataLoaded) {
+                    const finalSheep = hydrateCloudSheep(cloudData.sheep, sheepData);
 
-                // Hydrate Sheep
-                const hydratedSheep = finalSheep.map(row => {
-                    const visuals = row.visual_data || {};
-                    const skinData = row.skin_data;
-                    if (skinData) {
-                        visuals.skinData = skinData;
-                        visuals.skinId = skinData.id;
+                    // Migration Check (One-off upsert if we just loaded purely from JSON)
+                    if (cloudData.sheep?.length > 0 && (!sheepData || sheepData.length === 0)) {
+                        // We just loaded from JSON, let's trigger a save to migrate to Relational
+                        // But we can't save right away as 'sheep' state isn't set yet.
+                        // applyLoadedData sets 'sheep'.
+                        // We can flag it? Or just let next auto-save handle it?
+                        // Next auto-save will write to relational.
+                        console.log("Migrating Legacy JSON on next save...");
                     }
-                    return {
-                        id: row.id,
-                        name: row.name,
-                        status: row.status,
-                        health: parseFloat(row.health),
-                        careLevel: parseFloat(row.care_level),
-                        spiritualMaturity: row.spiritual_maturity,
-                        x: visuals.x, y: visuals.y, angle: visuals.angle,
-                        visual: visuals.visual || {},
-                        type: visuals.type || (parseFloat(row.health) >= 80 ? 'STRONG' : 'LAMB'),
-                        skinId: row.skin_id,
-                        prayedCount: row.prayed_count,
-                        resurrectionProgress: row.resurrection_progress,
-                        lastPrayedDate: row.last_prayed_date,
-                        note: row.note,
-                        state: 'idle', direction: 1, message: null, messageTimer: 0
-                    };
-                });
 
-                applyLoadedData({ sheep: hydratedSheep, inventory: existingUser.game_data?.inventory, settings: existingUser.game_data?.settings }, userId);
-                setIsDataLoaded(true);
-                setCurrentUser(displayName);
-                showMessage(`歡迎回來，${existingUser.nickname || displayName}! 👋`);
+                    applyLoadedData({ ...cloudData, sheep: finalSheep }, userId);
+
+                    if (existingUser.nickname) setNickname(existingUser.nickname);
+                    setIsDataLoaded(true);
+                    showMessage(`歡迎回來，${existingUser.nickname || displayName}! 👋`);
+                }
 
             } else {
                 // New User Logic
                 const { error: insertError } = await supabase
                     .from('users')
                     .insert([{
-                        id: userId,
-                        name: displayName,
-                        avatar: pictureUrl,
-                        nickname: null,
-                        game_data: {}
+                        id: userId, name: displayName, avatar: pictureUrl, nickname: null, game_data: {}
                     }]);
                 if (insertError) throw insertError;
 
                 showMessage("歡迎新加入的牧羊人！ 🎉");
                 setSheep([]); setInventory([]);
                 setNickname(null);
-                localStorage.removeItem(`sheep_game_data_${userId}`);
+                await clearData(userId); // Ensure clean slate
                 setIsDataLoaded(true);
-                setCurrentUser(displayName);
             }
         } catch (e) {
             console.error(e);
-            setIsLoading(false);
+            showMessage("同步失敗 (顯示本地存檔)"); // Fallback to local
         } finally {
             setIsLoading(false);
         }
@@ -274,6 +286,7 @@ export const GameProvider = ({ children }) => {
     const saveToCloud = async (overrides = {}) => {
         if (!lineId || !isDataLoaded || isLoading) return;
 
+        // Prepare Data
         const userData = {
             inventory: overrides.inventory || inventory,
             settings: { notify: overrides.notificationEnabled ?? notificationEnabled },
@@ -282,6 +295,20 @@ export const GameProvider = ({ children }) => {
         const nicknameToSave = overrides.nickname !== undefined ? overrides.nickname : nickname;
 
         const currentSheep = overrides.sheep || sheep;
+
+        // 1. SAVE LOCAL (IndexedDB) - Guaranteed Priority
+        const fullLocalData = {
+            sheep: currentSheep,
+            inventory: userData.inventory,
+            settings: userData.settings,
+            lastSave: userData.lastSave,
+            nickname: nicknameToSave,
+            name: currentUser
+        };
+        await saveData(lineId, fullLocalData);
+
+        // 2. SAVE CLOUD (Supabase)
+        // ... (Existing Logic)
         const persistentSheep = currentSheep.filter(s => s.id && !s.id.toString().startsWith('temp_'));
 
         const sheepRows = persistentSheep.map(s => ({
@@ -306,15 +333,6 @@ export const GameProvider = ({ children }) => {
         }));
 
         const rowsToUpsert = sheepRows.filter(r => validUUID.test(r.id));
-
-        localStorage.setItem(`sheep_game_data_${lineId}`, JSON.stringify({
-            sheep: currentSheep,
-            inventory: userData.inventory,
-            settings: userData.settings,
-            lastSave: Date.now(),
-            nickname: nicknameToSave,
-            name: currentUser
-        }));
 
         try {
             await supabase.from('users').upsert({
@@ -521,11 +539,10 @@ export const GameProvider = ({ children }) => {
         }
         setCurrentUser(null);
         setNickname(null);
+        if (lineId) await clearData(lineId); // Clear IDB
         setLineId(null);
-        localStorage.removeItem('sheep_current_session');
-        if (lineId) localStorage.removeItem(`sheep_game_data_${lineId}`);
         setSheep([]); setInventory([]);
-        setIsDataLoaded(false); // Reset
+        setIsDataLoaded(false);
         window.location.reload();
     };
 
@@ -619,36 +636,52 @@ export const GameProvider = ({ children }) => {
         }
     };
 
-    // Auto-Save Logic (Visibility Change + BeforeUnload)
-    // Auto-Save Logic (Visibility Change + BeforeUnload) + Clean Exit
+    // Helper Effect to keep Refs updated for AutoSave (Prevents Stale Closure in Interval)
+    const stateRef = React.useRef({ sheep, inventory, settings });
+    useEffect(() => {
+        stateRef.current = { sheep, inventory, settings };
+    }, [sheep, inventory, settings]);
+
+    // Auto-Save Logic (Visibility Change + Periodic)
     useEffect(() => {
         if (!lineId || !isDataLoaded) return;
 
         const handleUnload = () => {
-            // User Request: Clear cache on exit to enforce "Cloud Only" next session
+            // User Request: Clear cache on exit
             localStorage.removeItem('sheep_current_session');
             if (lineId) localStorage.removeItem(`sheep_game_data_${lineId}`);
         };
 
-        const handleSave = () => { saveToCloud(); };
+        const handleSave = () => {
+            // Use Ref for latest state
+            saveToCloud({
+                sheep: stateRef.current.sheep,
+                inventory: stateRef.current.inventory,
+                settings: stateRef.current.settings
+            });
+        };
 
-        // Save on Visibility Hidden (Mobile Switch App)
         const handleVisibility = () => {
             if (document.visibilityState === 'hidden') handleSave();
         };
 
-        window.addEventListener('beforeunload', handleUnload); // Clear on Close
-        document.addEventListener('visibilitychange', handleVisibility); // Save on Hide
+        window.addEventListener('beforeunload', handleUnload);
+        document.addEventListener('visibilitychange', handleVisibility);
 
-        // Debounced Save
-        const timeoutId = setTimeout(() => { saveToCloud(); }, 2000);
+        // Periodic Save (Every 60s)
+        const intervalId = setInterval(() => {
+            console.log("⏱️ Auto-saving...");
+            handleSave();
+        }, 60000);
 
         return () => {
-            clearTimeout(timeoutId);
+            clearInterval(intervalId);
             window.removeEventListener('beforeunload', handleUnload);
             document.removeEventListener('visibilitychange', handleVisibility);
         };
-    }, [sheep, inventory, lineId, isDataLoaded]);
+    }, [lineId, isDataLoaded]);
+
+
 
     // Game Loop
     useEffect(() => {
