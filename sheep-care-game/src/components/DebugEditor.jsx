@@ -156,7 +156,7 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                         }}>
                             <div>
                                 {getStatusText(target.status, target.health)}
-                                {!isDead && <span style={{ marginLeft: '10px' }}>HP: {Math.round(target.health)}%</span>}
+                                {!isDead && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
                                 {!isDead && <span style={{ marginLeft: '10px', color: '#ff9800' }}>❤️ 關愛: {target.careLevel || 0}</span>}
                             </div>
 
@@ -187,7 +187,7 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
                         </div>
                         {isAdmin && !isDead && (
                             <div style={{ marginTop: '10px', padding: '10px', background: '#e0f7fa', borderRadius: '8px', border: '1px dashed #00bcd4' }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#006064' }}>🔧 管理員調整: {Math.round(target.health)}%</label>
+                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#006064' }}>🔧 管理員調整: {Math.ceil(target.health)}%</label>
                                 <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                                     <input
                                         type="range"

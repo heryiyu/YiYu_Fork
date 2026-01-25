@@ -64,6 +64,10 @@ export const GameProvider = ({ children }) => {
         });
     };
 
+    // --- Sync State Refs ---
+    const lastSaveTimeRef = React.useRef(0); // Tracks the timestamp of current data
+    const lastSyncCheckRef = React.useRef(0); // For debouncing visibility checks
+
     // ... (Existing useEffects)
 
     // --- SKINS LOGIC ---
@@ -225,8 +229,11 @@ export const GameProvider = ({ children }) => {
                     return [];
                 };
 
-                // Case A: Cloud is Newer (by > 1 min) -> OVERWRITE LOCAL
-                if (cloudTimestamp > localTimestamp + 60000) {
+                // Case A: Cloud is Newer (by > 1s) or Future (Time Skew Protection) -> OVERWRITE LOCAL
+                if (cloudTimestamp > localTimestamp + 1000) {
+                    // Future Protection: If cloud is > 1s ahead, it's newer.
+                    // Even if our clock is behind, we trust cloud timestamp if it claims to be newer than what we have.
+                    console.log(`☁️ Cloud (${cloudTimestamp}) is newer than Local (${localTimestamp}). Syncing...`);
                     showMessage("☁️ 發現雲端有新進度，同步中...");
                     const finalSheep = hydrateCloudSheep(cloudData.sheep, sheepData);
                     applyLoadedData({ ...cloudData, sheep: finalSheep }, userId);
@@ -292,6 +299,7 @@ export const GameProvider = ({ children }) => {
             settings: { notify: overrides.notificationEnabled ?? notificationEnabled },
             lastSave: Date.now()
         };
+        lastSaveTimeRef.current = userData.lastSave; // Update Ref
         const nicknameToSave = overrides.nickname !== undefined ? overrides.nickname : nickname;
 
         const currentSheep = overrides.sheep || sheep;
@@ -579,6 +587,8 @@ export const GameProvider = ({ children }) => {
         setInventory(loadedData.inventory || []);
         setNotificationEnabled(loadedData.settings?.notify || false); // Load setting
 
+        lastSaveTimeRef.current = lastSave; // Update Ref with loaded time
+
         // Cache Locally
         if (targetUser) {
             localStorage.setItem(`sheep_game_data_${targetUser}`, JSON.stringify({
@@ -641,8 +651,58 @@ export const GameProvider = ({ children }) => {
             });
         };
 
+        const checkCloudVersion = async () => {
+            if (isLoading) return;
+            const now = Date.now();
+            // Debounce: 10s
+            if (now - lastSyncCheckRef.current < 10000) return;
+            lastSyncCheckRef.current = now;
+
+            console.log("👀 Checking cloud version... (Lightweight)");
+            try {
+                // Fetch ONLY game_data metadata (avoid large payload)
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('game_data')
+                    .eq('id', lineId)
+                    .single();
+
+                if (data && data.game_data) {
+                    const cloudTs = data.game_data.lastSave || 0;
+                    const localTs = lastSaveTimeRef.current || 0;
+
+                    // If Cloud is effectively newer (1s buffer)
+                    if (cloudTs > localTs + 1000) {
+                        console.log(`🔄 New Cloud Data Found! Cloud: ${cloudTs}, Local: ${localTs}`);
+                        showMessage("🔄 偵測到新進度，自動同步中...");
+
+                        // Trigger Full Sync by calling handleLoginSuccess again
+                        // We need the full profile usually, but we can reuse info?
+                        // Actually handleLoginSuccess re-fetches everything.
+                        // We need to pass the profile object.
+                        // Alternatively, we create a specialized sync function.
+                        if (window.liff && window.liff.isLoggedIn()) {
+                            window.liff.getProfile().then(profile => {
+                                handleLoginSuccess(profile);
+                            });
+                        } else {
+                            // Fallback if no LIFF profile (e.g. dev mode or weird state)
+                            // Just re-run logic with current IDs
+                            handleLoginSuccess({ userId: lineId, displayName: currentUser, pictureUrl: '' });
+                        }
+                    } else {
+                        console.log("✅ Local is up to date.");
+                    }
+                }
+            } catch (e) { console.error("Cloud check error", e); }
+        };
+
         const handleVisibility = () => {
-            if (document.visibilityState === 'hidden') handleSave();
+            if (document.visibilityState === 'hidden') {
+                handleSave();
+            } else if (document.visibilityState === 'visible') {
+                checkCloudVersion();
+            }
         };
 
         window.addEventListener('beforeunload', handleUnload);
