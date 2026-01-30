@@ -31,9 +31,15 @@ export const gameState = {
         }
 
         // 2. Get Sheep (Using 'user_id' text)
+        // Join with 'sheep_skins' (User specified table name)
         const { data: sheepList, error: sheepError } = await supabase
             .from('sheep')
-            .select('*')
+            .select(`
+                *,
+                skins:skin_id (
+                    id, type, data
+                )
+            `)
             .eq('user_id', userId);
 
         if (sheepError) {
@@ -44,21 +50,37 @@ export const gameState = {
         // 3. Calculate Offline Decay
         const now = new Date();
         const updatedSheepList = sheepList.map(s => {
-            let visual = s.visual || s.visual_data || {};
+            // Restore from DB format
+            let sheep = this._fromDbSheep(s);
+
+            // V13: Parametric Skins Logic
+            // We have 'skins.data' (Template) and 'sheep.visual_attrs' (Attributes)
+
+            // 1. Start with Template (if any)
+            let combinedVisual = {};
+            if (s.skins && s.skins.data) {
+                combinedVisual = { ...s.skins.data };
+            }
+
+            // 2. Merge Instance Attributes (This overrides template defaults)
+            if (s.visual_attrs) {
+                combinedVisual = { ...combinedVisual, ...s.visual_attrs };
+            }
+
+            sheep.visual = combinedVisual;
+
             // Schema has 'last_login'
-            const lastTime = new Date(s.updated_at || profile.last_login || now);
+            const lastTime = new Date(sheep.updated_at || profile.last_login || now);
             const diffHours = (now - lastTime) / (1000 * 60 * 60);
 
-            let updatedSheep = s;
             if (diffHours > 0.1) {
-                const sheepForCalc = { ...s, visual };
-                if (s.status !== 'dead') {
-                    updatedSheep = calculateOfflineDecay(sheepForCalc, diffHours);
+                if (sheep.status !== 'dead') {
+                    sheep = calculateOfflineDecay(sheep, diffHours);
                 }
             }
 
-            updatedSheep = sanitizeSheep({ ...updatedSheep, visual });
-            return updatedSheep;
+            sheep = sanitizeSheep(sheep);
+            return sheep;
         });
 
         // 4. Update Last Login (Schema: 'last_login')
@@ -70,17 +92,102 @@ export const gameState = {
         return { user: profile, sheep: updatedSheepList };
     },
 
-    async saveSheep(sheep) {
-        const payload = {
-            ...sheep,
+    // Helper: Ensure a skin exists for the sheep (Programmatic)
+    async _ensureSkin(sheep) {
+        if (sheep.skinId) return sheep.skinId;
+        if (!sheep.visual) return null;
+
+        // Clean visual data
+        const cleanVisual = { ...sheep.visual };
+        const propsToRemove = ['x', 'y', 'angle', 'direction', 'health', 'status', 'careLevel', 'prayedCount', 'skinData'];
+        propsToRemove.forEach(p => delete cleanVisual[p]);
+
+        const { data, error } = await supabase
+            .from('sheep_skins')
+            .insert([{
+                name: 'Sheep ' + (sheep.name || '') + ' Visual',
+                type: 'programmatic',
+                data: cleanVisual
+            }])
+            .select('id')
+            .single();
+
+        if (error) {
+            console.error("Error creating skin:", error);
+            return null;
+        }
+        return data.id;
+    },
+
+    // Helper: Map Sheep to DB (camel -> snake)
+    _toDbSheep(sheep) {
+        return {
+            id: sheep.id,
+            user_id: sheep.user_id,
+            name: sheep.name,
+            type: sheep.type,
+            status: sheep.status,
+            health: sheep.health,
+            // visual: sheep.visual, // REMOVED
+            // visual_data: sheep.visual, // REMOVED
+            visual_attrs: sheep.visual, // V13: Save attributes here
+
+            // New Columns (Snake Case)
+            x: sheep.x,
+            y: sheep.y,
+            angle: sheep.angle,
+            direction: sheep.direction,
+            care_level: sheep.careLevel,
+            spiritual_maturity: sheep.spiritualMaturity,
+            prayed_count: sheep.prayedCount,
+            last_prayed_date: sheep.lastPrayedDate,
+            resurrection_progress: sheep.resurrectionProgress,
+            skin_id: sheep.skinId,
+            note: sheep.note,
+            state: sheep.state,
+
             updated_at: new Date().toISOString()
         };
-        // Ensure mapping
-        if (sheep.visual) {
-            payload.visual = sheep.visual;
-            payload.visual_data = sheep.visual;
-        }
+    },
 
+    // Helper: Map DB to Sheep (snake -> camel)
+    _fromDbSheep(row) {
+        return {
+            id: row.id,
+            user_id: row.user_id,
+            name: row.name,
+            type: row.type,
+            status: row.status,
+            health: row.health,
+            status: row.status,
+            health: row.health,
+            // V13: Load from new flow. (This helper is for raw row conversion)
+            // But _fromDbSheep is mostly used inside loadGame where we handle the merge.
+            // If used standalone, we might miss the joined skin data.
+            // For safety, we map what we have.
+            visual: row.visual_attrs || {},
+            visual_attrs: row.visual_attrs,
+
+            x: row.x ?? 50,
+            y: row.y ?? 50,
+            angle: row.angle ?? 0,
+            direction: row.direction ?? 1,
+
+            careLevel: row.care_level ?? 0,
+            spiritualMaturity: row.spiritual_maturity ?? 0,
+            prayedCount: row.prayed_count ?? 0,
+            lastPrayedDate: row.last_prayed_date,
+            resurrectionProgress: row.resurrection_progress ?? 0,
+            skinId: row.skin_id,
+            note: row.note || '',
+            state: row.state || 'idle',
+
+            updated_at: row.updated_at
+        };
+    },
+
+    async saveSheep(sheep) {
+        const payload = this._toDbSheep(sheep);
         const { error } = await supabase
             .from('sheep')
             .upsert(payload);
@@ -90,13 +197,7 @@ export const gameState = {
 
     async saveAllSheep(sheepList) {
         if (!sheepList || sheepList.length === 0) return;
-
-        const payload = sheepList.map(s => ({
-            ...s,
-            visual: s.visual,
-            visual_data: s.visual,
-            updated_at: new Date().toISOString()
-        }));
+        const payload = sheepList.map(s => this._toDbSheep(s));
 
         const { error } = await supabase
             .from('sheep')
@@ -120,12 +221,15 @@ export const gameState = {
             return null;
         }
 
+        // Ensure Skin Exists
+        let skinId = sheep.skinId;
+        if (!skinId) {
+            skinId = await this._ensureSkin(sheep);
+        }
+
         const payload = {
-            ...sheep,
-            visual: sheep.visual,
-            visual_data: sheep.visual,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            ...this._toDbSheep({ ...sheep, skinId }),
+            created_at: new Date().toISOString()
         };
         if (!payload.id) delete payload.id;
 
@@ -174,13 +278,13 @@ export const gameState = {
         // 2. Save Sheep
         if (sheepList && sheepList.length > 0) {
             try {
-                const sheepPayload = sheepList.map(s => ({
-                    ...s,
-                    user_id: s.user_id || userId,
-                    visual: s.visual,
-                    visual_data: s.visual,
-                    updated_at: new Date().toISOString()
-                }));
+                // Ensure user_id is injected IF missing (though logic handles it)
+                const sheepPayload = sheepList.map(s => {
+                    const mapped = this._toDbSheep(s);
+                    // Force user_id injection if the helper didn't pick it up (e.g. if s.user_id was missing but userId is present)
+                    if (!mapped.user_id) mapped.user_id = userId;
+                    return mapped;
+                });
 
                 const url = `${supabaseUrl}/rest/v1/sheep`;
                 const xhr = new XMLHttpRequest();

@@ -27,7 +27,7 @@ export const Controls = ({ onOpenList }) => {
                         color: '#333',
                         border: '1px solid #ccc',
                         width: '60px', height: '60px',
-                        borderRadius: '20px', // Square-ish with rounded corners (Mobile App Dock style)
+                        borderRadius: '20px',
                         fontSize: '1.8rem',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: '0 4px 0 #9e9e9e'
@@ -36,6 +36,25 @@ export const Controls = ({ onOpenList }) => {
                     title="羊群名冊"
                 >
                     📋
+                </button>
+
+                {/* Manual Save Button (For Debugging Persistence) */}
+                <button
+                    className="action-btn"
+                    style={{
+                        background: '#e3f2fd',
+                        color: '#1565c0',
+                        border: '1px solid #90caf9',
+                        width: '60px', height: '60px',
+                        borderRadius: '20px',
+                        fontSize: '1.5rem',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 4px 0 #64b5f6'
+                    }}
+                    onClick={() => useGame().saveToCloud()} // Force Save
+                    title="強制存檔"
+                >
+                    💾
                 </button>
 
                 {/* Add Sheep Button (Primary Action) */}

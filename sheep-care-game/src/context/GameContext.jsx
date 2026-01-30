@@ -206,6 +206,13 @@ export const GameProvider = ({ children }) => {
             const notifySetting = overrides.notificationEnabled ?? notificationEnabled;
             const currentNickname = overrides.nickname !== undefined ? overrides.nickname : nickname;
 
+            // Construct gameData object (Fix: was missing)
+            const gameData = {
+                inventory: currentInventory,
+                settings: { notify: notifySetting },
+                lastSave: Date.now()
+            };
+
             // Parallel execute for faster close handling
             // Show simple toast if window is visible (not closing)
             if (document.visibilityState === 'visible') {
@@ -564,7 +571,8 @@ export const GameProvider = ({ children }) => {
 
         const handleVisibility = () => {
             if (document.visibilityState === 'hidden') {
-                handleSave();
+                // Backgrounding on Mobile: Treat as Close
+                handleUnload();
             } else if (document.visibilityState === 'visible') {
                 checkCloudVersion();
             }
