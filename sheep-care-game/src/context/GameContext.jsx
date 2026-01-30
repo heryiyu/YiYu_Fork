@@ -207,9 +207,18 @@ export const GameProvider = ({ children }) => {
             const currentNickname = overrides.nickname !== undefined ? overrides.nickname : nickname;
 
             // Construct gameData object (Fix: was missing)
+            // Construct gameData object (Fix: Merge settings, don't overwrite)
+            // We use stateRef.current.settings as base, then apply overrides if any (currently only notify passes override)
+            // Actually, we should merge the override into the base.
+
+            const currentSettings = {
+                ...stateRef.current.settings, // Base: existing settings (e.g. maxVisibleSheep)
+                notify: notifySetting         // Override/Update: notification status
+            };
+
             const gameData = {
                 inventory: currentInventory,
-                settings: { notify: notifySetting },
+                settings: currentSettings,
                 lastSave: Date.now()
             };
 
@@ -498,240 +507,249 @@ export const GameProvider = ({ children }) => {
     useEffect(() => {
         if (!lineId || !isDataLoaded) return;
 
-        const handleUnload = () => {
-            // Reliable Save on Close using KeepAlive Fetch
-            const currentSheep = stateRef.current.sheep;
-            const currentProfile = {
-                game_data: {
-                    inventory: stateRef.current.inventory,
-                    settings: stateRef.current.settings,
-                    lastSave: Date.now()
-                },
-                last_login: new Date().toISOString()
+        // Ref Sync: Keep Ref up to date for saveToCloud (async access)
+        useEffect(() => {
+            stateRef.current.sheep = sheep;
+            stateRef.current.inventory = inventory;
+            stateRef.current.settings = settings; // Fix: Ensure settings are synced to Ref!
+            lastSaveTimeRef.current = Date.now(); // Optional: track local changes? No, unsafe.
+        }, [sheep, inventory, settings]);
+
+        useEffect(() => {
+            const handleUnload = () => {
+                // Reliable Save on Close using KeepAlive Fetch
+                const currentSheep = stateRef.current.sheep;
+                const currentProfile = {
+                    game_data: {
+                        inventory: stateRef.current.inventory,
+                        settings: stateRef.current.settings,
+                        lastSave: Date.now()
+                    },
+                    last_login: new Date().toISOString()
+                };
+
+                // We use nickname from component state directly if possible, or omit it to avoid overwrite
+                // Actually, keepAlive is 'fire and forget', we trust Refs.
+                // Using Sync version to force browser to wait
+                gameState.saveGameSync(lineId, currentSheep, currentProfile);
             };
 
-            // We use nickname from component state directly if possible, or omit it to avoid overwrite
-            // Actually, keepAlive is 'fire and forget', we trust Refs.
-            // Using Sync version to force browser to wait
-            gameState.saveGameSync(lineId, currentSheep, currentProfile);
-        };
+            const handleSave = () => {
+                // Use Ref for latest state
+                saveToCloud({
+                    sheep: stateRef.current.sheep,
+                    inventory: stateRef.current.inventory,
+                    settings: stateRef.current.settings
+                });
+            };
 
-        const handleSave = () => {
-            // Use Ref for latest state
-            saveToCloud({
-                sheep: stateRef.current.sheep,
-                inventory: stateRef.current.inventory,
-                settings: stateRef.current.settings
+            const checkCloudVersion = async () => {
+                if (isLoading) return;
+                const now = Date.now();
+                // Debounce: 10s
+                if (now - lastSyncCheckRef.current < 10000) return;
+                lastSyncCheckRef.current = now;
+
+                try {
+                    // Fetch ONLY game_data metadata (avoid large payload)
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('game_data')
+                        .eq('id', lineId)
+                        .single();
+
+                    if (data && data.game_data) {
+                        const cloudTs = data.game_data.lastSave || 0;
+                        const localTs = lastSaveTimeRef.current || 0;
+
+                        // If Cloud is effectively newer (1s buffer)
+                        if (cloudTs > localTs + 1000) {
+                            showMessage("🔄 偵測到新進度，自動同步中...");
+
+                            // Trigger Full Sync by calling handleLoginSuccess again
+                            // We need the full profile usually, but we can reuse info?
+                            // Actually handleLoginSuccess re-fetches everything.
+                            // We need to pass the profile object.
+                            // Alternatively, we create a specialized sync function.
+                            if (window.liff && window.liff.isLoggedIn()) {
+                                window.liff.getProfile().then(profile => {
+                                    handleLoginSuccess(profile);
+                                });
+                            } else {
+                                // Fallback if no LIFF profile (e.g. dev mode or weird state)
+                                // Just re-run logic with current IDs
+                                handleLoginSuccess({ userId: lineId, displayName: currentUser, pictureUrl: '' });
+                            }
+                        } else {
+                            // Local is up to date
+                        }
+                    }
+                } catch (e) { console.error("Cloud check error", e); }
+            };
+
+            const handleVisibility = () => {
+                if (document.visibilityState === 'hidden') {
+                    // Backgrounding on Mobile: Treat as Close
+                    handleUnload();
+                } else if (document.visibilityState === 'visible') {
+                    checkCloudVersion();
+                }
+            };
+
+            window.addEventListener('beforeunload', handleUnload);
+            document.addEventListener('visibilitychange', handleVisibility);
+
+            // Periodic Save (Every 60s)
+            const intervalId = setInterval(() => {
+                handleSave();
+            }, 60000);
+
+            return () => {
+                clearInterval(intervalId);
+                window.removeEventListener('beforeunload', handleUnload);
+                document.removeEventListener('visibilitychange', handleVisibility);
+            };
+        }, [lineId, isDataLoaded]);
+
+
+
+        // Game Loop
+        useEffect(() => {
+            if (!lineId) return;
+            const tick = setInterval(() => {
+                setSheep(prev => prev.filter(s => s).map(s => {
+                    const updated = calculateTick(s, prev); // Pass 'prev' (all sheep) for flocking
+                    if (updated.status === 'dead' && s.status !== 'dead') {
+                        showMessage(`🕊️ ${s.name} 不幸離世了...`);
+                    }
+                    return updated;
+                }));
+            }, 500); // Optimized to 500ms (2 FPS) for low power mode
+            return () => clearInterval(tick);
+        }, [lineId]);
+
+        // Actions
+
+
+        const updateSheep = (id, updates) => {
+            setSheep(prev => {
+                const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
+                // Non-blocking save of the specific sheep
+                const target = next.find(s => s.id === id);
+                if (target) gameState.saveSheep(target);
+                return next;
             });
         };
 
-        const checkCloudVersion = async () => {
-            if (isLoading) return;
-            const now = Date.now();
-            // Debounce: 10s
-            if (now - lastSyncCheckRef.current < 10000) return;
-            lastSyncCheckRef.current = now;
+        const isAdmin = lineId === 'admin';
 
-            try {
-                // Fetch ONLY game_data metadata (avoid large payload)
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('game_data')
-                    .eq('id', lineId)
-                    .single();
-
-                if (data && data.game_data) {
-                    const cloudTs = data.game_data.lastSave || 0;
-                    const localTs = lastSaveTimeRef.current || 0;
-
-                    // If Cloud is effectively newer (1s buffer)
-                    if (cloudTs > localTs + 1000) {
-                        showMessage("🔄 偵測到新進度，自動同步中...");
-
-                        // Trigger Full Sync by calling handleLoginSuccess again
-                        // We need the full profile usually, but we can reuse info?
-                        // Actually handleLoginSuccess re-fetches everything.
-                        // We need to pass the profile object.
-                        // Alternatively, we create a specialized sync function.
-                        if (window.liff && window.liff.isLoggedIn()) {
-                            window.liff.getProfile().then(profile => {
-                                handleLoginSuccess(profile);
-                            });
-                        } else {
-                            // Fallback if no LIFF profile (e.g. dev mode or weird state)
-                            // Just re-run logic with current IDs
-                            handleLoginSuccess({ userId: lineId, displayName: currentUser, pictureUrl: '' });
+        const prayForSheep = (id) => {
+            const today = new Date().toDateString();
+            setSheep(prev => {
+                const nextState = prev.map(s => {
+                    if (s.id !== id) return s;
+                    if (s.status === 'dead') {
+                        const todayDate = new Date(today);
+                        const lastDate = s.lastPrayedDate ? new Date(s.lastPrayedDate) : null;
+                        let diffDays = -1;
+                        if (lastDate) {
+                            diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
                         }
-                    } else {
-                        // Local is up to date
+                        const isContinuous = diffDays === 1 || diffDays === -1;
+
+                        // Admin Bypass: Allow unlimited resurrection progress per day if needed? 
+                        // User requirement said "Unlimited Prayers", usually implies the daily limit.
+                        // Let's allow Admin to spam resurrection too if they want
+                        if (!isAdmin && diffDays === 0) {
+                            showMessage("今天已經為這隻小羊禱告過了，請明天再來！🙏");
+                            return s;
+                        }
+
+                        let newProgress = (isContinuous || isAdmin) ? (s.resurrectionProgress || 0) + 1 : 1;
+
+                        if (newProgress >= 5) {
+                            showMessage(`✨ 奇蹟發生了！${s.name} 復活了！`);
+                            return {
+                                ...s, status: 'healthy', health: 100, type: 'LAMB', careLevel: 0,
+                                resurrectionProgress: 0, lastPrayedDate: today, prayedCount: 0
+                            };
+                        } else {
+                            const statusMsg = (!isAdmin && diffDays > 1) ? "禱告中斷了，重新開始..." : "迫切認領禱告進行中...";
+                            showMessage(`🙏 ${statusMsg} (${newProgress}/5)`);
+                            return { ...s, resurrectionProgress: newProgress, lastPrayedDate: today };
+                        }
                     }
-                }
-            } catch (e) { console.error("Cloud check error", e); }
-        };
 
-        const handleVisibility = () => {
-            if (document.visibilityState === 'hidden') {
-                // Backgrounding on Mobile: Treat as Close
-                handleUnload();
-            } else if (document.visibilityState === 'visible') {
-                checkCloudVersion();
-            }
-        };
-
-        window.addEventListener('beforeunload', handleUnload);
-        document.addEventListener('visibilitychange', handleVisibility);
-
-        // Periodic Save (Every 60s)
-        const intervalId = setInterval(() => {
-            handleSave();
-        }, 60000);
-
-        return () => {
-            clearInterval(intervalId);
-            window.removeEventListener('beforeunload', handleUnload);
-            document.removeEventListener('visibilitychange', handleVisibility);
-        };
-    }, [lineId, isDataLoaded]);
-
-
-
-    // Game Loop
-    useEffect(() => {
-        if (!lineId) return;
-        const tick = setInterval(() => {
-            setSheep(prev => prev.filter(s => s).map(s => {
-                const updated = calculateTick(s, prev); // Pass 'prev' (all sheep) for flocking
-                if (updated.status === 'dead' && s.status !== 'dead') {
-                    showMessage(`🕊️ ${s.name} 不幸離世了...`);
-                }
-                return updated;
-            }));
-        }, 500); // Optimized to 500ms (2 FPS) for low power mode
-        return () => clearInterval(tick);
-    }, [lineId]);
-
-    // Actions
-
-
-    const updateSheep = (id, updates) => {
-        setSheep(prev => {
-            const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
-            // Non-blocking save of the specific sheep
-            const target = next.find(s => s.id === id);
-            if (target) gameState.saveSheep(target);
-            return next;
-        });
-    };
-
-    const isAdmin = lineId === 'admin';
-
-    const prayForSheep = (id) => {
-        const today = new Date().toDateString();
-        setSheep(prev => {
-            const nextState = prev.map(s => {
-                if (s.id !== id) return s;
-                if (s.status === 'dead') {
-                    const todayDate = new Date(today);
-                    const lastDate = s.lastPrayedDate ? new Date(s.lastPrayedDate) : null;
-                    let diffDays = -1;
-                    if (lastDate) {
-                        diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-                    }
-                    const isContinuous = diffDays === 1 || diffDays === -1;
-
-                    // Admin Bypass: Allow unlimited resurrection progress per day if needed? 
-                    // User requirement said "Unlimited Prayers", usually implies the daily limit.
-                    // Let's allow Admin to spam resurrection too if they want
-                    if (!isAdmin && diffDays === 0) {
-                        showMessage("今天已經為這隻小羊禱告過了，請明天再來！🙏");
+                    let count = (s.lastPrayedDate === today) ? s.prayedCount : 0;
+                    if (!isAdmin && count >= 3) {
+                        showMessage("這隻小羊今天已經接受過 3 次禱告了，讓牠休息一下吧！🙏");
                         return s;
                     }
+                    const rawNewHealth = Math.min(100, s.health + 6);
 
-                    let newProgress = (isContinuous || isAdmin) ? (s.resurrectionProgress || 0) + 1 : 1;
+                    // Use Centralized Helper to update Status & Type based on new Health
+                    const { health, status, type } = calculateSheepState(rawNewHealth, s.status);
 
-                    if (newProgress >= 5) {
-                        showMessage(`✨ 奇蹟發生了！${s.name} 復活了！`);
-                        return {
-                            ...s, status: 'healthy', health: 100, type: 'LAMB', careLevel: 0,
-                            resurrectionProgress: 0, lastPrayedDate: today, prayedCount: 0
-                        };
-                    } else {
-                        const statusMsg = (!isAdmin && diffDays > 1) ? "禱告中斷了，重新開始..." : "迫切認領禱告進行中...";
-                        showMessage(`🙏 ${statusMsg} (${newProgress}/5)`);
-                        return { ...s, resurrectionProgress: newProgress, lastPrayedDate: today };
-                    }
-                }
+                    const newCare = s.careLevel + 10;
 
-                let count = (s.lastPrayedDate === today) ? s.prayedCount : 0;
-                if (!isAdmin && count >= 3) {
-                    showMessage("這隻小羊今天已經接受過 3 次禱告了，讓牠休息一下吧！🙏");
-                    return s;
-                }
-                const rawNewHealth = Math.min(100, s.health + 6);
+                    return {
+                        ...s, status, health, type, careLevel: newCare,
+                        lastPrayedDate: today, prayedCount: count + 1
+                    };
+                });
 
-                // Use Centralized Helper to update Status & Type based on new Health
-                const { health, status, type } = calculateSheepState(rawNewHealth, s.status);
-
-                const newCare = s.careLevel + 10;
-
-                return {
-                    ...s, status, health, type, careLevel: newCare,
-                    lastPrayedDate: today, prayedCount: count + 1
-                };
+                // Immediate Save
+                saveToCloud({ sheep: nextState }).catch(e => console.error(e));
+                return nextState;
             });
+        };
 
-            // Immediate Save
-            saveToCloud({ sheep: nextState }).catch(e => console.error(e));
-            return nextState;
-        });
-    };
+        const deleteSheep = async (id) => {
+            setSheep(prev => {
+                const next = prev.filter(s => s.id !== id);
+                saveToCloud({ sheep: next }).catch(console.error);
+                return next;
+            });
+            if (lineId) await supabase.from('sheep').delete().eq('id', id);
+        };
+        const deleteMultipleSheep = async (ids) => {
+            setSheep(prev => {
+                const next = prev.filter(s => !ids.includes(s.id));
+                saveToCloud({ sheep: next }).catch(console.error);
+                return next;
+            });
+            if (lineId) await supabase.from('sheep').delete().in('id', ids);
+        };
 
-    const deleteSheep = async (id) => {
-        setSheep(prev => {
-            const next = prev.filter(s => s.id !== id);
-            saveToCloud({ sheep: next }).catch(console.error);
-            return next;
-        });
-        if (lineId) await supabase.from('sheep').delete().eq('id', id);
-    };
-    const deleteMultipleSheep = async (ids) => {
-        setSheep(prev => {
-            const next = prev.filter(s => !ids.includes(s.id));
-            saveToCloud({ sheep: next }).catch(console.error);
-            return next;
-        });
-        if (lineId) await supabase.from('sheep').delete().in('id', ids);
-    };
+        const updateNickname = (name) => {
+            setNickname(name);
+            saveToCloud({ nickname: name }); // Pass override to ensure immediate save
+        };
 
-    const updateNickname = (name) => {
-        setNickname(name);
-        saveToCloud({ nickname: name }); // Pass override to ensure immediate save
-    };
+        const loginAsAdmin = () => {
+            handleLoginSuccess({
+                userId: 'admin',
+                displayName: 'Administrator',
+                pictureUrl: null
+            });
+        };
 
-    const loginAsAdmin = () => {
-        handleLoginSuccess({
-            userId: 'admin',
-            displayName: 'Administrator',
-            pictureUrl: null
-        });
+        return (
+            <GameContext.Provider value={{
+                currentUser, nickname, setNickname, lineId, isAdmin,
+                isLoading, // Exposed for App.jsx loading screen
+                sheep, skins, inventory, message, weather, // skins exposed
+                location, updateUserLocation, isInClient, // Exposed
+                adoptSheep, updateSheep, createSkin, toggleSkinPublic, // createSkin exposed
+                loginWithLine, loginAsAdmin, logout, // Exposed
+                prayForSheep, deleteSheep, deleteMultipleSheep,
+                saveToCloud, forceLoadFromCloud, // Exposed
+                notificationEnabled, toggleNotification, // Exposed
+                updateNickname, // Exposed
+                settings, updateSetting, // Exposed Settings
+                setWeather // Exposed for Admin Control
+            }}>
+                {children}
+            </GameContext.Provider>
+        );
     };
-
-    return (
-        <GameContext.Provider value={{
-            currentUser, nickname, setNickname, lineId, isAdmin,
-            isLoading, // Exposed for App.jsx loading screen
-            sheep, skins, inventory, message, weather, // skins exposed
-            location, updateUserLocation, isInClient, // Exposed
-            adoptSheep, updateSheep, createSkin, toggleSkinPublic, // createSkin exposed
-            loginWithLine, loginAsAdmin, logout, // Exposed
-            prayForSheep, deleteSheep, deleteMultipleSheep,
-            saveToCloud, forceLoadFromCloud, // Exposed
-            notificationEnabled, toggleNotification, // Exposed
-            updateNickname, // Exposed
-            settings, updateSetting, // Exposed Settings
-            setWeather // Exposed for Admin Control
-        }}>
-            {children}
-        </GameContext.Provider>
-    );
-};
