@@ -39,7 +39,7 @@ export const GameProvider = ({ children }) => {
     const [sheep, setSheep] = useState([]);
     const [inventory, setInventory] = useState([]);
     const [message, setMessage] = useState(null);
-    const [notificationEnabled, setNotificationEnabled] = useState(false);
+    // const [notificationEnabled, setNotificationEnabled] = useState(false); // REMOVED: Merged into settings
     const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
 
     const [skins, setSkins] = useState([]); // New Skins State
@@ -48,9 +48,10 @@ export const GameProvider = ({ children }) => {
     const [settings, setSettings] = useState(() => {
         try {
             const saved = localStorage.getItem('sheep_game_settings');
-            return saved ? JSON.parse(saved) : { maxVisibleSheep: 15 };
+            // Default: maxVisibleSheep 15, notify false
+            return saved ? { maxVisibleSheep: 15, notify: false, ...JSON.parse(saved) } : { maxVisibleSheep: 15, notify: false };
         } catch {
-            return { maxVisibleSheep: 15 };
+            return { maxVisibleSheep: 15, notify: false };
         }
     });
 
@@ -58,6 +59,13 @@ export const GameProvider = ({ children }) => {
         setSettings(prev => {
             const next = { ...prev, [key]: value };
             localStorage.setItem('sheep_game_settings', JSON.stringify(next));
+
+            // Immediate Auto-Save on Setting Change
+            // Note: We need to use 'next' because state update is async
+            // But we can't call saveToCloud directly gracefully here without being inside the component flow or using ref.
+            // Using the useEffect (Sync State Refs) + Auto-Save loop is safer, OR explicit call.
+            // Let's explicit call via helper if we solve the circular dependency. 
+            // Actually, we'll rely on the Ref-Updated Save.
             return next;
         });
     };
@@ -177,9 +185,13 @@ export const GameProvider = ({ children }) => {
                 setNickname(user.nickname); // or display_name? DB column 'nickname' exists? V2 migration said yes.
 
                 // Load Game Data (Inventory, Settings)
+                // Load Game Data (Inventory, Settings)
                 const gameData = user.game_data || {};
                 setInventory(gameData.inventory || []);
-                setNotificationEnabled(gameData.settings?.notify || false);
+                // Update Settings from Cloud (Merge with local default structure)
+                if (gameData.settings) {
+                    setSettings(prev => ({ ...prev, ...gameData.settings }));
+                }
 
                 setIsDataLoaded(true);
                 showMessage(`歡迎回來，${user.nickname || displayName}! 👋`);
@@ -212,8 +224,8 @@ export const GameProvider = ({ children }) => {
             // Actually, we should merge the override into the base.
 
             const currentSettings = {
-                ...stateRef.current.settings, // Base: existing settings (e.g. maxVisibleSheep)
-                notify: notifySetting         // Override/Update: notification status
+                ...stateRef.current.settings, // Correct source of truth
+                ...overrides // Apply any logic overrides if necessary (rarely used now for settings)
             };
 
             const gameData = {
@@ -355,12 +367,15 @@ export const GameProvider = ({ children }) => {
     }, []);
 
     const toggleNotification = async () => {
-        const newState = !notificationEnabled;
-        setNotificationEnabled(newState);
+        const newState = !settings.notify;
+        updateSetting('notify', newState);
         showMessage(newState ? "🔔 牧羊提醒已開啟" : "🔕 牧羊提醒已關閉");
 
-        // Immediate Save
-        await saveToCloud({ notificationEnabled: newState });
+        // Immediate Save will be handled by settings update propagation? 
+        // No, updateSetting is local. We should trigger a save.
+        // We can pass the NEW settings explicitly to saveToCloud to be sure.
+        const newSettings = { ...settings, notify: newState };
+        saveToCloud({ settings: newSettings }); // saveToCloud needs to support 'settings' override key if we use it
     };
 
     // --- LIFF & Login Logic ---
@@ -453,8 +468,12 @@ export const GameProvider = ({ children }) => {
             });
 
         setSheep(decaySheep);
+        setSheep(decaySheep);
         setInventory(loadedData.inventory || []);
-        setNotificationEnabled(loadedData.settings?.notify || false); // Load setting
+        // setNotificationEnabled(loadedData.settings?.notify || false); // Removed
+        if (loadedData.settings) {
+            setSettings(prev => ({ ...prev, ...loadedData.settings }));
+        }
 
         lastSaveTimeRef.current = lastSave; // Update Ref with loaded time
 
@@ -463,7 +482,12 @@ export const GameProvider = ({ children }) => {
             localStorage.setItem(`sheep_game_data_${targetUser}`, JSON.stringify({
                 sheep: decaySheep,
                 inventory: loadedData.inventory || [],
-                settings: { notify: loadedData.settings?.notify || false }, // Save setting
+                localStorage.setItem(`sheep_game_data_${targetUser}`, JSON.stringify({
+                    sheep: decaySheep,
+                    inventory: loadedData.inventory || [],
+                    settings: loadedData.settings || { notify: false }, // Save setting
+                    lastSave: now
+                }));
                 lastSave: now
             }));
         }
@@ -745,7 +769,7 @@ export const GameProvider = ({ children }) => {
             loginWithLine, loginAsAdmin, logout, // Exposed
             prayForSheep, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed
-            notificationEnabled, toggleNotification, // Exposed
+            notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
             updateNickname, // Exposed
             settings, updateSetting, // Exposed Settings
             setWeather // Exposed for Admin Control
