@@ -39,7 +39,7 @@ export const GameProvider = ({ children }) => {
     const [sheep, setSheep] = useState([]);
     const [inventory, setInventory] = useState([]);
     const [message, setMessage] = useState(null);
-    // const [notificationEnabled, setNotificationEnabled] = useState(false); // REMOVED: Merged into settings
+
     const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
 
     const [skins, setSkins] = useState([]); // New Skins State
@@ -327,7 +327,7 @@ export const GameProvider = ({ children }) => {
         if (!isDataLoaded) return; // Don't save defaults over cloud data on boot
 
         const timer = setTimeout(() => {
-            console.log("Auto-saving settings change...", settings);
+            // console.log("Auto-saving settings change...", settings);
             saveToCloud(); // Uses Ref, which is synced by the other effect
         }, 1000); // 1s debounce
 
@@ -484,7 +484,7 @@ export const GameProvider = ({ children }) => {
 
         setSheep(decaySheep);
         setInventory(loadedData.inventory || []);
-        // setNotificationEnabled(loadedData.settings?.notify || false); // Removed
+
         if (loadedData.settings) {
             setSettings(prev => ({ ...prev, ...loadedData.settings }));
         }
@@ -539,12 +539,9 @@ export const GameProvider = ({ children }) => {
         lastSaveTimeRef.current = Date.now(); // Optional: track local changes? No, unsafe.
     }, [sheep, inventory, settings]);
 
-    // Auto-Save Logic (Visibility Change + Periodic)
     useEffect(() => {
-        // if (!lineId || !isDataLoaded) return; // This check was wrapping nested effects, causing syntax error.
-
-        // Let's rely on individual handlers to check loading state.
-    }, []); // Empty dependency for setup, handlers use Ref.
+        // Setup only
+    }, []);
 
     // Auto-Save Logic (Visibility Change + Periodic)
     useEffect(() => {
@@ -562,9 +559,7 @@ export const GameProvider = ({ children }) => {
                 last_login: new Date().toISOString()
             };
 
-            // We use nickname from component state directly if possible, or omit it to avoid overwrite
-            // Actually, keepAlive is 'fire and forget', we trust Refs.
-            // Using Sync version to force browser to wait
+            // Using KeepAlive fetch for reliable save
             gameState.saveGameSync(lineId, currentSheep, currentProfile);
         };
 

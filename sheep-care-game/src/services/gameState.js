@@ -126,8 +126,7 @@ export const gameState = {
             type: sheep.type,
             status: sheep.status,
             health: sheep.health,
-            // visual: sheep.visual, // REMOVED
-            // visual_data: sheep.visual, // REMOVED
+
             visual_attrs: sheep.visual, // V13: Save attributes here
 
             // New Columns (Snake Case)
@@ -271,47 +270,61 @@ export const gameState = {
     },
 
     // NUCLEAR OPTION: Synchronous XHR for absolute reliability on close
+    // Reliable Save on Exit (Using fetch with keepalive)
     saveGameSync(userId, sheepList, userProfile) {
         if (!userId) return;
+
+        const headers = {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal' // Don't need response
+        };
 
         // 1. Save Profile
         if (userProfile) {
             try {
-                const url = `${supabaseUrl}/rest/v1/users?line_id=eq.${userId}`;
-                const xhr = new XMLHttpRequest();
-                xhr.open('PATCH', url, false); // FALSE = Synchronous
-                xhr.setRequestHeader('apikey', supabaseKey);
-                xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('Prefer', 'return=minimal');
-                xhr.send(JSON.stringify(userProfile));
-            } catch (e) {
-                console.error("Sync Save Profile Failed", e);
-            }
+                // Ensure we use the correct Upsert logic logic via REST or just Update if we trust it exists (we do now)
+                // Actually to match Upsert logic: POST to /users with on_conflict=line_id
+                // But simplified: PATCH is Update. If we are sure user exists (which we are), PATCH is fine.
+                // However, previous logic in saveUserProfile was "Upsert".
+                // To do Upsert via REST: POST with Prefer: resolution=merge-duplicates
+
+                const url = `${supabaseUrl}/rest/v1/users`;
+                const payload = {
+                    line_id: userId,
+                    ...userProfile,
+                    updated_at: new Date().toISOString()
+                };
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+                    body: JSON.stringify(payload),
+                    keepalive: true
+                }).catch(e => console.error("Keepalive Save Profile Failed", e));
+
+            } catch (e) { console.error("Keepalive Save Profile Error", e); }
         }
 
         // 2. Save Sheep
         if (sheepList && sheepList.length > 0) {
             try {
-                // Ensure user_id is injected IF missing (though logic handles it)
                 const sheepPayload = sheepList.map(s => {
                     const mapped = this._toDbSheep(s);
-                    // Force user_id injection if the helper didn't pick it up (e.g. if s.user_id was missing but userId is present)
                     if (!mapped.user_id) mapped.user_id = userId;
                     return mapped;
                 });
 
                 const url = `${supabaseUrl}/rest/v1/sheep`;
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', url, false); // FALSE = Synchronous
-                xhr.setRequestHeader('apikey', supabaseKey);
-                xhr.setRequestHeader('Authorization', `Bearer ${supabaseKey}`);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('Prefer', 'resolution=merge-duplicates,return=minimal');
-                xhr.send(JSON.stringify(sheepPayload));
-            } catch (e) {
-                console.error("Sync Save Sheep Failed", e);
-            }
+                fetch(url, {
+                    method: 'POST',
+                    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+                    body: JSON.stringify(sheepPayload),
+                    keepalive: true
+                }).catch(e => console.error("Keepalive Save Sheep Failed", e));
+
+            } catch (e) { console.error("Keepalive Save Sheep Error", e); }
         }
     }
 };
