@@ -10,8 +10,8 @@ export const AssetPreloader = ({ onLoaded }) => {
             ASSETS.ENVIRONMENT.SKY.DAY_GRAIDENT,
             // Mountains might be an array now
             Array.isArray(ASSETS.ENVIRONMENT.MOUNTAINS.BG) ? ASSETS.ENVIRONMENT.MOUNTAINS.BG[0] : ASSETS.ENVIRONMENT.MOUNTAINS.BG,
-            ASSETS.SHEEP.CLASSIC_WHITE,
-            ASSETS.SHEEP.GHOST,
+            ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY,
+            ASSETS.SHEEP_VARIANTS.GHOST,
             // Preload a few trees/clouds to be safe
             ASSETS.ENVIRONMENT.CLOUDS[0],
             ASSETS.DECORATIONS.TREES_SINGLE[0]
