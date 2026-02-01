@@ -1,37 +1,72 @@
 /* src/styles/design-tokens.css */
 
 :root {
-  /* -- Palette per Design Screenshots -- */
-  
-  /* Backgrounds */
-  --color-primary-cream: #FFF8E7; /* The main card background */
-  --color-bg-overlay: rgba(0, 0, 0, 0.4); /* Dimmed background for modals */
-  
-  /* Text */
-  --color-text-brown: #5D4037; /* Main text color */
-  --color-text-secondary: #8D6E63; /* Lighter brown for subtitles */
-  
-  /* Actions */
-  --color-primary-pink: #F5A8B4; /* "Pray" button */
-  --color-primary-pink-hover: #E695A2;
-  
-  --color-action-blue: #81D4FA; /* "Adopt" button blue */
-  --color-action-blue-hover: #4FC3F7;
-  
-  --color-status-orange: #FFCC80; /* "New Friend" tag */
-  
-  /* Shapes */
-  --radius-card: 24px;   /* Large rounded corners for cards */
-  --radius-btn: 50px;    /* Pill shaped buttons */
-  --radius-tag: 12px;    /* Smaller pills for tags */
-  
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  
-  /* Shadows */
-  --shadow-soft: 0 4px 12px rgba(93, 64, 55, 0.15);
-  --shadow-card: 0 8px 24px rgba(93, 64, 55, 0.2);
+    /* -- Palette per Design Screenshots -- */
+
+    /* Backgrounds */
+    --color-primary-cream: #FFF8E7;
+    /* The main card background */
+    --color-bg-overlay: rgba(0, 0, 0, 0.4);
+    /* Dimmed background for modals */
+
+    /* Text */
+    --color-text-brown: #5D4037;
+    /* Main text color */
+    --color-text-secondary: #8D6E63;
+    /* Lighter brown for subtitles */
+
+    /* Actions */
+    --color-primary-pink: #F5A8B4;
+    /* "Pray" button */
+    --color-primary-pink-hover: #E695A2;
+
+    --color-action-blue: #81D4FA;
+    /* "Adopt" button blue */
+    --color-action-blue-hover: #4FC3F7;
+
+    --color-status-orange: #FFCC80;
+    /* "New Friend" tag */
+
+    /* Shapes */
+    --radius-card: 24px;
+    /* Large rounded corners for cards */
+    --radius-btn: 50px;
+    /* Pill shaped buttons */
+    --radius-tag: 12px;
+    /* Smaller pills for tags */
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+
+    /* Shadows */
+    --shadow-soft: 0 4px 12px rgba(93, 64, 55, 0.15);
+    --shadow-card: 0 8px 24px rgba(93, 64, 55, 0.2);
+
+    /* Scene Colors - Default (Day) */
+    --color-sky: #E1F5FE;
+    --color-grass-base: #C5E1A5;
+    --color-grass-foreground: #A5D6A7;
+}
+
+/* Theme: Evening (Golden Hour) */
+[data-theme='evening'] {
+    --color-sky: #FFD180;
+    /* Peachy Orange */
+    --color-grass-base: #FFF59D;
+    /* Warm Yellow/Tan */
+    --color-grass-foreground: #A5D6A7;
+    /* Keep Green or slightly warmer */
+}
+
+/* Theme: Night */
+[data-theme='night'] {
+    --color-sky: #263238;
+    /* Dark Navy */
+    --color-grass-base: #558B2F;
+    /* Dark Olive */
+    --color-grass-foreground: #33691E;
+    /* Deep Forest Green */
 }

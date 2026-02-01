@@ -14,7 +14,7 @@ import { AdminWeatherControl } from './components/AdminWeatherControl';
 import './App.css';
 
 function App() {
-  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin } = useGame();
+  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   const [showList, setShowList] = useState(false);
@@ -74,7 +74,7 @@ function App() {
   };
 
   return (
-    <div className="game-container" key={currentUser}>
+    <div className="game-container" key={currentUser} data-theme={weather?.timeStatus || 'day'}>
       {message && <div key={message} className="toast-message">{message}</div>}
 
       {/* --- Unified Top Left Widget --- */}

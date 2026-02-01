@@ -2,38 +2,65 @@
 // Open-Meteo API (Free, No Key)
 const API_URL = "https://api.open-meteo.com/v1/forecast";
 
-export const getWeather = async (lat = 25.0330, lon = 121.5654) => { // Default Taipei
+export const getWeather = async (lat = 25.0330, lon = 121.5654) => {
     try {
-        const response = await fetch(`${API_URL}?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        const response = await fetch(`${API_URL}?latitude=${lat}&longitude=${lon}&current_weather=true&daily=sunrise,sunset&timezone=auto`);
         const data = await response.json();
 
-        // Map WMO Weather Codes to our types
-        // https://open-meteo.com/en/docs
         const code = data.current_weather.weathercode;
-        const isDay = data.current_weather.is_day; // 1 day, 0 night
+        const isDayRaw = data.current_weather.is_day; // 1 day, 0 night
+
+        // Calculate Time of Day Status
+        let timeStatus = 'day';
+        let isDay = true;
+
+        if (data.daily && data.daily.sunrise && data.daily.sunset) {
+            const now = new Date();
+            const sunrise = new Date(data.daily.sunrise[0]);
+            const sunset = new Date(data.daily.sunset[0]);
+
+            // Evening: Sunset - 1hr to Sunset + 1hr (Golden Hour)
+            const eveningStart = new Date(sunset.getTime() - 60 * 60 * 1000);
+            const eveningEnd = new Date(sunset.getTime() + 60 * 60 * 1000);
+
+            if (now >= eveningStart && now <= eveningEnd) {
+                timeStatus = 'evening';
+                isDay = true; // Visually day-ish
+            } else if (now < sunrise || now > eveningEnd) {
+                timeStatus = 'night';
+                isDay = false;
+            } else {
+                timeStatus = 'day';
+                isDay = true;
+            }
+        } else {
+            // Fallback if daily API fails
+            if (isDayRaw === 0) {
+                timeStatus = 'night';
+                isDay = false;
+            }
+        }
 
         let weatherType = 'sunny';
+        // (WMO Code Mapping)
+        if (code >= 95) weatherType = 'storm';
+        else if (code >= 71) weatherType = 'snow';
+        else if (code >= 61) weatherType = 'rain';
+        else if (code >= 51) weatherType = 'rain';
+        else if (code >= 45) weatherType = 'cloudy';
+        else if (code >= 1) weatherType = 'cloudy';
 
-        if (code >= 95) weatherType = 'storm'; // Thunderstorm
-        else if (code >= 71) weatherType = 'snow'; // Snow (71, 73, 75, 77, 85, 86)
-        else if (code >= 61) weatherType = 'rain'; // Rain
-        else if (code >= 51) weatherType = 'rain'; // Drizzle
-        else if (code >= 45) weatherType = 'cloudy'; // Fog
-        else if (code >= 1) weatherType = 'cloudy'; // Clouds (1, 2, 3)
-        // 0 is clear sky (sunny)
-
-        // Force night visual if is_day is 0? 
-        // Or handle separately. Let's return both.
         return {
             type: weatherType,
-            code: code, // Raw WMO code
+            code: code,
             temp: data.current_weather.temperature,
-            isDay: isDay === 1
+            isDay: isDay,
+            timeStatus: timeStatus // day, evening, night
         };
 
     } catch (error) {
         console.error("Weather fetch failed:", error);
-        return { type: 'sunny', temp: 25, isDay: true }; // Fallback
+        return { type: 'sunny', temp: 25, isDay: true, timeStatus: 'day' };
     }
 };
 

@@ -36,10 +36,10 @@ export const ASSETS = {
       '/assets/decorations/grass/grass_02.svg',
       '/assets/decorations/grass/grass_03.svg',
     ],
-    ROCKS: [
-      '/assets/decorations/rocks/rock_01.svg',
-      '/assets/decorations/rocks/rock_02.svg',
-      '/assets/decorations/rocks/rock_03.svg',
+    GRASS_EDGES: [
+      '/assets/decorations/grass_edges/edge_01.svg',
+      '/assets/decorations/grass_edges/edge_02.svg',
+      '/assets/decorations/grass_edges/edge_03.svg',
     ]
   },
   SHEEP: {
