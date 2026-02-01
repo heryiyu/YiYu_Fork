@@ -51,13 +51,13 @@ export const ASSETS = {
     ]
   },
   SHEEP: {
-    CLASSIC_WHITE: '/assets/sheep/classic_white.svg',
-    GHOST: '/assets/sheep/ghost.svg',
+    CLASSIC_WHITE: '/assets/sheep/classic_white.png',
+    GHOST: '/assets/sheep/ghost.png',
   },
   // Fallback map for mapping DB skin keys to local assets if DB url is missing
   SKIN_MAP: {
-    'classic_white': '/assets/sheep/classic_white.svg',
-    'ghost_default': '/assets/sheep/ghost.svg',
+    'classic_white': '/assets/sheep/classic_white.png',
+    'ghost_default': '/assets/sheep/ghost.png',
   }
 };
 

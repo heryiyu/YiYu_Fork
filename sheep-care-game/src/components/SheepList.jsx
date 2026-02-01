@@ -17,97 +17,77 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             }}
             style={{
                 position: 'relative',
-                background: isDead ? '#F5F5F5' : '#FFFFFF',
+                background: 'var(--color-primary-cream)',
                 borderRadius: 'var(--radius-card)',
-                padding: '12px',
+                padding: '8px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 boxShadow: isSelectionMode && isSelected
                     ? '0 0 0 4px var(--color-action-blue)'
                     : 'var(--shadow-card)',
                 cursor: 'pointer',
                 transition: 'transform 0.1s, box-shadow 0.2s',
-                aspectRatio: '0.8',
-                border: '1px solid rgba(0,0,0,0.05)'
+                height: '100%', // Strict height from dock
+                boxSizing: 'border-box',
+                border: '2px solid rgba(255,255,255,0.6)',
+                overflow: 'hidden' // Strict clipping
             }}
         >
-            {/* Status Badge */}
-            <div style={{
-                position: 'absolute', top: '10px', left: '10px', zIndex: 2,
-                background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'rgba(255, 255, 255, 0.8)'),
-                color: isDead || isSick ? 'white' : 'var(--color-text-secondary)',
-                padding: '4px 8px', borderRadius: 'var(--radius-tag)',
-                fontSize: '0.7rem', fontWeight: 'bold'
-            }}>
-                {isDead ? '已離世' : (isSick ? '生病' : (s.type === 'LAMB' ? '小羊' : s.type))}
+            {/* 1. Header (Fixed Height) */}
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
+                    <span>♥</span> <span>{s.careLevel || 0}%</span>
+                </div>
+                <div style={{
+                    background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'var(--color-badge-orange)'),
+                    color: 'white', padding: '3px 8px', borderRadius: 'var(--radius-tag)',
+                    fontSize: '0.65rem', fontWeight: 'bold',
+                }}>
+                    {isDead ? '已離世' : (isSick ? '生病' : s.name.length > 3 ? '夥伴' : '新朋友')}
+                </div>
             </div>
 
-            {/* Selection Checkbox Overlay */}
-            {isSelectionMode && (
-                <div style={{
-                    position: 'absolute', top: '10px', right: '10px', zIndex: 10,
-                    width: '24px', height: '24px', borderRadius: '50%',
-                    background: isSelected ? 'var(--color-action-blue)' : 'white',
-                    border: '2px solid #ddd',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: 'white', fontWeight: 'bold'
-                }}>
-                    {isSelected && '✓'}
-                </div>
-            )}
-
-            {/* Avatar Section - Fixed overflow clipping */}
-            <div style={{
-                flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                marginBottom: '5px', position: 'relative' // Removed overflow:hidden
+            {/* 2. Avatar (Fills "Remaining Height" with Min-Height Constraint) */}
+            {/* 2. Avatar (Fills "Remaining Height" with Min-Height Constraint) */}
+            <div className="sheep-card-avatar" style={{
+                flex: 1, // Grow to fill space
+                minHeight: '60px', // STRICT MIN SIZE for Sheep
+                width: '100%',
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                overflow: 'hidden', // Clip overflow
+                padding: '4px 0' // Safety buffer
             }}>
                 <AssetSheep
                     status={s.status}
                     visual={s.visual}
                     health={s.health}
                     type={s.type}
-                    scale={1.2} // Slightly larger scale
+                    scale={1} // CSS handles resizing via contain
                     direction={1}
                     centered={true}
                 />
             </div>
 
-            {/* Info Section */}
-            <div style={{ width: '100%', textAlign: 'center' }}>
+            {/* 3. Footer (Hidden on very short screens) */}
+            {/* 3. Footer (Fixed Height) */}
+            <div className="card-footer" style={{ width: '100%', textAlign: 'center', marginTop: 'auto', flexShrink: 0 }}>
                 <div style={{
-                    fontWeight: 'bold', fontSize: '1rem', color: 'var(--color-text-brown)',
-                    marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                    fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--color-text-brown)',
+                    marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                 }}>
                     {s.name}
                 </div>
-
-                {/* Health Bar (if alive) */}
-                {!isDead && (
-                    <div style={{
-                        width: '80%', height: '6px', background: '#EEE',
-                        borderRadius: '3px', margin: '0 auto 8px auto', overflow: 'hidden'
-                    }}>
-                        <div style={{
-                            width: `${s.health || 100}%`, height: '100%',
-                            background: s.health < 30 ? '#FF5252' : '#81C784'
-                        }} />
-                    </div>
-                )}
-
-                {/* Primary Action Button */}
                 {!isSelectionMode && (
-                    <button style={{
-                        width: '100%', padding: '8px 0',
-                        background: isDead ? 'var(--color-status-orange)' : 'var(--color-primary-pink)',
+                    <button className="sheep-card-action" style={{
+                        width: '100%', padding: '6px 0',
+                        background: 'var(--color-action-pink)',
                         color: 'white', border: 'none',
                         borderRadius: 'var(--radius-btn)',
-                        fontWeight: 'bold', fontSize: '0.85rem'
+                        fontWeight: 'bold', fontSize: '0.8rem',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'
                     }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onSelect(s);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); onSelect(s); }}
                     >
-                        {isDead ? '回憶' : '禱告'}
+                        {isDead ? <><span>🕯️</span> 回憶</> : <><span>🙏</span> 禱告 {s.prayedCount || 0}/3</>}
                     </button>
                 )}
             </div>
@@ -118,20 +98,26 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => { // Removed onClose
     const { sheep, deleteMultipleSheep, updateSheep } = useGame();
-    const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
+    // ... logic ...
 
+    // REDUNDANT LOGIC SNIPPET REMOVED FOR BREVITY IN REPLACEMENT, 
+    // BUT we must keep the existing logic. 
+    // I will replace only the render part or use strict replacement. 
+    // Since I'm replacing the whole component block in previous steps, 
+    // I need to be careful. I will target the `const SheepCard` and `return (...)` of SheepList.
+
+    // Re-instating the full list component code to be safe, but focusing on the style injection.
+    const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [editingSheep, setEditingSheep] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
 
-    // Filter Logic
     const filteredSheep = useMemo(() => sortedSheep.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
         const isDead = s.status === 'dead';
         const isSick = s.status === 'sick';
-
         if (!matchesSearch) return false;
         if (filterStatus === 'DEAD') return isDead;
         if (filterStatus === 'SICK') return isSick;
@@ -139,7 +125,6 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
         return true;
     }), [sortedSheep, searchTerm, filterStatus]);
 
-    // Counts Logic
     const counts = useMemo(() => sortedSheep.reduce((acc, s) => {
         const isDead = s.status === 'dead';
         const isSick = s.status === 'sick';
@@ -173,18 +158,29 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
     return (
         <div className="sheep-list-container" style={{
             position: 'absolute', bottom: 0, left: 0, width: '100vw', height: '33%', // Occupy Foreground Terrain
-            background: 'transparent', // No background, scene acts as BG
-            zIndex: 1500, // Below Controls (2000) but above Foreground (100)
+            background: 'transparent',
+            zIndex: 1500,
             display: 'flex', flexDirection: 'column',
-            pointerEvents: 'none' // Allow clicks through empty areas, but re-enable for children
+            pointerEvents: 'none'
         }}>
             <style>{`
                 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
                 .sheep-dock-scroll::-webkit-scrollbar { display: none; }
                 .dock-child { pointer-events: auto; }
+                
+                /* Adaptive Logic: Strict Tiered Hiding */
+                /* 1. Hide Action Button first (Height < 600px) */
+                @media (max-height: 600px) {
+                    .sheep-card-action { display: none !important; }
+                }
+                
+                /* 2. Hide Sheep Avatar second (Height < 500px) */
+                @media (max-height: 500px) {
+                    .sheep-card-avatar { display: none !important; }
+                }
             `}</style>
 
-            {/* Filter Bar (Floating above the list) */}
+            {/* Filter Bar */}
             <div className="dock-child" style={{
                 padding: '10px 20px',
                 display: 'flex', gap: '8px',
@@ -211,7 +207,6 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
                     </button>
                 ))}
 
-                {/* Edit Mode Toggle (Small) */}
                 <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
                     style={{
                         marginLeft: 'auto',
@@ -227,19 +222,20 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
             </div>
 
             {/* Horizontal Scroll List */}
-            <div className="sheep-dock-scroll dock-child" style={{
+            <div className="dock-scroll-area" style={{
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center',
+                alignItems: 'flex-end', // Align cards to bottom
                 gap: '15px',
-                padding: '0 20px 80px 20px', // Bottom padding for Controls
+                padding: '10px 20px 20px 20px', // ADDED TOP PADDING (10px)
                 overflowX: 'auto',
                 overflowY: 'hidden',
                 scrollBehavior: 'smooth'
             }}>
                 {filteredSheep.map(s => (
-                    <div key={s.id} style={{ minWidth: '130px', height: '100%', position: 'relative' }}>
+                    // WRAPPER
+                    <div key={s.id} style={{ minWidth: '120px', height: '100%', paddingBottom: '5px' }}>
                         <SheepCard
                             s={s}
                             isSelectionMode={isSelectionMode}
@@ -257,7 +253,7 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
                 )}
             </div>
 
-            {/* Batch Action Bar (if selecting) */}
+            {/* Batch Action Bar */}
             {isSelectionMode && selectedIds.size > 0 && (
                 <div className="dock-child" style={{
                     position: 'absolute', bottom: '85px', left: '50%', transform: 'translateX(-50%)',
@@ -278,7 +274,7 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
                 </div>
             )}
 
-            {/* Edit Modal Overlay - Needs to be full screen z-index high */}
+            {/* Edit Modal Overlay */}
             {editingSheep && (
                 <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000 }}>
                     <AddSheepModal

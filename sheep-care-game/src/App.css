@@ -758,8 +758,62 @@
   white-space: nowrap;
 }
 
-.profile-hud-widget .text-label {
-  font-size: 0.9rem;
-  color: #666;
-  white-space: nowrap;
+
+/* --- Sheep Dock (Responsive) --- */
+.sheep-dock-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 35%;
+  /* Slightly taller base */
+  background: transparent;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.dock-filters {
+  padding: 10px 20px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.dock-scroll-area {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  /* Align cards to bottom */
+  gap: 15px;
+  padding: 0 20px 20px 20px;
+  /* Reduced bottom padding from 80px to 20px */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  pointer-events: auto;
+}
+
+.dock-scroll-area::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .sheep-dock-container {
+    height: 40%;
+    /* More height on mobile to fit cards + header */
+  }
+
+  /* Compact Controls on Mobile */
+  .controls-container {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
 }

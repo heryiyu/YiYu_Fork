@@ -7,6 +7,13 @@ export const Login = () => {
 
     // Default to LINE Login (Standard for all users)
     const [showAdminLogin, setShowAdminLogin] = useState(false);
+    const [adminUser, setAdminUser] = useState(''); // Restored to fix ReferenceError
+    // const [adminPass, setAdminPass] = useState(''); // Kept if needed later, but commented out if unused to avoid lint errors? No, user asked to restore it. 
+    // Actually, looking at the code, adminPass isn't used in handleAdminLogin. But I'll define it to be safe or just define adminUser.
+    // The error was specifically "adminUser is not defined". 
+    // I'll just restore adminUser for now as that's the crash. 
+    // Wait, let's restore both to be clean.
+    const [adminPass, setAdminPass] = useState('');
 
     // Effect removed: We no longer auto-switch to Admin login if not in client.
     // Users can manually click "Admin Access" if needed.

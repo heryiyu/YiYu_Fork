@@ -102,8 +102,14 @@ export const AssetSheep = ({
                     src={imgSrc}
                     alt="sheep"
                     style={{
-                        width: '100%',
-                        height: 'auto',
+                        // IF centered (Card Mode): Fit within the box (contain)
+                        // ELSE (Field Mode): Fixed width/auto height based on container
+                        width: centered ? 'auto' : '100%',
+                        height: centered ? 'auto' : 'auto',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+
                         // Direction Flip
                         transform: `scaleX(${direction})`,
                         filter: isDead ? 'grayscale(100%) drop-shadow(0 0 5px rgba(255,255,255,0.5))' : 'none'

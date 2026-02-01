@@ -28,14 +28,14 @@ export const Controls = ({ onOpenList }) => {
                     className="action-btn adopt-btn"
                     onClick={() => setShowAddModal(true)}
                     style={{
-                        background: '#66bb6a', /* Green */
+                        background: 'var(--color-action-blue)', /* New Blue */
                         color: 'white',
                         minWidth: '160px', /* Shrink slightly to fit 3 icons if needed */
                         height: '60px',
                         borderRadius: '30px',
                         fontSize: '1.2rem',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                        boxShadow: '0 4px 0 #388e3c'
+                        boxShadow: '0 4px 0 #3d92ad' // Darker blue shadow
                     }}
                 >
                     <span style={{ fontSize: '1.5rem' }}>➕</span> 新增
