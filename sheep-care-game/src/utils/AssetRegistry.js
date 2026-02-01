@@ -50,15 +50,40 @@ export const ASSETS = {
       '/assets/decorations/grass_edges/edge_04.svg',
     ]
   },
-  SHEEP: {
-    CLASSIC_WHITE: '/assets/sheep/classic_white.png',
-    GHOST: '/assets/sheep/ghost.png',
+  SHEEP_VARIANTS: {
+    CLASSIC_WHITE: {
+      HEALTHY: '/assets/sheep/classic_white.png',
+      SICK: '/assets/sheep/classic_white_sick.png',
+    },
+    BLACK: {
+      HEALTHY: '/assets/sheep/black.png',
+      SICK: '/assets/sheep/black_sick.png',
+    },
+    FLUFFY_WHITE: {
+      HEALTHY: '/assets/sheep/fluffy_white.png',
+      SICK: '/assets/sheep/fluffy_white_sick.png',
+    },
+    PINK: {
+      HEALTHY: '/assets/sheep/pink.png',
+      SICK: '/assets/sheep/pink_sick.png',
+    },
+    BROWN: {
+      HEALTHY: '/assets/sheep/brown.png',
+      SICK: '/assets/sheep/brown_sick.png',
+    },
+    GHOST: '/assets/sheep/ghost.png', // Singular state
   },
-  // Fallback map for mapping DB skin keys to local assets if DB url is missing
+  // Legacy Flat Map kept for simpler reference if needed, but variants preferred now.
+  // We will map the 'skinKey' -> 'Variant Object'
   SKIN_MAP: {
-    'classic_white': '/assets/sheep/classic_white.png',
-    'ghost_default': '/assets/sheep/ghost.png',
+    'classic_white': 'CLASSIC_WHITE',
+    'black': 'BLACK',
+    'fluffy_white': 'FLUFFY_WHITE',
+    'pink': 'PINK',
+    'brown': 'BROWN',
+    'ghost_default': 'GHOST',
   }
+
 };
 
 // Helper to get random asset from a list
