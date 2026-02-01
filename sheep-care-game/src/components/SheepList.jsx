@@ -281,6 +281,25 @@ export const SheepList = ({ onSelect }) => {
                                     已選取 {selectedIds.size}
                                 </div>
 
+                                {/* Search Bar (Selection Mode) */}
+                                <div style={{ position: 'relative', height: '36px', flexShrink: 0, transition: 'opacity 0.2s', marginRight: '4px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="搜尋..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{
+                                            height: '100%', padding: '0 12px 0 30px',
+                                            borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
+                                            background: 'rgba(255,255,255,0.9)',
+                                            width: searchTerm ? '120px' : '80px',
+                                            transition: 'width 0.2s', fontSize: '0.9rem',
+                                            color: '#5d4037', outline: 'none'
+                                        }}
+                                    />
+                                    <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                                </div>
+
                                 {/* Action Buttons */}
                                 <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}
                                     style={{
