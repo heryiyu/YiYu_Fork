@@ -7,6 +7,7 @@ import { AddSheepModal } from './AddSheepModal';
 import '../styles/design-tokens.css';
 
 // --- Card Component ---
+// --- Card Component ---
 const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isDead, isSick }) => {
     return (
         <div
@@ -19,7 +20,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 position: 'relative',
                 background: 'var(--color-primary-cream)',
                 borderRadius: 'var(--radius-card)',
-                padding: '8px',
+                padding: '5px', // Reduced padding
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 boxShadow: isSelectionMode && isSelected
                     ? '0 0 0 4px var(--color-action-blue)'
@@ -48,14 +49,15 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             )}
 
             {/* 1. Header (Fixed Height) */}
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
+                {/* Health Text: Increased size for better visibility */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1.1rem', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
                     <span>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
                 <div style={{
                     background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'var(--color-badge-orange)'),
-                    color: 'white', padding: '3px 8px', borderRadius: 'var(--radius-tag)',
-                    fontSize: '0.65rem', fontWeight: 'bold',
+                    color: 'white', padding: '2px 6px', borderRadius: 'var(--radius-tag)',
+                    fontSize: '0.6rem', fontWeight: 'bold',
                 }}>
                     {isDead ? '已離世' : (isSick ? '生病' : s.name.length > 3 ? '夥伴' : '新朋友')}
                 </div>
@@ -64,18 +66,18 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             {/* 2. Avatar (Fills "Remaining Height" with Min-Height Constraint) */}
             <div className="sheep-card-avatar" style={{
                 flex: 1, // Grow to fill space
-                minHeight: '60px', // STRICT MIN SIZE for Sheep
+                minHeight: '40px', // Reduced min-height
                 width: '100%',
-                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', // Changed to CENTER alignment
                 overflow: 'hidden', // Clip overflow
-                padding: '4px 0' // Safety buffer
+                padding: '2px 0' // Safety buffer
             }}>
                 <AssetSheep
                     status={s.status}
                     visual={s.visual}
                     health={s.health}
                     type={s.type}
-                    scale={1} // CSS handles resizing via contain
+                    scale={0.55} // Reduced scale to 0.55
                     direction={1}
                     centered={true}
                 />
@@ -84,17 +86,17 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             {/* 3. Footer (Fixed Height) */}
             <div className="card-footer" style={{ width: '100%', textAlign: 'center', marginTop: 'auto', flexShrink: 0 }}>
                 <div style={{
-                    fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--color-text-brown)',
-                    marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                    fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--color-text-brown)',
+                    marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                 }}>
                     {s.name}
                 </div>
                 {!isSelectionMode && (
                     <div style={{
-                        fontSize: '0.75rem', color: isDead ? '#9E9E9E' : 'var(--color-text-brown)',
-                        marginTop: '4px', fontWeight: 'bold'
+                        fontSize: '0.7rem', color: isDead ? '#9E9E9E' : 'var(--color-text-brown)',
+                        marginTop: '2px', fontWeight: 'bold'
                     }}>
-                        {isDead ? '🕯️ 回憶' : `🙏 禱告 ${s.prayedCount || 0}/3`}
+                        {isDead ? `🕯️ 迫切禱告 ${s.resurrectionProgress || 0}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
                     </div>
                 )}
             </div>
@@ -339,10 +341,9 @@ export const SheepList = ({ onSelect }) => {
                 <div
                     className="list-content-wrapper"
                     style={{
-                        // FIX: Restore explicit height logic for responsive design
-                        // Use clamp to ensure it's never too small (phone) or too big (tablet)
-                        // Originally ~33% or 260px min.
-                        height: isCollapsed ? '0px' : 'clamp(260px, 33vh, 400px)',
+                        // FIX: Responsive height constraint (Short Cards)
+                        // clamp(MIN, VAL, MAX) -> Reduced to be much more compact
+                        height: isCollapsed ? '0px' : 'clamp(180px, 25vh, 260px)',
                         opacity: isCollapsed ? 0 : 1,
                         display: 'flex', flexDirection: 'column',
                         pointerEvents: isCollapsed ? 'none' : 'auto'
@@ -354,8 +355,8 @@ export const SheepList = ({ onSelect }) => {
                         display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'flex-end',
-                        gap: '15px',
-                        padding: '10px 20px 20px 20px',
+                        gap: '12px', // Slightly reduced gap
+                        padding: '10px 16px 20px 16px', // Adjusted padding
                         overflowX: 'auto',
                         overflowY: 'hidden',
                         scrollBehavior: 'smooth',
@@ -364,8 +365,10 @@ export const SheepList = ({ onSelect }) => {
                     }}>
                         {filteredSheep.map(s => (
                             <div key={s.id} style={{
-                                minWidth: 'clamp(120px, 30vw, 160px)',
-                                height: '100%', // Match parent height (which is now constrained)
+                                // Adjusted Width: Narrower for mobile as requested
+                                // 100px min is safe for content, 130px max prevents looking "stretched"
+                                minWidth: 'clamp(90px, 24vw, 130px)',
+                                height: '100%',
                                 paddingBottom: '5px',
                                 pointerEvents: 'auto'
                             }}>
