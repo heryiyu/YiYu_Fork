@@ -48,25 +48,25 @@
     /* Scene Colors - Default (Day) */
     --color-sky: #E1F5FE;
     --color-grass-base: #C5E1A5;
-    --color-grass-foreground: #A5D6A7;
+    --color-grass-foreground: #B5D1A8;
 }
 
 /* Theme: Evening (Golden Hour) */
 [data-theme='evening'] {
-    --color-sky: #FFD180;
+    --color-sky: #FCD698;
     /* Peachy Orange */
-    --color-grass-base: #FFF59D;
+    --color-grass-base: #E7D6AA;
     /* Warm Yellow/Tan */
-    --color-grass-foreground: #A5D6A7;
+    --color-grass-foreground: #BCC597;
     /* Keep Green or slightly warmer */
 }
 
 /* Theme: Night */
 [data-theme='night'] {
-    --color-sky: #263238;
+    --color-sky: #313749;
     /* Dark Navy */
-    --color-grass-base: #558B2F;
+    --color-grass-base: #808E64;
     /* Dark Olive */
-    --color-grass-foreground: #33691E;
+    --color-grass-foreground: #9EB494;
     /* Deep Forest Green */
 }

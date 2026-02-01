@@ -8,12 +8,13 @@ export const AssetPreloader = ({ onLoaded }) => {
     useEffect(() => {
         const assetsToLoad = [
             ASSETS.ENVIRONMENT.SKY.DAY_GRAIDENT,
-            ASSETS.ENVIRONMENT.MOUNTAINS.BG,
+            // Mountains might be an array now
+            Array.isArray(ASSETS.ENVIRONMENT.MOUNTAINS.BG) ? ASSETS.ENVIRONMENT.MOUNTAINS.BG[0] : ASSETS.ENVIRONMENT.MOUNTAINS.BG,
             ASSETS.SHEEP.CLASSIC_WHITE,
             ASSETS.SHEEP.GHOST,
             // Preload a few trees/clouds to be safe
             ASSETS.ENVIRONMENT.CLOUDS[0],
-            ASSETS.DECORATIONS.TREES[0]
+            ASSETS.DECORATIONS.TREES_SINGLE[0]
         ];
 
         let loadedCount = 0;

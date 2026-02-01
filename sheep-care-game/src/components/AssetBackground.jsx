@@ -15,30 +15,31 @@ export const AssetBackground = ({ userId, weather }) => {
             background: 'var(--color-sky)' // Token-based Sky
         }}>
             {/* --- 1. CLOUDS (Z=1) --- */}
-            <div className="cloud-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '30%', zIndex: 1, pointerEvents: 'none' }}>
-                {scene.clouds.map((cloudSrc, i) => (
+            <div className="cloud-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
+                {scene.clouds.map((cloud, i) => (
                     <motion.img
                         key={`cloud-${i}`}
-                        src={cloudSrc}
+                        src={cloud.src}
                         style={{
                             position: 'absolute',
-                            top: `${10 + (i * 5)}%`,
-                            width: `${8 + (i * 3)}%`,
+                            top: `${cloud.y}%`,
+                            left: `${cloud.x}%`,
+                            width: `${10 * cloud.scale}%`,
                             opacity: 0.8
                         }}
-                        initial={{ x: `${-20 - (i * 20)}%` }}
-                        animate={{ x: ['-20%', '120%'] }}
+                        initial={{ x: 0 }}
+                        animate={{ x: ['-10%', '10%'] }} // Gentle drift, not full crossing
                         transition={{
-                            duration: 40 + (i * 10),
+                            duration: 20 + Math.random() * 10,
                             repeat: Infinity,
-                            ease: 'linear',
-                            delay: i * 5
+                            repeatType: 'reverse',
+                            ease: 'easeInOut'
                         }}
                     />
                 ))}
             </div>
 
-            {/* --- 2. MOUNTAINS (Z=2) --- */}
+            {/* --- 2. MOUNTAIN ZONE (Z=2) --- */}
             {scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => (
                 <img
                     key={m.id}
@@ -49,8 +50,31 @@ export const AssetBackground = ({ userId, weather }) => {
                         bottom: `${m.y}%`,
                         // Pivot: Move down by 20% of element height to bury base
                         transform: `translate(-50%, 20%) scale(${m.scale})`,
-                        zIndex: 2,
+                        zIndex: 1, // Lowered to 1
                         opacity: 0.9
+                    }}
+                />
+            ))}
+
+            {/* --- 2.5. TREES (Z=2 - Behind Grass) --- */}
+            {scene.elements.filter(e => e.type === 'TREE').map(t => (
+                <motion.img
+                    key={t.id}
+                    src={t.src}
+                    style={{
+                        position: 'absolute',
+                        left: `${t.x}%`,
+                        // Pivot: Bottom is Horizon Y - 10% of Height (Reduced from 20%)
+                        bottom: `calc(${t.y}% - ${(150 * t.scale) * 0.1}px)`,
+                        height: `${150 * t.scale}px`,
+                        zIndex: 2,
+                        transformOrigin: 'bottom center'
+                    }}
+                    animate={{ rotate: [-2, 2, -2] }}
+                    transition={{
+                        duration: 4 + Math.random() * 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut'
                     }}
                 />
             ))}
@@ -73,37 +97,16 @@ export const AssetBackground = ({ userId, weather }) => {
                     src={g.src}
                     style={{
                         position: 'absolute',
-                        left: `${g.x}%`,
+                        left: `${g.x}px`, // Pixel based for continuous strip
                         bottom: `64.5%`, // Hardcoded precise alignment to cover the seam
-                        width: '21%',
+                        width: g.width || '20px', // Use stored width
                         zIndex: 4,
                         pointerEvents: 'none'
                     }}
                 />
             ))}
 
-            {/* --- 4. TREES (Z=5) --- */}
-            {scene.elements.filter(e => e.type === 'TREE').map(t => (
-                <motion.img
-                    key={t.id}
-                    src={t.src}
-                    style={{
-                        position: 'absolute',
-                        left: `${t.x}%`,
-                        // Pivot: Bottom is Horizon Y - 20% of Height
-                        bottom: `calc(${t.y}% - ${(150 * t.scale) * 0.2}px)`,
-                        height: `${150 * t.scale}px`,
-                        zIndex: 5,
-                        transformOrigin: 'bottom center'
-                    }}
-                    animate={{ rotate: [-2, 2, -2] }}
-                    transition={{
-                        duration: 4 + Math.random() * 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                    }}
-                />
-            ))}
+
 
             {/* --- 5. FIELD DECORATIONS (Grass) (Z=6+) --- */}
             {scene.elements.filter(e => e.type === 'GRASS').map(d => (

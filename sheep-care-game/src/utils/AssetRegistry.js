@@ -25,10 +25,13 @@ export const ASSETS = {
     }
   },
   DECORATIONS: {
-    TREES: [
+    TREES_SINGLE: [
       '/assets/decorations/trees/tree_01.svg',
       '/assets/decorations/trees/tree_02.svg',
-      '/assets/decorations/trees/tree_03.svg',
+    ],
+    TREES_GROUP: [
+      '/assets/decorations/trees/tree_group_01.svg',
+      '/assets/decorations/trees/tree_group_02.svg',
     ],
     BUSHES: [
       '/assets/decorations/bushes/bush_01.svg',
@@ -44,6 +47,7 @@ export const ASSETS = {
       '/assets/decorations/grass_edges/edge_01.svg',
       '/assets/decorations/grass_edges/edge_02.svg',
       '/assets/decorations/grass_edges/edge_03.svg',
+      '/assets/decorations/grass_edges/edge_04.svg',
     ]
   },
   SHEEP: {
