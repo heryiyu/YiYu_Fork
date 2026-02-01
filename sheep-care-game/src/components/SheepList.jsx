@@ -50,14 +50,18 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 
             {/* 1. Header (Fixed Height) */}
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
-                {/* Health Text: Increased size for better visibility */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1.1rem', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
-                    <span>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
+                {/* Health Text: Dynamic size */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '1.2em' }}>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
+                {/* Status Badge: No wrap, dynamic size */}
                 <div style={{
                     background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'var(--color-badge-orange)'),
-                    color: 'white', padding: '2px 6px', borderRadius: 'var(--radius-tag)',
-                    fontSize: '0.6rem', fontWeight: 'bold',
+                    color: 'white', padding: '2px 4px', borderRadius: 'var(--radius-tag)', // Reduced padding
+                    fontSize: 'clamp(0.55rem, 2.5vw, 0.65rem)', fontWeight: 'bold',
+                    whiteSpace: 'nowrap', // Prevent wrapping
+                    flexShrink: 0,
+                    marginLeft: '4px' // Little spacer
                 }}>
                     {isDead ? '已離世' : (isSick ? '生病' : s.name.length > 3 ? '夥伴' : '新朋友')}
                 </div>
