@@ -690,6 +690,14 @@ export const GameProvider = ({ children }) => {
         });
     };
 
+    const updateMultipleSheep = (ids, changes) => {
+        setSheep(prev => {
+            const next = prev.map(s => ids.includes(s.id) ? { ...s, ...changes } : s);
+            saveToCloud({ sheep: next }).catch(console.error);
+            return next;
+        });
+    };
+
     const isAdmin = lineId === 'admin';
 
     const prayForSheep = (id) => {
@@ -789,7 +797,7 @@ export const GameProvider = ({ children }) => {
             isLoading, // Exposed for App.jsx loading screen
             sheep, skins, inventory, message, weather, // skins exposed
             location, updateUserLocation, isInClient, // Exposed
-            adoptSheep, updateSheep, createSkin, toggleSkinPublic, // createSkin exposed
+            adoptSheep, updateSheep, updateMultipleSheep, createSkin, toggleSkinPublic, // createSkin exposed
             loginWithLine, loginAsAdmin, logout, // Exposed
             prayForSheep, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed

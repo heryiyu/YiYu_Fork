@@ -12,9 +12,6 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
 
     // Admin States
     // const [selectedType, setSelectedType] = useState('LAMB'); // removed manual control
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [deleteNameInput, setDeleteNameInput] = useState('');
-    const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
     // Spiritual Maturity State
     const [sLevel, setSLevel] = useState('');
@@ -29,13 +26,9 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
             setName(target.name);
             setNote(target.note || '');
             // Parse "Level (Stage)" or just "Level"
-            // Parse "Level (Stage)" or just "Level"
             const { level, stage } = parseMaturity(target.spiritualMaturity);
             setSLevel(level);
             setSStage(stage);
-            // Reset delete state when opening new sheep
-            setDeleteConfirmOpen(false);
-            setDeleteNameInput('');
             setIsEditing(false); // Default to read-only
             setLocalMsg('');
         }
@@ -58,17 +51,6 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
         setSStage(stage);
         setIsEditing(false);
         setLocalMsg('');
-    };
-
-    const handleResetHealth = () => {
-        updateSheep(target.id, { health: 100, status: 'healthy' });
-    };
-
-    const handleDelete = () => {
-        if (deleteNameInput === target.name) {
-            deleteSheep(target.id);
-            onClose();
-        }
     };
 
     const handlePray = () => {
@@ -258,131 +240,46 @@ export const DebugEditor = ({ selectedSheepId, onClose }) => {
 
                     <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
 
-                    {/* Reset Confirmation Section */}
-                    {resetConfirmOpen ? (
-                        <div style={{ background: '#fff3e0', padding: '10px', borderRadius: '8px', border: '1px solid #ffe0b2', marginBottom: '10px' }}>
-                            <p style={{ color: '#e65100', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '8px' }}>確定要重置所有資料嗎？(將回到初始狀態)</p>
-                            <div style={{ display: 'flex', gap: '10px' }}>
+                    {/* Main Actions - Save/Cancel Only */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {isEditing && (
+                            <>
                                 <button
-                                    onClick={() => {
-                                        updateSheep(target.id, {
-                                            health: 60,
-                                            status: 'healthy',
-                                            type: 'LAMB',
-                                            careLevel: 0,
-                                            prayedCount: 0,
-                                            resurrectionProgress: 0,
-                                            note: '',
-                                            lastPrayedDate: null
-                                        });
-                                        // setSelectedType('LAMB');
-                                        setNote('');
-                                        setResetConfirmOpen(false);
-                                        onClose();
-                                    }}
+                                    onClick={handleSave}
+                                    disabled={!hasChanges}
                                     style={{
-                                        flex: 1, padding: '6px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'
+                                        flex: 1, height: '36px', padding: '0 5px',
+                                        background: hasChanges ? '#4caf50' : '#ccc',
+                                        color: 'white', border: 'none', borderRadius: '8px',
+                                        cursor: hasChanges ? 'pointer' : 'not-allowed',
+                                        whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem'
                                     }}
                                 >
-                                    確認重置
+                                    儲存
                                 </button>
                                 <button
-                                    onClick={() => setResetConfirmOpen(false)}
+                                    onClick={handleCancel}
                                     style={{
-                                        flex: 1, padding: '6px', background: '#fff', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer'
+                                        flex: 1, height: '36px', padding: '0 5px',
+                                        background: '#29b6f6',
+                                        color: 'white', border: 'none', borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem'
                                     }}
                                 >
                                     取消
                                 </button>
+                            </>
+                        )}
+                        {!isEditing && (
+                            <div style={{
+                                width: '100%', textAlign: 'center',
+                                fontSize: '0.8rem', color: '#999', padding: '10px'
+                            }}>
+                                (若需刪除或重置，請使用列表的「選取」功能)
                             </div>
-                        </div>
-                    ) : null}
-
-                    {/* Delete Section */}
-                    {deleteConfirmOpen ? (
-                        <div style={{ background: '#ffebee', padding: '10px', borderRadius: '8px', border: '1px solid #ffcdd2' }}>
-                            <p style={{ color: '#d32f2f', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '8px' }}>請問確定要刪除這隻小羊嗎？</p>
-                            <p style={{ fontSize: '0.8rem', marginBottom: '8px' }}>請輸入 <strong>{target.name}</strong> 以確認：</p>
-                            <input
-                                type="text"
-                                value={deleteNameInput}
-                                onChange={(e) => setDeleteNameInput(e.target.value)}
-                                placeholder="輸入名字..."
-                                style={{ width: '100%', padding: '6px', marginBottom: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                            />
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button
-                                    onClick={handleDelete}
-                                    disabled={deleteNameInput !== target.name}
-                                    style={{
-                                        flex: 1, padding: '6px', background: deleteNameInput === target.name ? '#d32f2f' : '#ccc', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer'
-                                    }}
-                                >
-                                    確認刪除
-                                </button>
-                                <button
-                                    onClick={() => setDeleteConfirmOpen(false)}
-                                    style={{
-                                        flex: 1, padding: '6px', background: '#fff', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer'
-                                    }}
-                                >
-                                    取消
-                                </button>
-                            </div>
-                        </div>
-                    ) : null}
-
-                    {/* Main Actions (Hide if any confirm is open) */}
-                    {/* Main Actions (Hide if any confirm is open) */}
-                    {!deleteConfirmOpen && !resetConfirmOpen && (
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            {isEditing && (
-                                <>
-                                    <button
-                                        onClick={handleSave}
-                                        disabled={!hasChanges}
-                                        style={{
-                                            flex: 1, height: '36px', padding: '0 5px',
-                                            background: hasChanges ? '#4caf50' : '#ccc',
-                                            color: 'white', border: 'none', borderRadius: '8px',
-                                            cursor: hasChanges ? 'pointer' : 'not-allowed',
-                                            whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem'
-                                        }}
-                                    >
-                                        儲存
-                                    </button>
-                                    <button
-                                        onClick={handleCancel}
-                                        style={{
-                                            flex: 1, height: '36px', padding: '0 5px',
-                                            background: '#29b6f6',
-                                            color: 'white', border: 'none', borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem'
-                                        }}
-                                    >
-                                        取消
-                                    </button>
-                                </>
-                            )}
-
-                            <button
-                                onClick={() => setResetConfirmOpen(true)}
-                                style={{ flex: 2, height: '36px', padding: '0 5px', background: '#ff9800', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', gap: '5px', whiteSpace: 'nowrap' }}
-                                title="重置資料"
-                            >
-                                🔄 重置資料
-                            </button>
-
-                            <button
-                                onClick={() => setDeleteConfirmOpen(true)}
-                                style={{ flex: 1.2, height: '36px', padding: '0 5px', background: '#ff5252', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', whiteSpace: 'nowrap' }}
-                                title="刪除"
-                            >
-                                🗑️ 刪除
-                            </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 

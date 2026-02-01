@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from './context/GameContext';
 import { Field } from './components/Field';
-import { Controls } from './components/Controls';
+
 import { DebugEditor } from './components/DebugEditor';
 import { Guide } from './components/Guide';
 import { Login } from './components/Login';
@@ -123,9 +123,7 @@ function App() {
 
       <Field onSelectSheep={handleSelectSheep} />
 
-      <Controls
-        onOpenList={() => setShowList(true)}
-      />
+
 
       {/* Permanent Foreground Dock */}
       <SheepList

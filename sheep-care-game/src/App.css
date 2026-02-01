@@ -199,28 +199,7 @@
 }
 
 /* ... Controls etc same ... */
-.controls-container {
-  height: 90px;
-  background: transparent;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  /* Align buttons to bottom padding */
-  z-index: 2000;
-  padding: 0 0 20px 0;
-  /* Lift up slightly */
-  position: absolute;
-  /* Fix to bottom overlay */
-  bottom: 0;
-  width: 100%;
-  pointer-events: none;
-  /* Let clicks pass through empty areas */
-}
 
-/* Ensure buttons are clickable */
-.controls-container>* {
-  pointer-events: auto;
-}
 
 
 
