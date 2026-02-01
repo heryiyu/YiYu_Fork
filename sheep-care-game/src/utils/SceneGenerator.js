@@ -111,20 +111,20 @@ export const generateScene = (userId = 'guest') => {
     elements.push(...trees);
 
     // --- 3. HORIZON EDGE (Grass Strip - Continuous) ---
-    // y: ~65% (Seam). Continuous placement with 4px gap.
+    // y: ~65% (Seam). Continuous placement with 0.4em (4px) gap.
     const edges = [];
 
-    // Width map (Numeric for calculation)
+    // Width map (In EM units relative to base 10px)
     const getEdgeWidthVal = (src) => {
-        if (src.includes('edge_01')) return 16;
-        if (src.includes('edge_02')) return 65;
-        if (src.includes('edge_03')) return 20;
-        if (src.includes('edge_04')) return 2;
-        return 20;
+        if (src.includes('edge_01')) return 2.5;
+        if (src.includes('edge_02')) return 8;
+        if (src.includes('edge_03')) return 3;
+        if (src.includes('edge_04')) return 0.5;
+        return 2.0;
     };
 
-    let currentX = -10; // Start slightly off-screen
-    const MAX_WIDTH = 2500; // Generate enough to cover wide screens
+    let currentX = -1; // Start slightly off-screen (-1em)
+    const MAX_WIDTH = 250; // Cover ~2500px equivalent
 
     while (currentX < MAX_WIDTH) {
         const src = getRandomAsset(ASSETS.DECORATIONS.GRASS_EDGES);
@@ -134,14 +134,14 @@ export const generateScene = (userId = 'guest') => {
             id: `horizon-grass-${currentX}`,
             type: 'HORIZON_GRASS',
             src: src,
-            x: currentX, // Now in PIXELS
+            x: currentX, // Now in EM
             y: 64,
-            width: `${w}px`,
+            width: `${w}em`,
             scale: 1,
             zIndex: 6
         });
 
-        currentX += (w + 4); // Width + 4px gap
+        currentX += (w + 0.4); // Width + 0.4em gap
     }
     elements.push(...edges);
 
@@ -168,7 +168,7 @@ export const generateScene = (userId = 'guest') => {
                 src: getRandomAsset(ASSETS.DECORATIONS.GRASS),
                 x: x,
                 y: y,
-                scale: rng.range(0.5, 0.8),
+                scale: rng.range(1, 1.5),
                 zIndex: Math.floor(100 - y)
             });
         }

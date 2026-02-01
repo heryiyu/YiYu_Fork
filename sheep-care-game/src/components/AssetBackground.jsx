@@ -12,7 +12,8 @@ export const AssetBackground = ({ userId, weather }) => {
         <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
             overflow: 'hidden', zIndex: 0,
-            background: 'var(--color-sky)' // Token-based Sky
+            background: 'var(--color-sky)', // Token-based Sky
+            fontSize: '10px' // Base scale factor for em units
         }}>
             {/* --- 1. CLOUDS (Z=1) --- */}
             <div className="cloud-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
@@ -97,9 +98,10 @@ export const AssetBackground = ({ userId, weather }) => {
                     src={g.src}
                     style={{
                         position: 'absolute',
-                        left: `${g.x}px`, // Pixel based for continuous strip
-                        bottom: `64.5%`, // Hardcoded precise alignment to cover the seam
-                        width: g.width || '20px', // Use stored width
+                        position: 'absolute',
+                        left: `${g.x}em`, // EM based for continuous strip
+                        bottom: `65%`, // Explicit alignment with horizontal line
+                        width: g.width || '20px',
                         zIndex: 4,
                         pointerEvents: 'none'
                     }}
@@ -117,7 +119,7 @@ export const AssetBackground = ({ userId, weather }) => {
                         position: 'absolute',
                         left: `${d.x}%`,
                         bottom: `${d.y}%`,
-                        width: '40px',
+                        width: '1.2em', // 12px -> 1.2em base size
                         transform: `scale(${d.scale})`,
                         zIndex: Math.floor(100 - d.y) // Depth sort
                     }}
@@ -161,7 +163,7 @@ export const AssetBackground = ({ userId, weather }) => {
                             position: 'absolute',
                             left: `${g.x}%`,
                             top: `${g.y}%`,
-                            width: '40px',
+                            width: '1.2em', // 12px -> 1.2em base size
                             transform: `scale(${g.scale})`,
                             zIndex: 102
                         }}
