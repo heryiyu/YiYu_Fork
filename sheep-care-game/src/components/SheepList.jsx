@@ -484,7 +484,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Add Modal Overlay (Now managed here) */}
                 {showAddModal && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000 }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
                         <AddSheepModal
                             onConfirm={handleConfirmAdd}
                             onCancel={() => setShowAddModal(false)}
@@ -494,7 +494,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Edit Modal Overlay */}
                 {editingSheep && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000 }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
                         <AddSheepModal
                             editingSheep={editingSheep}
                             onConfirm={(updatedData) => {

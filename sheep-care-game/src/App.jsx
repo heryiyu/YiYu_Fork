@@ -13,6 +13,8 @@ import { UserProfile } from './components/UserProfile';
 import { AdminWeatherControl } from './components/AdminWeatherControl';
 import './App.css';
 
+import { AssetPreloader } from './components/AssetPreloader';
+
 function App() {
   const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
@@ -29,28 +31,9 @@ function App() {
     setShowSkinManager(false);
   }, [currentUser]);
 
-  // 0. Global Loading
+  // 0. Global Loading (Use AssetPreloader for consistency)
   if (isLoading) {
-    return (
-      <div style={{
-        width: '100vw', height: '100vh',
-        display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center',
-        background: 'linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%)',
-        color: '#555',
-        position: 'fixed', top: 0, left: 0, zIndex: 9999
-      }}>
-        <div className="spinner" style={{
-          fontSize: '3rem', marginBottom: '20px',
-          animation: 'spin 1.5s linear infinite'
-        }}>⏳</div>
-        <style>{`
-            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        `}</style>
-        <h2 style={{ marginBottom: '10px', color: '#444' }}>正在同步羊群資料...</h2>
-        <p style={{ color: '#888', fontSize: '0.9rem' }}>正在從雲端牧場接回您的小羊</p>
-      </div>
-    );
+    return <AssetPreloader onLoaded={() => { }} />;
   }
 
   // 1. Not Logged In
