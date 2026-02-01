@@ -19,24 +19,7 @@ export const Controls = ({ onOpenList }) => {
         <div className="controls-container">
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', width: '100%', justifyContent: 'center' }}>
 
-                {/* Sheep List Button */}
-                <button
-                    className="action-btn"
-                    style={{
-                        background: '#fff',
-                        color: '#333',
-                        border: '1px solid #ccc',
-                        width: '60px', height: '60px',
-                        borderRadius: '20px',
-                        fontSize: '1.8rem',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 4px 0 #9e9e9e'
-                    }}
-                    onClick={onOpenList}
-                    title="羊群名冊"
-                >
-                    📋
-                </button>
+
 
 
 

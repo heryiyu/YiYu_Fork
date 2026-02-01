@@ -55,17 +55,17 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 </div>
             )}
 
-            {/* Avatar Section */}
+            {/* Avatar Section - Fixed overflow clipping */}
             <div style={{
                 flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                marginBottom: '10px', overflow: 'hidden'
+                marginBottom: '5px', position: 'relative' // Removed overflow:hidden
             }}>
                 <AssetSheep
                     status={s.status}
                     visual={s.visual}
                     health={s.health}
                     type={s.type}
-                    scale={0.8}
+                    scale={1.2} // Slightly larger scale
                     direction={1}
                     centered={true}
                 />
@@ -116,7 +116,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 };
 
 // --- Main List Component ---
-export const SheepList = ({ onSelect, onClose }) => {
+export const SheepList = ({ onSelect }) => { // Removed onClose
     const { sheep, deleteMultipleSheep, updateSheep } = useGame();
     const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
 
@@ -172,67 +172,75 @@ export const SheepList = ({ onSelect, onClose }) => {
 
     return (
         <div className="sheep-list-container" style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
-            animation: 'fadeIn 0.3s'
-        }} onClick={onClose}>
+            position: 'absolute', bottom: 0, left: 0, width: '100vw', height: '33%', // Occupy Foreground Terrain
+            background: 'transparent', // No background, scene acts as BG
+            zIndex: 1500, // Below Controls (2000) but above Foreground (100)
+            display: 'flex', flexDirection: 'column',
+            pointerEvents: 'none' // Allow clicks through empty areas, but re-enable for children
+        }}>
+            <style>{`
+                @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                .sheep-dock-scroll::-webkit-scrollbar { display: none; }
+                .dock-child { pointer-events: auto; }
+            `}</style>
 
-            {/* Modal Content */}
-            <div style={{
-                width: '100%', maxWidth: '420px', height: '90%',
-                background: 'var(--color-primary-cream)',
-                borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
-                display: 'flex', flexDirection: 'column',
-                overflow: 'hidden', boxShadow: '0 -4px 20px rgba(0,0,0,0.2)',
-                animation: 'slideUp 0.3s'
-            }} onClick={(e) => e.stopPropagation()}>
+            {/* Filter Bar (Floating above the list) */}
+            <div className="dock-child" style={{
+                padding: '10px 20px',
+                display: 'flex', gap: '8px',
+                overflowX: 'auto', scrollbarWidth: 'none',
+                maxWidth: '100%'
+            }}>
+                {[
+                    { id: 'ALL', label: '全部' },
+                    { id: 'HEALTHY', label: '健康' },
+                    { id: 'SICK', label: '生病' },
+                    { id: 'DEAD', label: '離世' }
+                ].map(f => (
+                    <button key={f.id} onClick={() => setFilterStatus(f.id)}
+                        style={{
+                            padding: '4px 12px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.5)',
+                            background: filterStatus === f.id ? 'var(--color-text-brown)' : 'rgba(255, 255, 255, 0.8)',
+                            color: filterStatus === f.id ? 'white' : 'var(--color-text-brown)',
+                            fontWeight: 'bold', fontSize: '0.8rem', whiteSpace: 'nowrap',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                        }}>
+                        {f.label} {counts[f.id]}
+                    </button>
+                ))}
 
-                {/* Header */}
-                <div style={{ padding: '24px 20px 10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, color: 'var(--color-text-brown)', fontSize: '1.5rem' }}>
-                        小羊圖鑑
-                    </h2>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
-                            style={{ background: isSelectionMode ? 'var(--color-action-blue)' : '#FFF', border: '1px solid #DDD', borderRadius: '20px', padding: '6px 12px', fontSize: '0.8rem', color: isSelectionMode ? 'white' : '#666' }}>
-                            {isSelectionMode ? '完成' : '編輯'}
-                        </button>
-                        <button onClick={onClose} style={{ background: '#F5F5F5', border: 'none', borderRadius: '50%', width: '32px', height: '32px', fontSize: '1.2rem', color: '#666' }}>
-                            ✕
-                        </button>
-                    </div>
-                </div>
+                {/* Edit Mode Toggle (Small) */}
+                <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
+                    style={{
+                        marginLeft: 'auto',
+                        background: isSelectionMode ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
+                        border: '1px solid #DDD', borderRadius: '15px',
+                        padding: '4px 12px', fontSize: '0.8rem',
+                        color: isSelectionMode ? 'white' : '#666',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                    {isSelectionMode ? '完成' : '編輯'}
+                </button>
+            </div>
 
-                {/* Filters */}
-                <div style={{ padding: '0 20px 10px 20px', display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-                    {[
-                        { id: 'ALL', label: '全部' },
-                        { id: 'HEALTHY', label: '健康' },
-                        { id: 'SICK', label: '生病' },
-                        { id: 'DEAD', label: '離世' }
-                    ].map(f => (
-                        <button key={f.id} onClick={() => setFilterStatus(f.id)}
-                            style={{
-                                padding: '6px 16px', borderRadius: '20px', border: 'none',
-                                background: filterStatus === f.id ? 'var(--color-text-brown)' : 'rgba(93, 64, 55, 0.1)',
-                                color: filterStatus === f.id ? 'white' : 'var(--color-text-brown)',
-                                fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap',
-                                transition: 'all 0.2s'
-                            }}>
-                            {f.label} {counts[f.id]}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Grid Content */}
-                <div style={{
-                    flex: 1, overflowY: 'auto', padding: '10px 20px 40px 20px',
-                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', alignContent: 'start'
-                }}>
-                    {filteredSheep.map(s => (
+            {/* Horizontal Scroll List */}
+            <div className="sheep-dock-scroll dock-child" style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '15px',
+                padding: '0 20px 80px 20px', // Bottom padding for Controls
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollBehavior: 'smooth'
+            }}>
+                {filteredSheep.map(s => (
+                    <div key={s.id} style={{ minWidth: '130px', height: '100%', position: 'relative' }}>
                         <SheepCard
-                            key={s.id}
                             s={s}
                             isSelectionMode={isSelectionMode}
                             isSelected={selectedIds.has(s.id)}
@@ -241,49 +249,47 @@ export const SheepList = ({ onSelect, onClose }) => {
                             isDead={s.status === 'dead'}
                             isSick={s.status === 'sick'}
                         />
-                    ))}
-
-                    {filteredSheep.length === 0 && (
-                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0', color: '#AAA' }}>
-                            沒有找到小羊...
-                        </div>
-                    )}
-                </div>
-
-                {/* Selection Actions Footer */}
-                {isSelectionMode && (
-                    <div style={{
-                        padding: '16px 20px', background: 'white', borderTop: '1px solid #EEE',
-                        display: 'flex', gap: '10px', justifyContent: 'space-between',
-                        boxShadow: '0 -2px 10px rgba(0,0,0,0.05)'
-                    }}>
-                        <button onClick={handleSelectAll} style={{ padding: '10px', borderRadius: '12px', background: '#F5F5F5', border: 'none', color: '#666', flex: 1 }}>
-                            全選
-                        </button>
-                        <button onClick={handleDeleteSelected}
-                            disabled={selectedIds.size === 0}
-                            style={{
-                                padding: '10px', borderRadius: '12px', flex: 2,
-                                background: selectedIds.size > 0 ? '#FF5252' : '#EEE',
-                                color: selectedIds.size > 0 ? 'white' : '#AAA', border: 'none', fontWeight: 'bold',
-                                transition: 'all 0.2s'
-                            }}>
-                            刪除 ({selectedIds.size})
-                        </button>
                     </div>
+                ))}
+
+                {filteredSheep.length === 0 && (
+                    <div style={{ color: 'rgba(0,0,0,0.5)', padding: '20px', fontWeight: 'bold' }}>沒有小羊...</div>
                 )}
             </div>
 
-            {/* Edit Modal Overlay */}
+            {/* Batch Action Bar (if selecting) */}
+            {isSelectionMode && selectedIds.size > 0 && (
+                <div className="dock-child" style={{
+                    position: 'absolute', bottom: '85px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'white', padding: '10px 20px', borderRadius: '30px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    display: 'flex', gap: '10px', animation: 'pop-in 0.2s'
+                }}>
+                    <button onClick={handleSelectAll} style={{ padding: '8px 16px', borderRadius: '20px', background: '#F5F5F5', border: 'none', color: '#666' }}>
+                        全選
+                    </button>
+                    <button onClick={handleDeleteSelected}
+                        style={{
+                            padding: '8px 16px', borderRadius: '20px',
+                            background: '#FF5252', color: 'white', border: 'none', fontWeight: 'bold'
+                        }}>
+                        刪除 ({selectedIds.size})
+                    </button>
+                </div>
+            )}
+
+            {/* Edit Modal Overlay - Needs to be full screen z-index high */}
             {editingSheep && (
-                <AddSheepModal
-                    editingSheep={editingSheep}
-                    onConfirm={(updatedData) => {
-                        if (updateSheep) updateSheep(editingSheep.id, updatedData);
-                        setEditingSheep(null);
-                    }}
-                    onCancel={() => setEditingSheep(null)}
-                />
+                <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000 }}>
+                    <AddSheepModal
+                        editingSheep={editingSheep}
+                        onConfirm={(updatedData) => {
+                            if (updateSheep) updateSheep(editingSheep.id, updatedData);
+                            setEditingSheep(null);
+                        }}
+                        onCancel={() => setEditingSheep(null)}
+                    />
+                </div>
             )}
         </div>
     );
