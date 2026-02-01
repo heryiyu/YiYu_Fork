@@ -35,7 +35,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             {/* 1. Header (Fixed Height) */}
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
-                    <span>♥</span> <span>{s.careLevel || 0}%</span>
+                    <span>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
                 <div style={{
                     background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'var(--color-badge-orange)'),
@@ -167,17 +167,6 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
                 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
                 .sheep-dock-scroll::-webkit-scrollbar { display: none; }
                 .dock-child { pointer-events: auto; }
-                
-                /* Adaptive Logic: Strict Tiered Hiding */
-                /* 1. Hide Action Button first (Height < 600px) */
-                @media (max-height: 600px) {
-                    .sheep-card-action { display: none !important; }
-                }
-                
-                /* 2. Hide Sheep Avatar second (Height < 500px) */
-                @media (max-height: 500px) {
-                    .sheep-card-avatar { display: none !important; }
-                }
             `}</style>
 
             {/* Filter Bar */}
@@ -231,7 +220,8 @@ export const SheepList = ({ onSelect }) => { // Removed onClose
                 padding: '10px 20px 20px 20px', // ADDED TOP PADDING (10px)
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                scrollBehavior: 'smooth'
+                scrollBehavior: 'smooth',
+                pointerEvents: 'auto' // ENABLE SCROLLING
             }}>
                 {filteredSheep.map(s => (
                     // WRAPPER
