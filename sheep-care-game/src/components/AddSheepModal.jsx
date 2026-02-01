@@ -65,20 +65,37 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // VALIDATION REGEX: Chinese, English, Numbers, Spaces
+        const validNameRegex = /^[\u4e00-\u9fa5a-zA-Z0-9\s]+$/;
+
         // 1. Creation Mode (Batch)
         if (isBatchMode && !editingSheep) {
             const lines = batchInput.trim().split('\n').filter(line => line.trim());
-            const sheepData = lines.map(line => {
+            const sheepData = [];
+
+            for (const line of lines) {
                 const parts = line.split(/[ \t,，]+/).map(p => p.trim());
+                const sName = parts[0];
+
+                if (!sName) continue;
+                if (!validNameRegex.test(sName)) {
+                    alert(`名稱 "${sName}" 包含無效字元！僅允許中文、英文、數字與空白。`);
+                    return;
+                }
+                if (sName.length > 12) {
+                    alert(`名稱 "${sName}" 太長了！請控制在 12 字以內。`);
+                    return;
+                }
+
                 // Generate RANDOM visual for each batch sheep
                 const randomVisual = generateVisuals();
-                return {
-                    name: parts[0],
+                sheepData.push({
+                    name: sName,
                     spiritualMaturity: parts[1] && parts[2] ? `${parts[1]} (${parts[2]})` : (parts[1] || ''),
                     visual: { ...randomVisual, pattern: 'none' }, // Default random
                     skinId: null
-                };
-            }).filter(s => s.name); // Filter empty names
+                });
+            }
 
             if (sheepData.length === 0) return; // Prevent empty submit
             onConfirm(sheepData);
@@ -86,6 +103,16 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         }
 
         // 2. Single Creation OR Edit Logic
+        const trimmedName = name.trim();
+        if (!validNameRegex.test(trimmedName)) {
+            alert("名稱包含無效字元！僅允許中文、英文、數字與空白。");
+            return;
+        }
+        if (trimmedName.length > 12) {
+            alert("名稱太長了！請控制在 12 字以內。");
+            return;
+        }
+
         let finalMaturity = spiritualMaturity;
         if (spiritualMaturity && maturityStage) {
             finalMaturity = `${spiritualMaturity} (${maturityStage})`;
@@ -123,7 +150,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         }
 
         onConfirm({
-            name: name.trim(), // Trim Name
+            name: trimmedName,
             note: note ? note.trim() : '',
             spiritualMaturity: finalMaturity,
             ...finalVisualData

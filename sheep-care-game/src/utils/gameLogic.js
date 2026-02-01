@@ -217,7 +217,7 @@ export const calculateOfflineDecay = (s, diffHours) => {
 
 export const calculateTick = (s, allSheep = []) => {
     // Allow dead sheep to process message logic
-    // if (s.status === 'dead') return s;
+
 
     let { x, y, state, angle, direction, message, messageTimer } = s;
     const oldX = x;

@@ -441,8 +441,8 @@ export const GameProvider = ({ children }) => {
     }, []);
 
     const loginWithLine = () => {
-        // Localhost Bypass
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Localhost Bypass (Dev Only)
+        if (import.meta.env.DEV && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             const mockProfile = {
                 userId: 'admin', // Fixed ID for Admin
                 displayName: 'Admin',
