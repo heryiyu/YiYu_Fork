@@ -50,8 +50,12 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 
             {/* 1. Header (Fixed Height) */}
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
-                {/* Health Text: Dynamic size */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
+                {/* Health Text: Dynamic size (Smaller if 100%) */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '2px',
+                    fontSize: Math.ceil(s.health || 0) >= 100 ? 'clamp(0.8rem, 3.5vw, 1.0rem)' : 'clamp(0.9rem, 4vw, 1.1rem)',
+                    color: 'var(--color-action-pink)', fontWeight: 'bold'
+                }}>
                     <span style={{ fontSize: '1.2em' }}>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
                 {/* Status Badge: No wrap, dynamic size */}
