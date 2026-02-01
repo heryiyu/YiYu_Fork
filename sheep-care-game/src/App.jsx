@@ -17,14 +17,13 @@ function App() {
   const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
-  const [showList, setShowList] = useState(false);
+  // showList removed - permanent dock
   const [showSettings, setShowSettings] = useState(false);
   const [showSkinManager, setShowSkinManager] = useState(false);
 
   // Reset state when user changes
   useEffect(() => {
     setSelectedSheepId(null);
-    setShowList(false);
     setShowGuide(false);
     setShowSettings(false);
     setShowSkinManager(false);
@@ -128,13 +127,10 @@ function App() {
         onOpenList={() => setShowList(true)}
       />
 
-      {/* Modals */}
-      {showList && (
-        <SheepList
-          onSelect={handleSelectFromList}
-          onClose={() => setShowList(false)}
-        />
-      )}
+      {/* Permanent Foreground Dock */}
+      <SheepList
+        onSelect={handleSelectFromList}
+      />
 
       {selectedSheepId && (
         <DebugEditor

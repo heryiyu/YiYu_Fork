@@ -12,7 +12,8 @@ export const useGame = () => useContext(GameContext);
 // Supabase client is managed in services/supabaseClient
 
 export const GameProvider = ({ children }) => {
-    const LIFF_ID = "2008919632-15fCJTqb";
+    // Use env var for LIFF ID, fallback to the known ID if missing
+    const LIFF_ID = import.meta.env.VITE_LINE_LIFF_ID || "2008919632-15fCJTqb";
 
     // --- Session Init (SessionStorage for Auto-Logout on Close) ---
     const [currentUser, setCurrentUser] = useState(null); // Line Name
