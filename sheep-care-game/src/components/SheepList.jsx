@@ -258,86 +258,146 @@ export const SheepList = ({ onSelect }) => {
                         pointerEvents: 'auto',
                         cursor: 'pointer',
                         userSelect: 'none',
-                        position: 'relative', zIndex: 2
+                        position: 'relative', zIndex: 2,
+                        minHeight: '56px' // Ensure height stability
                     }}
                 >
                     {/* Inner wrapper: functional when Open, pass-through when Collapsed */}
                     <div style={{
                         display: 'contents',
-                        pointerEvents: isCollapsed ? 'none' : 'auto' // CRITICAL SAFETY FIX
+                        pointerEvents: isCollapsed ? 'none' : 'auto'
                     }} onClick={(e) => !isCollapsed && e.stopPropagation()}>
 
-                        {/* 1. Add Button (Gold) */}
-                        <button onClick={() => setShowAddModal(true)} style={{
-                            width: '36px', height: '36px', borderRadius: '50%',
-                            background: '#ffd700', border: 'none',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.2rem', color: '#5d4037', fontWeight: 'bold',
-                            flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer',
-                            opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s'
-                        }}>
-                            ➕
-                        </button>
-
-                        {/* 2. Search Bar (White Pill) */}
-                        <div style={{ position: 'relative', height: '36px', flexShrink: 0, opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s' }}>
-                            <input
-                                type="text"
-                                placeholder="搜尋..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{
-                                    height: '100%', padding: '0 12px 0 30px',
-                                    borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                    background: 'rgba(255,255,255,0.9)',
-                                    width: searchTerm ? '120px' : '80px',
-                                    transition: 'width 0.2s', fontSize: '0.9rem',
-                                    color: '#5d4037', outline: 'none'
-                                }}
-                            />
-                            <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
-                        </div>
-
-                        {/* Divider */}
-                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)', margin: '0 4px' }}></div>
-
-                        {/* 3. Filters */}
-                        {[
-                            { id: 'ALL', label: '全部' },
-                            { id: 'HEALTHY', label: '健康' },
-                            { id: 'SICK', label: '生病' },
-                            { id: 'DEAD', label: '離世' }
-                        ].map(f => (
-                            <button key={f.id} onClick={() => setFilterStatus(f.id)}
-                                style={{
-                                    padding: '6px 12px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                    background: filterStatus === f.id ? 'var(--color-text-brown)' : 'rgba(255, 255, 255, 0.8)',
-                                    color: filterStatus === f.id ? 'white' : 'var(--color-text-brown)',
-                                    fontWeight: 'bold', fontSize: '0.8rem', whiteSpace: 'nowrap',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                    transition: 'all 0.2s',
-                                    cursor: 'pointer', flexShrink: 0,
-                                    opacity: isCollapsed ? 0.6 : 1
+                        {isSelectionMode ? (
+                            // --- SELECTION TOOLBAR ---
+                            <>
+                                {/* Selected Count */}
+                                <div style={{
+                                    color: 'white', fontWeight: 'bold', fontSize: '1rem',
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                                    marginRight: '8px',
+                                    whiteSpace: 'nowrap'
                                 }}>
-                                {f.label} {counts[f.id]}
-                            </button>
-                        ))}
+                                    已選取 {selectedIds.size}
+                                </div>
 
-                        {/* 4. Select Button */}
-                        <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
-                            style={{
-                                marginLeft: 'auto',
-                                background: isSelectionMode ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
-                                border: '1px solid #DDD', borderRadius: '15px',
-                                padding: '6px 16px', fontSize: '0.8rem',
-                                color: isSelectionMode ? 'white' : '#666',
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                fontWeight: 'bold', flexShrink: 0,
-                                opacity: isCollapsed ? 0.6 : 1
-                            }}>
-                            {isSelectionMode ? '取消' : '選取'}
-                        </button>
+                                {/* Action Buttons */}
+                                <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '18px',
+                                        background: selectedIds.size > 0 ? '#FF5252' : '#ccc',
+                                        color: 'white', border: 'none', fontWeight: 'bold', cursor: selectedIds.size > 0 ? 'pointer' : 'default',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', flexShrink: 0,
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        transition: 'all 0.2s',
+                                        fontSize: '0.8rem'
+                                    }}>
+                                    🗑️ 刪除
+                                </button>
+
+                                <button onClick={handleResetSelected} disabled={selectedIds.size === 0}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '18px',
+                                        background: selectedIds.size > 0 ? '#29B6F6' : '#ccc',
+                                        color: 'white', border: 'none', fontWeight: 'bold', cursor: selectedIds.size > 0 ? 'pointer' : 'default',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', flexShrink: 0,
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        transition: 'all 0.2s',
+                                        fontSize: '0.8rem'
+                                    }}>
+                                    🔄 重置
+                                </button>
+
+                                {/* Cancel Button (Right Aligned) */}
+                                <button onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
+                                    style={{
+                                        marginLeft: 'auto',
+                                        background: 'rgba(255,255,255,0.9)',
+                                        border: '1px solid #DDD', borderRadius: '15px',
+                                        padding: '6px 16px', fontSize: '0.8rem',
+                                        color: '#5d4037', cursor: 'pointer',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                        fontWeight: 'bold', flexShrink: 0
+                                    }}>
+                                    取消
+                                </button>
+                            </>
+                        ) : (
+                            // --- STANDARD TOOLBAR ---
+                            <>
+                                {/* 1. Add Button (Gold) */}
+                                <button onClick={() => setShowAddModal(true)} style={{
+                                    width: '36px', height: '36px', borderRadius: '50%',
+                                    background: '#ffd700', border: 'none',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '1.2rem', color: '#5d4037', fontWeight: 'bold',
+                                    flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer',
+                                    opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s'
+                                }}>
+                                    ➕
+                                </button>
+
+                                {/* 2. Search Bar (White Pill) */}
+                                <div style={{ position: 'relative', height: '36px', flexShrink: 0, opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="搜尋..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{
+                                            height: '100%', padding: '0 12px 0 30px',
+                                            borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
+                                            background: 'rgba(255,255,255,0.9)',
+                                            width: searchTerm ? '120px' : '80px',
+                                            transition: 'width 0.2s', fontSize: '0.9rem',
+                                            color: '#5d4037', outline: 'none'
+                                        }}
+                                    />
+                                    <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                                </div>
+
+                                {/* Divider */}
+                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)', margin: '0 4px' }}></div>
+
+                                {/* 3. Filters */}
+                                {[
+                                    { id: 'ALL', label: '全部' },
+                                    { id: 'HEALTHY', label: '健康' },
+                                    { id: 'SICK', label: '生病' },
+                                    { id: 'DEAD', label: '離世' }
+                                ].map(f => (
+                                    <button key={f.id} onClick={() => setFilterStatus(f.id)}
+                                        style={{
+                                            padding: '6px 12px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
+                                            background: filterStatus === f.id ? 'var(--color-text-brown)' : 'rgba(255, 255, 255, 0.8)',
+                                            color: filterStatus === f.id ? 'white' : 'var(--color-text-brown)',
+                                            fontWeight: 'bold', fontSize: '0.8rem', whiteSpace: 'nowrap',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                            transition: 'all 0.2s',
+                                            cursor: 'pointer', flexShrink: 0,
+                                            opacity: isCollapsed ? 0.6 : 1
+                                        }}>
+                                        {f.label} {counts[f.id]}
+                                    </button>
+                                ))}
+
+                                {/* 4. Select Button */}
+                                <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
+                                    style={{
+                                        marginLeft: 'auto',
+                                        background: isSelectionMode ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
+                                        border: '1px solid #DDD', borderRadius: '15px',
+                                        padding: '6px 16px', fontSize: '0.8rem',
+                                        color: isSelectionMode ? 'white' : '#666',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                        fontWeight: 'bold', flexShrink: 0,
+                                        opacity: isCollapsed ? 0.6 : 1
+                                    }}>
+                                    {isSelectionMode ? '取消' : '選取'}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -397,32 +457,7 @@ export const SheepList = ({ onSelect }) => {
                     </div>
                 </div>
 
-                {/* Batch Action Bar (Conditional: Selection Mode > 0) */}
-                {isSelectionMode && selectedIds.size > 0 && !isCollapsed && (
-                    <div className="dock-child" style={{
-                        position: 'absolute', bottom: '85px', left: '50%', transform: 'translateX(-50%)',
-                        background: 'white', padding: '10px 20px', borderRadius: '30px',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                        display: 'flex', gap: '10px', animation: 'pop-in 0.2s', zIndex: 2000
-                    }}>
-                        <button onClick={handleDeleteSelected}
-                            style={{
-                                padding: '8px 16px', borderRadius: '20px',
-                                background: '#FF5252', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '4px'
-                            }}>
-                            🗑️ 刪除 ({selectedIds.size})
-                        </button>
-                        <button onClick={handleResetSelected}
-                            style={{
-                                padding: '8px 16px', borderRadius: '20px',
-                                background: '#29B6F6', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '4px'
-                            }}>
-                            🔄 重置 ({selectedIds.size})
-                        </button>
-                    </div>
-                )}
+                {/* Batch Action Bar REMOVED - Integrated into Toolbar */}
 
                 {/* Add Modal Overlay (Now managed here) */}
                 {showAddModal && (
