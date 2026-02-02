@@ -46,10 +46,11 @@ export const NicknameSetup = ({ onClose }) => {
                     position: 'fixed',
                     top: '20px', left: '20px',
                     width: '320px',
-                    background: 'white',
+                    background: 'var(--bg-card)',
                     borderRadius: '20px',
                     padding: '20px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                    boxShadow: 'var(--shadow-card)',
+                    border: '1px solid var(--border-subtle)',
                     zIndex: 9999,
                     animation: 'popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
                 }}>
@@ -57,15 +58,15 @@ export const NicknameSetup = ({ onClose }) => {
 
                     {/* Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <h3 style={{ margin: 0, color: '#444' }}>📄 牧場主資料</h3>
-                        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#999' }}>✖</button>
+                        <h3 style={{ margin: 0, color: 'var(--text-header)' }}>📄 牧場主資料</h3>
+                        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✖</button>
                     </div>
 
                     {/* Info Block (Always Visible) */}
                     <div style={{
-                        background: 'linear-gradient(to right, #f8f9fa, #e9ecef)',
+                        background: 'var(--bg-card-secondary)',
                         padding: '12px', borderRadius: '12px', marginBottom: '20px',
-                        display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem', color: '#555'
+                        display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem', color: 'var(--text-body)'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '1.2rem' }}>📍</span>
@@ -127,10 +128,10 @@ export const NicknameSetup = ({ onClose }) => {
 
     // --- RENDER: INITIAL SETUP (Centered Modal) ---
     return (
-        <div className="debug-editor-overlay" style={{ background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)' }}>
+        <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
             <div className="simple-editor" style={{ width: '300px', textAlign: 'center', padding: '30px' }}>
-                <h2 style={{ marginBottom: '20px', color: '#333' }}>✨ 歡迎來到牧場</h2>
-                <p style={{ color: '#666', marginBottom: '25px', lineHeight: '1.6' }}>
+                <h2 style={{ marginBottom: '20px', color: 'var(--text-header)' }}>✨ 歡迎來到牧場</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '25px', lineHeight: '1.6' }}>
                     為了讓羊群認識您<br />
                     請告訴我們您的暱稱
                 </p>
@@ -143,19 +144,19 @@ export const NicknameSetup = ({ onClose }) => {
                         placeholder="請輸入您的暱稱"
                         style={{
                             width: '100%', padding: '12px', marginBottom: '10px',
-                            border: '1px solid #ddd', borderRadius: '8px',
-                            fontSize: '1rem', outline: 'none', textAlign: 'center'
+                            border: '1px solid var(--border-subtle)', borderRadius: '8px',
+                            fontSize: '1rem', outline: 'none', textAlign: 'center', background: 'white'
                         }}
                         autoFocus
                     />
-                    {error && <div style={{ color: 'red', fontSize: '0.9rem', marginBottom: '15px' }}>{error}</div>}
+                    {error && <div style={{ color: 'var(--palette-text-status)', fontSize: '0.9rem', marginBottom: '15px' }}>{error}</div>}
 
                     <button
                         type="submit"
                         disabled={!name.trim()}
                         style={{
                             width: '100%', padding: '12px',
-                            background: name.trim() ? '#66bb6a' : '#ccc',
+                            background: name.trim() ? 'var(--btn-primary-bg)' : '#ccc',
                             color: 'white', border: 'none', borderRadius: '8px',
                             fontSize: '1.1rem', cursor: name.trim() ? 'pointer' : 'not-allowed',
                             transition: 'background 0.2s', marginTop: '10px'

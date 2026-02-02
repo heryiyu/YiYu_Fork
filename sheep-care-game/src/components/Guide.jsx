@@ -10,14 +10,14 @@ export const Guide = ({ onClose }) => {
                     <button className="close-btn" onClick={onClose}>✖</button>
                 </div>
 
-                <div style={{ maxHeight: '60vh', overflowY: 'auto', fontSize: '0.9rem', lineHeight: '1.5', color: '#000' }}>
+                <div style={{ maxHeight: '60vh', overflowY: 'auto', fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--text-body)' }}>
                     <h4>1. 每日照顧與進化</h4>
                     <p>上帝限制了每日的影響力，讓成長循序漸進：</p>
                     <ul>
                         <li><strong>禱告 (Prayer):</strong> 每隻小羊每天最多 <strong>3 次</strong> (每次恢復 <strong>+6 負擔</strong>)。</li>
                         <li><strong>負擔 (Burden):</strong> 每次禱告恢復負擔，代表對靈魂的負擔與關愛。</li>
                         <li><strong>生命三階段 (負擔指數):</strong>
-                            <div style={{ background: '#e3f2fd', padding: '8px', borderRadius: '4px', margin: '5px 0', fontSize: '0.85rem' }}>
+                            <div style={{ background: 'var(--bg-card-secondary)', padding: '8px', borderRadius: '4px', margin: '5px 0', fontSize: '0.85rem' }}>
                                 🍂 <strong>虛弱 (Weak):</strong> 負擔 &lt; 40，小羊看起來無精打采。<br />
                                 🐑 <strong>健康 (Healthy):</strong> 負擔 40-79，精神飽滿的樣子。<br />
                                 💪 <strong>強壯 (Strong):</strong> 負擔 &ge; 80，長出羊角，強壯有力！
@@ -54,7 +54,7 @@ export const Guide = ({ onClose }) => {
                         <li><strong>開啟後:</strong> 系統將在適當時間提醒您回來關心羊群的狀況。</li>
                     </ul>
 
-                    <p style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
+                    <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-secondary)' }}>
                         <em>"信心若沒有行為就是死的。"</em>
                     </p>
                 </div>
