@@ -255,7 +255,7 @@ export const SheepList = ({ onSelect }) => {
 
                                 <button
                                     type="button"
-                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--delete"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--delete btn-destructive"
                                     onClick={handleDeleteSelected}
                                     disabled={selectedIds.size === 0}
                                 >

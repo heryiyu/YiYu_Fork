@@ -1,5 +1,5 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
+import { Eye } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { Sheep } from './Sheep';
 import { AssetBackground } from './AssetBackground';
@@ -145,9 +145,11 @@ export const Field = ({ onSelectSheep }) => {
                     background: 'var(--color-primary-cream)', color: 'var(--color-text-brown)',
                     padding: '8px 16px', borderRadius: 'var(--radius-btn)',
                     fontSize: '0.85rem', pointerEvents: 'none', zIndex: 500,
-                    boxShadow: 'var(--shadow-soft)', fontWeight: 'bold'
+                    boxShadow: 'var(--shadow-soft)', fontWeight: 'bold',
+                    display: 'flex', alignItems: 'center', gap: '6px'
                 }}>
-                    👁️ {visibleIds.size} / {sheep.length}
+                    <Eye size={14} strokeWidth={2} style={{ opacity: 0.8 }} />
+                    {visibleIds.size} / {sheep.length}
                 </div>
             )}
 

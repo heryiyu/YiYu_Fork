@@ -44,15 +44,13 @@
 }
 
 .danger-btn {
-    background: #ff4d4d;
-    /* Keep explicit red or add to tokens if desired, but this is debug only */
-    color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
+    background: var(--btn-danger-bg);
+    color: var(--btn-danger-text);
 }
-
 .danger-btn:hover {
-    background: #cc0000;
+    background: var(--btn-danger-hover);
 }

@@ -124,10 +124,10 @@
   line-height: 1.2;
 }
 
-/* 已離世 – same as 失喪的靈魂: bg #f5d6d6, text #b65a5a */
+/* 已離世 – same as 失喪的靈魂 */
 .sheep-card-tag--dead {
-  background: #f5d6d6;
-  color: #b65a5a;
+  background: var(--tag-dead-bg);
+  color: var(--tag-dead-text);
 }
 
 /* 生病 – same as 虛弱: bg #fde8ec, text #f39fac */
@@ -343,16 +343,7 @@
   opacity: 1;
 }
 
-.dock-toolbar-action-btn--delete {
-  background: var(--btn-danger-bg);
-  color: var(--btn-danger-text);
-  border-color: var(--btn-danger-bg);
-}
-
-.dock-toolbar-action-btn--delete:not(:disabled):hover {
-  background: var(--btn-danger-hover);
-  border-color: var(--btn-danger-hover);
-}
+/* Color handled by .btn-destructive (App.css) */
 
 .dock-toolbar-action-btn--reset {
   background: var(--btn-reset-bg);

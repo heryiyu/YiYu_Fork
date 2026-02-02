@@ -1,12 +1,80 @@
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { generateScene } from '../utils/SceneGenerator';
 import '../styles/design-tokens.css';
 
+const mountainSvgCache = new Map();
+const mountainTintCache = new Map();
+
 export const AssetBackground = ({ userId, weather }) => {
     // Generate the deterministic scene for this user
     const scene = useMemo(() => generateScene(userId), [userId]);
+    const timeStatus = weather?.timeStatus || 'day';
+    const [tintedMountains, setTintedMountains] = useState({});
+
+    const getBushVariantSrc = (src) => {
+        if (!src.includes('/assets/decorations/bushes/')) return src;
+        if (timeStatus === 'evening') {
+            return src.replace(/(bush_\d+)\.svg$/, '$1_evening.svg');
+        }
+        if (timeStatus === 'night') {
+            return src.replace(/(bush_\d+)\.svg$/, '$1_night.svg');
+        }
+        return src;
+    };
+
+    useEffect(() => {
+        if (timeStatus === 'day') return;
+        const desiredFill =
+            timeStatus === 'evening'
+                ? '#EFC786'
+                : timeStatus === 'night'
+                    ? '#262E49'
+                    : null;
+        if (!desiredFill) return;
+
+        const mountainSrcs = Array.from(
+            new Set(scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => m.src))
+        );
+        if (mountainSrcs.length === 0) return;
+
+        let isMounted = true;
+        const loadMountainVariants = async () => {
+            const updates = {};
+
+            await Promise.all(
+                mountainSrcs.map(async (src) => {
+                    const cacheKey = `${src}|${timeStatus}`;
+                    if (mountainTintCache.has(cacheKey)) {
+                        updates[src] = mountainTintCache.get(cacheKey);
+                        return;
+                    }
+
+                    let svgText = mountainSvgCache.get(src);
+                    if (!svgText) {
+                        const response = await fetch(src);
+                        if (!response.ok) return;
+                        svgText = await response.text();
+                        mountainSvgCache.set(src, svgText);
+                    }
+
+                    const tintedSvg = svgText.replace(/#C2DBFA/gi, desiredFill);
+                    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(tintedSvg)}`;
+                    mountainTintCache.set(cacheKey, dataUri);
+                    updates[src] = dataUri;
+                })
+            );
+
+            if (!isMounted || Object.keys(updates).length === 0) return;
+            setTintedMountains((prev) => ({ ...prev, ...updates }));
+        };
+
+        loadMountainVariants();
+        return () => {
+            isMounted = false;
+        };
+    }, [scene, timeStatus]);
 
     return (
         <div style={{
@@ -44,7 +112,7 @@ export const AssetBackground = ({ userId, weather }) => {
             {scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => (
                 <img
                     key={m.id}
-                    src={m.src}
+                    src={timeStatus === 'day' ? m.src : (tintedMountains[m.src] || m.src)}
                     style={{
                         position: 'absolute',
                         left: `${m.x}%`,
@@ -145,7 +213,7 @@ export const AssetBackground = ({ userId, weather }) => {
                 {scene.elements.filter(e => e.type === 'FOREGROUND_SEAM_ITEM').map(item => (
                     <img
                         key={item.id}
-                        src={item.src}
+                        src={item.subType === 'BUSH' ? getBushVariantSrc(item.src) : item.src}
                         style={{
                             position: 'absolute',
                             left: `${item.x}em`,

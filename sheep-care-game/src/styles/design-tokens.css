@@ -46,9 +46,11 @@
     --palette-sheep-brown: #7b5b33;
     --palette-sheep-grey: #ccbea8;
 
-    /* high-contrast actions (dock toolbar, readability on light backgrounds) */
-    --palette-danger: #b91c1c;
-    --palette-danger-hover: #991b1b;
+    /* destructive / reset actions (harmonious with pastel palette) */
+    --palette-danger: #b65a5a;
+    --palette-danger-hover: #a04d4d;
+    --palette-reset-soft: #9a7b5a;
+    --palette-reset-soft-hover: #8a6b4a;
     --palette-primary-strong: #0369a1;
     --palette-primary-strong-hover: #0284c7;
     --palette-disabled: #6b635b;
@@ -86,6 +88,7 @@
     --text-secondary: var(--palette-text-section);
     --text-accent: var(--palette-text-status);
     --text-body: var(--palette-text-dark);
+    --text-label: var(--palette-sheep-brown);
     --text-inverse: var(--palette-white);
     --text-link: var(--palette-blue-text);
 
@@ -102,10 +105,12 @@
     --btn-care-text: var(--palette-white);
     --btn-care-hover: var(--palette-pink-action-hover);
 
-    /* danger (delete) and reset – high contrast for dock toolbar */
+    /* danger (delete) and reset – use with .btn-destructive for destructive actions */
     --btn-danger-bg: var(--palette-danger);
     --btn-danger-text: var(--palette-white);
     --btn-danger-hover: var(--palette-danger-hover);
+    --btn-reset-soft-bg: var(--palette-reset-soft);
+    --btn-reset-soft-hover: var(--palette-reset-soft-hover);
     --btn-reset-bg: var(--palette-primary-strong);
     --btn-reset-text: var(--palette-white);
     --btn-reset-hover: var(--palette-primary-strong-hover);
@@ -122,6 +127,9 @@
     --tag-christian-bg: var(--palette-lavender);
     --tag-christian-text: var(--palette-purple);
 
+    --tag-dead-bg: #f5d6d6;
+    --tag-dead-text: var(--palette-danger);
+
     /* sheep assets */
     --sheep-skin-white: var(--palette-white);
     --sheep-skin-brown: var(--palette-sheep-brown);
@@ -132,6 +140,11 @@
     --sheep-eyes: var(--palette-text-dark);
     --sheep-legs: var(--palette-text-dark);
     --sheep-halo: #FFD700;
+
+    /* modal / UI aliases (used by modals) */
+    --color-primary-cream: var(--palette-cream);
+    --color-action-blue: var(--palette-blue-action);
+    --color-action-pink: var(--palette-pink-action);
 
     /* visuals */
     --shadow-card: 0 4px 12px rgba(143, 125, 103, 0.15);

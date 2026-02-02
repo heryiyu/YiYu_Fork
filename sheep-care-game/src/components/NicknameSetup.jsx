@@ -99,7 +99,7 @@ export const NicknameSetup = ({ onClose }) => {
                                     padding: '0 15px', cursor: 'pointer'
                                 }}>保存</button>
                             </div>
-                            {error && <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '5px' }}>{error}</div>}
+                            {error && <div style={{ color: 'var(--text-accent)', fontSize: '0.8rem', marginTop: '5px' }}>{error}</div>}
                         </form>
                     ) : (
                         <div style={{

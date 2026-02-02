@@ -1,99 +1,78 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 
 export const SettingsModal = ({ onClose }) => {
-    const { settings, updateSetting } = useGame();
+    const { settings, updateSetting, saveToCloud } = useGame();
+    const closeBtnRef = useRef(null);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+
+    useEffect(() => {
+        closeBtnRef.current?.focus();
+    }, []);
 
     const handleChange = (e) => {
         updateSetting('maxVisibleSheep', parseInt(e.target.value));
     };
 
     return (
-        <div className="debug-editor-overlay" onClick={onClose}>
-            <div
-                className="simple-editor"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                    width: '320px',
-                    padding: '20px',
-                    borderRadius: '15px',
-                    background: '#fff',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-                }}
-            >
-                <div className="editor-header" style={{ marginBottom: '20px', textAlign: 'center' }}>
-                    <h3>⚙️ 顯示設定</h3>
+        <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h3 id="settings-modal-title">⚙️ 顯示設定</h3>
+                    <button ref={closeBtnRef} className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
                 </div>
 
-                <div style={{ marginBottom: '25px' }}>
-                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: '#555' }}>
-                        畫面顯示小羊數量
-                        <span style={{ float: 'right', color: '#2196f3' }}>
-                            {settings.maxVisibleSheep} 隻
-                        </span>
-                    </label>
+                <div className="modal-form">
+                    <div className="form-group">
+                        <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>畫面顯示小羊數量</span>
+                            <span style={{ color: 'var(--palette-blue-action)' }}>{settings.maxVisibleSheep} 隻</span>
+                        </label>
 
-                    <input
-                        type="range"
-                        min="10"
-                        max="50"
-                        step="5"
-                        value={settings.maxVisibleSheep}
-                        onChange={handleChange}
-                        style={{ width: '100%', cursor: 'pointer' }}
-                    />
+                        <input
+                            type="range"
+                            min="10"
+                            max="50"
+                            step="5"
+                            value={settings.maxVisibleSheep}
+                            onChange={handleChange}
+                            style={{ width: '100%', cursor: 'pointer' }}
+                        />
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>
-                        <span>10 (效能)</span>
-                        <span>50 (豐富)</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>
+                            <span>10 (效能)</span>
+                            <span>50 (豐富)</span>
+                        </div>
+
+                        <p className="modal-info-box" style={{ marginTop: '10px' }}>
+                            💡 當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
+                        </p>
                     </div>
 
-                    <p style={{ fontSize: '0.8rem', color: '#777', marginTop: '10px', background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-                        💡 當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
-                    </p>
-                </div>
+                    <div className="form-group">
+                        <button
+                            type="button"
+                            className="modal-btn-secondary-outline"
+                            onClick={() => saveToCloud()}
+                        >
+                            ☁️ 手動備份至雲端
+                        </button>
+                        <p className="modal-hint">
+                            (通常關閉視窗時會自動儲存)
+                        </p>
+                    </div>
 
-                <div style={{ marginBottom: '20px' }}>
-                    <button
-                        onClick={() => {
-                            useGame().saveToCloud();
-                            // Optional: Show a toast? saveToCloud already does showMessage.
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            background: '#e3f2fd',
-                            color: '#1565c0',
-                            border: '1px solid #90caf9',
-                            borderRadius: '8px',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                        }}
-                    >
-                        ☁️ 手動備份至雲端
+                    <button className="modal-btn-primary" onClick={onClose}>
+                        確定
                     </button>
-                    <p style={{ fontSize: '0.75rem', color: '#999', textAlign: 'center', marginTop: '5px' }}>
-                        (通常關閉視窗時會自動儲存)
-                    </p>
                 </div>
-
-                <button
-                    onClick={onClose}
-                    style={{
-                        width: '100%',
-                        padding: '12px',
-                        background: '#2196f3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    確定
-                </button>
             </div>
         </div>
     );
