@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ASSETS } from '../utils/AssetRegistry';
+import { AssetSheep } from './AssetSheep';
 import '../styles/design-tokens.css';
 
 export const AssetPreloader = ({ onLoaded }) => {
@@ -50,8 +51,15 @@ export const AssetPreloader = ({ onLoaded }) => {
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             zIndex: 9999
         }}>
-            <div style={{ fontSize: '40px', marginBottom: '20px', animation: 'bounce 1s infinite' }}>
-                🐑
+            <div style={{ width: '60px', height: '60px', marginBottom: '20px' }}>
+                <AssetSheep
+                    x={0}
+                    y={0}
+                    state="walking"
+                    direction={1}
+                    status="healthy"
+                    centered
+                />
             </div>
             <div style={{
                 color: 'var(--color-text-brown)',

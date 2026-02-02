@@ -14,6 +14,7 @@ import { AdminWeatherControl } from './components/AdminWeatherControl';
 import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
+import { Bell, BellOff, BookOpen, Settings } from 'lucide-react';
 
 function App() {
   const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather } = useGame();
@@ -61,38 +62,41 @@ function App() {
 
       {/* --- Unified Top Left Widget --- */}
       <UserProfile />
-      <AdminWeatherControl />
+      {/* Weather Control temporarily retired */}
+      {false && <AdminWeatherControl />}
 
-      {/* --- HUD: Top Right System Buttons --- */}
+      {/* --- HUD: Top Right System Buttons (Lucide icons) --- */}
       <div className="hud-right">
         {/* Bell */}
         <button
           className="hud-btn"
-          style={{ background: notificationEnabled ? '#fff' : '#eee' }}
+          style={{ background: notificationEnabled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)' }}
           onClick={toggleNotification}
           title={notificationEnabled ? "關閉提醒" : "開啟提醒"}
         >
-          {notificationEnabled ? '🔔' : '🔕'}
+          {notificationEnabled ? <Bell size={18} strokeWidth={2.5} /> : <BellOff size={18} strokeWidth={2.5} />}
         </button>
 
         {/* Guide */}
         <button
           className="hud-btn"
           onClick={() => setShowGuide(true)}
+          title="使用說明"
         >
-          📖
+          <BookOpen size={18} strokeWidth={2.5} />
         </button>
 
         {/* Display Settings (Sheep Count) */}
         <button
           className="hud-btn"
           onClick={() => setShowSettings(true)}
+          title="設定"
         >
-          ⚙️
+          <Settings size={18} strokeWidth={2.5} />
         </button>
 
-        {/* Admin Skin Manager Button */}
-        {isAdmin && (
+        {/* Skin Manager button hidden – not in use anymore */}
+        {false && isAdmin && (
           <button
             className="hud-btn"
             style={{ background: '#e3f2fd', border: '1px solid #90caf9' }}
