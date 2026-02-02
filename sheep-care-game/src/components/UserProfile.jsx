@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { ASSETS } from '../utils/AssetRegistry';
+import { User } from 'lucide-react';
 
 export const UserProfile = () => {
-    const { nickname, sheep, weather, location, updateNickname, currentUser } = useGame();
+    const { nickname, sheep, weather, location, updateNickname, currentUser, userAvatarUrl } = useGame();
     const [expanded, setExpanded] = useState(false);
     const [name, setName] = useState(nickname || '');
     const [isEditing, setIsEditing] = useState(false);
@@ -61,7 +63,15 @@ export const UserProfile = () => {
         >
             {/* Header: Name + Avatar */}
             <div className="widget-header">
-                <span className="icon">👤</span>
+                {userAvatarUrl ? (
+                    <span className="icon icon-avatar">
+                        <img src={userAvatarUrl} alt="" width={24} height={24} />
+                    </span>
+                ) : (
+                    <span className="icon">
+                        <User size={18} strokeWidth={2.5} />
+                    </span>
+                )}
                 {expanded ? (
                     <input
                         type="text"
@@ -90,7 +100,9 @@ export const UserProfile = () => {
             {/* Collapsed Info: Sheep Count */}
             {!expanded && (
                 <div className="widget-collapsed-info">
-                    <span className="icon">🐑</span>
+                    <span className="icon icon-sheep">
+                        <img src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY} alt="" width={24} height={24} style={{ display: 'block', objectFit: 'contain' }} />
+                    </span>
                     <span className="text-label">{sheep?.length || 0} 隻</span>
                 </div>
             )}
@@ -114,7 +126,9 @@ export const UserProfile = () => {
 
                     {/* Sheep Count Detail */}
                     <div className="widget-header">
-                        <span className="icon">🐑</span>
+                        <span className="icon icon-sheep">
+                            <img src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY} alt="" width={24} height={24} style={{ display: 'block', objectFit: 'contain' }} />
+                        </span>
                         <span className="text-label">目前擁有 {sheep?.length || 0} 隻小羊</span>
                     </div>
                 </div>

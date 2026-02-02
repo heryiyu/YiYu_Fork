@@ -1,115 +1,38 @@
-
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { AssetSheep } from './AssetSheep';
 import { getStableSheepMessage } from '../utils/gameLogic';
 import { AddSheepModal } from './AddSheepModal';
+import { Trash2, RotateCcw } from 'lucide-react';
 import '../styles/design-tokens.css';
+import './SheepList.css';
 
 // --- Card Component ---
-// --- Card Component ---
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isDead, isSick, isFavorite, onToggleFavorite }) => {
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isDead, isSick }) => {
     return (
         <div
-            className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''}`}
+            className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''} ${isSelectionMode ? 'sheep-card--select-mode' : ''}`}
             onClick={() => {
                 if (isSelectionMode) onToggleSelect(s.id);
                 else onSelect(s);
             }}
-            style={{
-                position: 'relative',
-                background: 'var(--color-primary-cream)',
-                borderRadius: 'var(--radius-card)',
-                padding: '5px', // Reduced padding
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                boxShadow: isSelectionMode && isSelected
-                    ? '0 0 0 4px var(--color-action-blue)'
-                    : 'var(--shadow-card)',
-                cursor: 'pointer',
-                transition: 'transform 0.1s, box-shadow 0.2s',
-                height: '100%', // Strict height from dock
-                boxSizing: 'border-box',
-                border: '2px solid rgba(255,255,255,0.6)',
-                overflow: 'hidden', // Strict clipping
-                transform: isSelectionMode ? 'scale(0.95)' : 'scale(1)' // Slight shrink in select mode
-            }}
         >
-            {/* Selection Indicator Overlay */}
             {isSelectionMode && (
-                <div style={{
-                    position: 'absolute', top: '8px', right: '8px', zIndex: 10,
-                    width: '24px', height: '24px', borderRadius: '50%',
-                    background: isSelected ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
-                    border: '2px solid var(--color-action-blue)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}>
-                    {isSelected && <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+                <div className={`sheep-card-selection-dot ${isSelected ? 'sheep-card-selection-dot--selected' : ''}`}>
+                    {isSelected && <span className="sheep-card-selection-check">✓</span>}
                 </div>
             )}
 
-            {/* Favorite Indicator / Toggle */}
-            {!isSelectionMode && (
-                <div
-                    onClick={(e) => {
-                        e.stopPropagation(); // Prevent card click
-                        onToggleFavorite();
-                    }}
-                    style={{
-                        position: 'absolute', top: '4px', left: '4px', zIndex: 12, // Moved to Top-Left to avoid overlapping Right-side badges
-                        width: '24px', height: '24px', borderRadius: '50%',
-                        // background: isFavorite ? 'rgba(255, 192, 203, 0.8)' : 'rgba(255,255,255,0.6)', // Less intrusive bg
-                        // Actually, plain heart implies "Like".
-                        background: 'transparent',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                        transform: isFavorite ? 'scale(1.2)' : 'scale(1)',
-                        transition: 'all 0.2s',
-                        filter: isFavorite ? 'drop-shadow(0 2px 4px rgba(255,0,0,0.3))' : 'none'
-                    }}
-                    title={isFavorite ? "取消最愛" : "加入最愛"}
-                >
-                    <span style={{
-                        fontSize: '18px', // Slightly larger
-                        color: isFavorite ? '#FF4081' : 'rgba(0,0,0,0.2)', // Red if active, gray ghost if not
-                        // Add stroke for visibility if inactive? 
-                        // Let's make inactive standard gray outline.
-                        WebkitTextStroke: isFavorite ? '0px' : '1px #999',
-                        // Actually emoji heart is filled. 
-                        // Use text shadow maybe?
-                    }}>
-                        {isFavorite ? '❤️' : '🤍'}
-                    </span>
-                </div>
-            )
-            }
-
-            {/* 1. Header (Fixed Height) - Adjusted padding to respect Heart Icon at Top-Left */}
-            <div style={{
-                width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', // Changed to flex-end to push Badges to right
-                marginBottom: '2px', flexShrink: 0,
-                paddingLeft: '28px' // Reserve space for Heart Icon at Left
-            }}>
-                {/* Health Text: Dynamic size (Smaller if 100%) - Moved to below avatar or keep? 
-                    User wanted Heart NOT to overlap text. 
-                    Previous text was Top-Left "Health".
-                    We moved Heart to Top-Left. 
-                    So we pushed header content to Right.
-                */}
-
-                {/* Health Text */}
+            {/* 1. Header (Fixed Height) */}
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
+                {/* Health Text: Dynamic size (Smaller if 100%) */}
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: '2px',
                     fontSize: Math.ceil(s.health || 0) >= 100 ? 'clamp(0.8rem, 3.5vw, 1.0rem)' : 'clamp(0.9rem, 4vw, 1.1rem)',
-                    color: 'var(--color-action-pink)', fontWeight: 'bold',
-                    marginRight: 'auto' // Push back to left if possible?
-                    // No, if we push to left it overlaps heart.
-                    // Let's put Health Text back to Left but with margin.
+                    color: 'var(--color-action-pink)', fontWeight: 'bold'
                 }}>
-                    {/* Actually, let's just use the paddingLeft we added to container. */}
                     <span style={{ fontSize: '1.2em' }}>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
-
                 {/* Status Badge: No wrap, dynamic size */}
                 <div style={{
                     background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'var(--color-badge-orange)'),
@@ -123,39 +46,22 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 </div>
             </div>
 
-            {/* 2. Avatar (Fills "Remaining Height" with Min-Height Constraint) */}
-            <div className="sheep-card-avatar" style={{
-                flex: 1, // Grow to fill space
-                minHeight: '40px', // Reduced min-height
-                width: '100%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', // Changed to CENTER alignment
-                overflow: 'hidden', // Clip overflow
-                padding: '2px 0' // Safety buffer
-            }}>
+            <div className="sheep-card-avatar">
                 <AssetSheep
                     status={s.status}
                     visual={s.visual}
                     health={s.health}
                     type={s.type}
-                    scale={0.55} // Reduced scale to 0.55
+                    scale={0.55}
                     direction={1}
                     centered={true}
                 />
             </div>
 
-            {/* 3. Footer (Fixed Height) */}
-            <div className="card-footer" style={{ width: '100%', textAlign: 'center', marginTop: 'auto', flexShrink: 0 }}>
-                <div style={{
-                    fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--color-text-brown)',
-                    marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                }}>
-                    {s.name}
-                </div>
+            <div className="sheep-card-footer">
+                <div className="sheep-card-name">{s.name}</div>
                 {!isSelectionMode && (
-                    <div style={{
-                        fontSize: '0.7rem', color: isDead ? '#9E9E9E' : 'var(--color-text-brown)',
-                        marginTop: '2px', fontWeight: 'bold'
-                    }}>
+                    <div className={`sheep-card-pray ${isDead ? 'sheep-card-pray--dead' : ''}`}>
                         {isDead ? `🕯️ 迫切禱告 ${s.resurrectionProgress || 0}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
                     </div>
                 )}
@@ -311,20 +217,8 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Toolbar: Add | Search | Filters | Select */}
                 <div
-                    className="dock-child"
+                    className="dock-child dock-toolbar"
                     onClick={handleToolbarClick}
-                    style={{
-                        padding: '10px 20px',
-                        display: 'flex', gap: '8px', alignItems: 'center',
-                        overflowX: 'auto', scrollbarWidth: 'none',
-                        maxWidth: '100%',
-                        background: 'transparent',
-                        pointerEvents: 'auto',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        position: 'relative', zIndex: 2,
-                        minHeight: '56px' // Ensure height stability
-                    }}
                 >
                     {/* Inner wrapper: functional when Open, pass-through when Collapsed */}
                     <div style={{
@@ -333,116 +227,80 @@ export const SheepList = ({ onSelect }) => {
                     }} onClick={(e) => !isCollapsed && e.stopPropagation()}>
 
                         {isSelectionMode ? (
-                            // --- SELECTION TOOLBAR ---
+                            // --- SELECTION TOOLBAR (same chip style as standard) ---
                             <>
-                                {/* Selected Count */}
-                                <div style={{
-                                    color: 'white', fontWeight: 'bold', fontSize: '1rem',
-                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                    marginRight: '8px',
-                                    whiteSpace: 'nowrap'
-                                }}>
-                                    已選取 {selectedIds.size}
-                                </div>
+                                <span className="dock-toolbar-label">已選取 {selectedIds.size}</span>
 
-                                {/* Search Bar (Selection Mode) */}
-                                <div style={{ position: 'relative', height: '36px', flexShrink: 0, transition: 'opacity 0.2s', marginRight: '4px' }}>
+                                <div className="dock-toolbar-search-wrap">
                                     <input
                                         type="text"
+                                        className="dock-toolbar-search-input"
                                         placeholder="搜尋..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            height: '100%', padding: '0 12px 0 30px',
-                                            borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                            background: 'rgba(255,255,255,0.9)',
-                                            width: searchTerm ? '120px' : '80px',
-                                            transition: 'width 0.2s', fontSize: '0.9rem',
-                                            color: '#5d4037', outline: 'none'
-                                        }}
+                                        style={{ width: searchTerm ? '120px' : '80px' }}
                                     />
                                     <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
                                 </div>
 
-                                {/* Action Buttons */}
-                                <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '18px',
-                                        background: selectedIds.size > 0 ? '#FF5252' : '#ccc',
-                                        color: 'white', border: 'none', fontWeight: 'bold', cursor: selectedIds.size > 0 ? 'pointer' : 'default',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', flexShrink: 0,
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        transition: 'all 0.2s',
-                                        fontSize: '0.8rem'
-                                    }}>
-                                    🗑️ 刪除
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--delete"
+                                    onClick={handleDeleteSelected}
+                                    disabled={selectedIds.size === 0}
+                                >
+                                    <Trash2 size={14} strokeWidth={2.5} />
+                                    刪除
                                 </button>
 
-                                <button onClick={handleResetSelected} disabled={selectedIds.size === 0}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '18px',
-                                        background: selectedIds.size > 0 ? '#29B6F6' : '#ccc',
-                                        color: 'white', border: 'none', fontWeight: 'bold', cursor: selectedIds.size > 0 ? 'pointer' : 'default',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', flexShrink: 0,
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        transition: 'all 0.2s',
-                                        fontSize: '0.8rem'
-                                    }}>
-                                    🔄 重置
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--reset"
+                                    onClick={handleResetSelected}
+                                    disabled={selectedIds.size === 0}
+                                >
+                                    <RotateCcw size={14} strokeWidth={2.5} />
+                                    重置
                                 </button>
 
-                                {/* Cancel Button (Right Aligned) */}
-                                <button onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
-                                    style={{
-                                        marginLeft: 'auto',
-                                        background: 'rgba(255,255,255,0.9)',
-                                        border: '1px solid #DDD', borderRadius: '15px',
-                                        padding: '6px 16px', fontSize: '0.8rem',
-                                        color: '#5d4037', cursor: 'pointer',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                        fontWeight: 'bold', flexShrink: 0
-                                    }}>
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--cancel"
+                                    onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
+                                >
                                     取消
                                 </button>
                             </>
                         ) : (
                             // --- STANDARD TOOLBAR ---
                             <>
-                                {/* 1. Add Button (Gold) */}
-                                <button onClick={() => setShowAddModal(true)} style={{
-                                    width: '36px', height: '36px', borderRadius: '50%',
-                                    background: '#ffd700', border: 'none',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '1.2rem', color: '#5d4037', fontWeight: 'bold',
-                                    flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer',
-                                    opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s'
-                                }}>
+                                {/* 1. Add Button (rounded chip style like SheepListModal) */}
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-add-btn"
+                                    onClick={() => setShowAddModal(true)}
+                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                >
                                     ➕
                                 </button>
 
-                                {/* 2. Search Bar (White Pill) */}
-                                <div style={{ position: 'relative', height: '36px', flexShrink: 0, opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                                {/* 2. Search Bar */}
+                                <div className="dock-toolbar-search-wrap" style={{ opacity: isCollapsed ? 0.6 : 1 }}>
                                     <input
                                         type="text"
+                                        className="dock-toolbar-search-input"
                                         placeholder="搜尋..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            height: '100%', padding: '0 12px 0 30px',
-                                            borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                            background: 'rgba(255,255,255,0.9)',
-                                            width: searchTerm ? '120px' : '80px',
-                                            transition: 'width 0.2s', fontSize: '0.9rem',
-                                            color: '#5d4037', outline: 'none'
-                                        }}
+                                        style={{ width: searchTerm ? '120px' : '80px' }}
                                     />
                                     <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
                                 </div>
 
                                 {/* Divider */}
-                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)', margin: '0 4px' }}></div>
+                                <div className="dock-toolbar-divider" />
 
-                                {/* 3. Filters */}
+                                {/* 3. Filters (chip style like SheepListModal) */}
                                 {[
                                     { id: 'ALL', label: '全部' },
                                     { id: 'FAVORITE', label: '❤️ 最愛' },
@@ -450,34 +308,24 @@ export const SheepList = ({ onSelect }) => {
                                     { id: 'SICK', label: '生病' },
                                     { id: 'DEAD', label: '離世' }
                                 ].map(f => (
-                                    <button key={f.id} onClick={() => setFilterStatus(f.id)}
-                                        style={{
-                                            padding: '6px 12px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                            background: filterStatus === f.id ? 'var(--color-text-brown)' : 'rgba(255, 255, 255, 0.8)',
-                                            color: filterStatus === f.id ? 'white' : 'var(--color-text-brown)',
-                                            fontWeight: 'bold', fontSize: '0.8rem', whiteSpace: 'nowrap',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s',
-                                            cursor: 'pointer', flexShrink: 0,
-                                            opacity: isCollapsed ? 0.6 : 1
-                                        }}>
+                                    <button
+                                        type="button"
+                                        key={f.id}
+                                        className={`dock-toolbar-chip ${filterStatus === f.id ? 'dock-toolbar-chip--selected' : ''}`}
+                                        onClick={() => setFilterStatus(f.id)}
+                                        style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                    >
                                         {f.label} {counts[f.id]}
                                     </button>
                                 ))}
 
                                 {/* 4. Select Button */}
-                                <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
-                                    style={{
-                                        marginLeft: 'auto',
-                                        background: isSelectionMode ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
-                                        border: '1px solid #DDD', borderRadius: '15px',
-                                        padding: '6px 16px', fontSize: '0.8rem',
-                                        color: isSelectionMode ? 'white' : '#666',
-                                        cursor: 'pointer',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                        fontWeight: 'bold', flexShrink: 0,
-                                        opacity: isCollapsed ? 0.6 : 1
-                                    }}>
+                                <button
+                                    type="button"
+                                    className={`dock-toolbar-select-btn ${isSelectionMode ? 'dock-toolbar-select-btn--active' : ''}`}
+                                    onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
+                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                >
                                     {isSelectionMode ? '取消' : '選取'}
                                 </button>
                             </>
@@ -514,8 +362,8 @@ export const SheepList = ({ onSelect }) => {
                         {filteredSheep.map(s => (
                             <div key={s.id} style={{
                                 // Adjusted Width: Narrower for mobile as requested
-                                // 100px min is safe for content, 130px max prevents looking "stretched"
-                                minWidth: 'clamp(90px, 24vw, 130px)',
+                                /* Wider so tag text (e.g. 新朋友) fits without overflow */
+                                minWidth: 'clamp(100px, 26vw, 150px)',
                                 height: '100%',
                                 paddingBottom: '5px',
                                 pointerEvents: 'auto'

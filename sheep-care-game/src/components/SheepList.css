@@ -1,0 +1,359 @@
+/* SheepList & SheepCard - aligned with SheepListModal reference */
+
+.sheep-card {
+  position: relative;
+  background: var(--card-inner-bg);
+  border-radius: var(--card-inner-radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  border: none;
+}
+
+.sheep-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--card-inner-radius);
+  pointer-events: none;
+}
+
+.sheep-card.selected {
+  box-shadow: 0 0 0 4px var(--palette-blue-action);
+}
+
+.sheep-card:not(.selected) {
+  box-shadow: var(--card-inner-shadow);
+}
+
+.sheep-card.sheep-card--select-mode {
+  transform: scale(0.95);
+}
+
+/* Selection indicator */
+.sheep-card-selection-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--palette-blue-action);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sheep-card-selection-dot.sheep-card-selection-dot--selected {
+  background: var(--palette-blue-action);
+}
+
+.sheep-card-selection-dot:not(.sheep-card-selection-dot--selected) {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sheep-card-selection-dot .sheep-card-selection-check {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Header row: health + tag */
+.sheep-card-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.sheep-card-health {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--palette-pink-action);
+  font-weight: bold;
+  font-size: clamp(0.9rem, 4vw, 1.1rem);
+}
+
+.sheep-card-health.sheep-card-health--full {
+  font-size: clamp(0.8rem, 3.5vw, 1rem);
+}
+
+.sheep-card-health .sheep-card-health-icon {
+  font-size: 1.2em;
+}
+
+/* Tag pill - base (compact to avoid overflow) */
+.sheep-card-tag {
+  padding: 2px 5px;
+  border-radius: 6px;
+  font-size: clamp(0.5rem, 2vw, 0.65rem);
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.sheep-card-tag--dead {
+  background: #9e9e9e;
+  color: white;
+}
+
+.sheep-card-tag--sick {
+  background: #fde8ec;
+  color: var(--palette-pink-action);
+}
+
+.sheep-card-tag--new {
+  background: var(--tag-new-bg);
+  color: var(--tag-new-text);
+}
+
+.sheep-card-tag--companion {
+  background: var(--tag-christian-bg);
+  color: var(--tag-christian-text);
+}
+
+/* Avatar area */
+.sheep-card-avatar {
+  flex: 1;
+  min-height: 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 2px 0;
+}
+
+/* Footer */
+.sheep-card-footer {
+  width: 100%;
+  text-align: center;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sheep-card-name {
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: var(--palette-sheep-brown);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheep-card-pray {
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+.sheep-card-pray.sheep-card-pray--dead {
+  color: #9e9e9e;
+}
+
+.sheep-card-pray:not(.sheep-card-pray--dead) {
+  color: var(--palette-sheep-brown);
+}
+
+/* --- Dock toolbar (aligned with SheepListModal chips) --- */
+.dock-toolbar {
+  padding: 10px 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+  min-height: 56px;
+}
+
+.dock-toolbar-label {
+  color: var(--palette-sheep-brown);
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.dock-toolbar-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--palette-orange-action);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--palette-sheep-brown);
+  font-weight: bold;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  transition: opacity 0.2s;
+}
+
+.dock-toolbar-add-btn:hover {
+  opacity: 0.9;
+}
+
+.dock-toolbar-search-wrap {
+  position: relative;
+  height: 36px;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.dock-toolbar-search-input {
+  height: 100%;
+  padding: 0 12px 0 30px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  color: var(--palette-sheep-brown);
+  outline: none;
+  transition: width 0.2s;
+}
+
+.dock-toolbar-search-input::placeholder {
+  color: var(--palette-taupe);
+}
+
+.dock-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.dock-toolbar-chip {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--palette-sheep-brown);
+  background: transparent;
+  color: var(--palette-sheep-brown);
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.dock-toolbar-chip.dock-toolbar-chip--selected {
+  background: var(--palette-sheep-brown);
+  color: white;
+  border-color: var(--palette-sheep-brown);
+}
+
+.dock-toolbar-select-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--palette-sheep-brown);
+  background: rgba(255, 255, 255, 0.8);
+  color: #666;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+.dock-toolbar-select-btn.dock-toolbar-select-btn--active {
+  background: var(--palette-blue-action);
+  color: white;
+  border-color: var(--palette-blue-action);
+}
+
+/* Selection toolbar buttons (same chip style as filter chips) */
+.dock-toolbar-action-btn {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dock-toolbar-action-btn:disabled {
+  background: var(--btn-disabled-bg) !important;
+  border-color: var(--btn-disabled-bg) !important;
+  color: var(--btn-disabled-text);
+  cursor: default;
+  opacity: 1;
+}
+
+.dock-toolbar-action-btn--delete {
+  background: var(--btn-danger-bg);
+  color: var(--btn-danger-text);
+  border-color: var(--btn-danger-bg);
+}
+
+.dock-toolbar-action-btn--delete:not(:disabled):hover {
+  background: var(--btn-danger-hover);
+  border-color: var(--btn-danger-hover);
+}
+
+.dock-toolbar-action-btn--reset {
+  background: var(--btn-reset-bg);
+  color: var(--btn-reset-text);
+  border-color: var(--btn-reset-bg);
+}
+
+.dock-toolbar-action-btn--reset:not(:disabled):hover {
+  background: var(--btn-reset-hover);
+  border-color: var(--btn-reset-hover);
+}
+
+.dock-toolbar-action-btn--cancel {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--palette-sheep-brown);
+  color: var(--palette-sheep-brown);
+}
+
+.dock-toolbar-action-btn--cancel:hover {
+  background: white;
+}

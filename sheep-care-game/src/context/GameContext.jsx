@@ -18,6 +18,7 @@ export const GameProvider = ({ children }) => {
     // --- Session Init (SessionStorage for Auto-Logout on Close) ---
     const [currentUser, setCurrentUser] = useState(null); // Line Name
     const [nickname, setNickname] = useState(null); // User Nickname
+    const [userAvatarUrl, setUserAvatarUrl] = useState(null); // LINE profile picture (login-time)
     const [lineId, setLineId] = useState(null); // Line User ID
     const [isLoading, setIsLoading] = useState(true);
     const [isInClient, setIsInClient] = useState(false); // New state to track if in LINE Client
@@ -172,6 +173,7 @@ export const GameProvider = ({ children }) => {
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
         setCurrentUser(displayName);
+        setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
         showMessage(`設定羊群中... (Hi, ${displayName})`);
 
         try {
@@ -498,6 +500,7 @@ export const GameProvider = ({ children }) => {
         }
         setCurrentUser(null);
         setNickname(null);
+        setUserAvatarUrl(null);
         if (lineId) await clearData(lineId); // Clear IDB
         setLineId(null);
         setSheep([]); setInventory([]);
@@ -821,7 +824,7 @@ export const GameProvider = ({ children }) => {
 
     return (
         <GameContext.Provider value={{
-            currentUser, nickname, setNickname, lineId, isAdmin,
+            currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
             isLoading, // Exposed for App.jsx loading screen
             sheep, skins, inventory, message, weather, // skins exposed
             location, updateUserLocation, isInClient, // Exposed

@@ -74,11 +74,13 @@ export const AssetSheep = ({
         }
     };
 
-    // Select Animation
+    // Select Animation (disabled in card/centered mode so PNGs stay static)
     let activeAnim = {};
-    if (isDead) activeAnim = ghostAnim;
-    else if (isWalking) activeAnim = walkAnim;
-    else if (state === 'sleep') activeAnim = sleepAnim;
+    if (!centered) {
+        if (isDead) activeAnim = ghostAnim;
+        else if (isWalking) activeAnim = walkAnim;
+        else if (state === 'sleep') activeAnim = sleepAnim;
+    }
 
     const containerStyle = centered ? {
         position: 'relative',
