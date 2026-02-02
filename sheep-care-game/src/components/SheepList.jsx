@@ -83,8 +83,15 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {
     const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin } = useGame();
-    // Re-instating the full list component code to be safe, but focusing on the style injection.
-    const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
+    const pinnedSet = useMemo(() => new Set(settings?.pinnedSheepIds || []), [settings?.pinnedSheepIds]);
+    const sortedSheep = useMemo(() => {
+        return [...(sheep || [])].sort((a, b) => {
+            const aPinned = pinnedSet.has(a.id);
+            const bPinned = pinnedSet.has(b.id);
+            if (aPinned !== bPinned) return aPinned ? -1 : 1;
+            return a.id - b.id;
+        });
+    }, [sheep, pinnedSet]);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [editingSheep, setEditingSheep] = useState(null);
