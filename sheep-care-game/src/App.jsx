@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from './context/GameContext';
 import { Field } from './components/Field';
 
-import { DebugEditor } from './components/DebugEditor';
+import { SheepDetailModal } from './components/SheepDetailModal';
 import { Guide } from './components/Guide';
 import { Login } from './components/Login';
 import { NicknameSetup } from './components/NicknameSetup';
@@ -114,7 +114,7 @@ function App() {
       />
 
       {selectedSheepId && (
-        <DebugEditor
+        <SheepDetailModal
           selectedSheepId={selectedSheepId}
           onClose={() => setSelectedSheepId(null)}
         />

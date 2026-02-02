@@ -86,11 +86,16 @@ export const gameState = {
             }
 
             // 2. Merge Instance Attributes (This overrides template defaults)
-            if (s.visual_attrs) {
-                combinedVisual = { ...combinedVisual, ...s.visual_attrs };
+            // User renamed to Spiritual_Journey_Planning
+            const rawCol = s.Spiritual_Journey_Planning || s.visual_attrs || {}; // Fallback for transition
+            const { plan, ...instanceVisuals } = rawCol;
+
+            if (instanceVisuals) {
+                combinedVisual = { ...combinedVisual, ...instanceVisuals };
             }
 
             sheep.visual = combinedVisual;
+            sheep.plan = plan || {}; // Assign plan to sheep object
 
             // Schema has 'last_login'
             const lastTime = new Date(sheep.updated_at || profile.last_login || now);
@@ -148,9 +153,13 @@ export const gameState = {
             name: sheep.name,
             type: sheep.type,
             status: sheep.status,
+            status: sheep.status,
             health: sheep.health,
 
-            visual_attrs: sheep.visual, // V13: Save attributes here
+            // V13: Save attributes here
+            // User renamed 'visual_attrs' to 'Spiritual_Journey_Planning'
+            // We store visual attributes AND spiritual plan here.
+            Spiritual_Journey_Planning: { ...sheep.visual, plan: sheep.plan },
 
             // New Columns (Snake Case)
             x: sheep.x,
@@ -185,8 +194,21 @@ export const gameState = {
             // But _fromDbSheep is mostly used inside loadGame where we handle the merge.
             // If used standalone, we might miss the joined skin data.
             // For safety, we map what we have.
-            visual: row.visual_attrs || {},
-            visual_attrs: row.visual_attrs,
+            // visual: row.visual_attrs || {}, // OLD
+
+            // NEW: Parse Spiritual_Journey_Planning
+            // It contains { ...visual, plan: { ... } }
+            visual: (() => {
+                const raw = row.Spiritual_Journey_Planning || {};
+                const { plan, ...vis } = raw;
+                return vis; // Return just visual parts for 'visual' prop
+            })(),
+
+            // Extract Plan
+            plan: (row.Spiritual_Journey_Planning && row.Spiritual_Journey_Planning.plan) || {},
+
+            // We iterate on 'visual_attrs' for compatibility if needed, but row likely has new col
+            // visual_attrs: row.visual_attrs, 
 
             x: row.x ?? 50,
             y: row.y ?? 50,
