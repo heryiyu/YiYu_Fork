@@ -6,12 +6,15 @@ import '../styles/design-tokens.css';
 
 const mountainSvgCache = new Map();
 const mountainTintCache = new Map();
+const cloudSvgCache = new Map();
+const cloudTintCache = new Map();
 
 export const AssetBackground = ({ userId, weather }) => {
     // Generate the deterministic scene for this user
     const scene = useMemo(() => generateScene(userId), [userId]);
     const timeStatus = weather?.timeStatus || 'day';
     const [tintedMountains, setTintedMountains] = useState({});
+    const [tintedClouds, setTintedClouds] = useState({});
 
     const getBushVariantSrc = (src) => {
         if (!src.includes('/assets/decorations/bushes/')) return src;
@@ -76,6 +79,52 @@ export const AssetBackground = ({ userId, weather }) => {
         };
     }, [scene, timeStatus]);
 
+    useEffect(() => {
+        if (timeStatus !== 'night') return;
+        const desiredFill = '#4E5364';
+        const cloudSrcs = Array.from(new Set(scene.clouds.map(c => c.src)));
+        if (cloudSrcs.length === 0) return;
+
+        let isMounted = true;
+        const loadCloudVariants = async () => {
+            const updates = {};
+
+            await Promise.all(
+                cloudSrcs.map(async (src) => {
+                    const cacheKey = `${src}|night`;
+                    if (cloudTintCache.has(cacheKey)) {
+                        updates[src] = cloudTintCache.get(cacheKey);
+                        return;
+                    }
+
+                    let svgText = cloudSvgCache.get(src);
+                    if (!svgText) {
+                        const response = await fetch(src);
+                        if (!response.ok) return;
+                        svgText = await response.text();
+                        cloudSvgCache.set(src, svgText);
+                    }
+
+                    const tintedSvg = svgText.replace(
+                        /fill="(white|#fff|#ffffff)"/gi,
+                        `fill="${desiredFill}"`
+                    );
+                    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(tintedSvg)}`;
+                    cloudTintCache.set(cacheKey, dataUri);
+                    updates[src] = dataUri;
+                })
+            );
+
+            if (!isMounted || Object.keys(updates).length === 0) return;
+            setTintedClouds((prev) => ({ ...prev, ...updates }));
+        };
+
+        loadCloudVariants();
+        return () => {
+            isMounted = false;
+        };
+    }, [scene, timeStatus]);
+
     return (
         <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -88,7 +137,7 @@ export const AssetBackground = ({ userId, weather }) => {
                 {scene.clouds.map((cloud, i) => (
                     <motion.img
                         key={`cloud-${i}`}
-                        src={cloud.src}
+                        src={timeStatus === 'night' ? (tintedClouds[cloud.src] || cloud.src) : cloud.src}
                         style={{
                             position: 'absolute',
                             top: `${cloud.y}%`,
