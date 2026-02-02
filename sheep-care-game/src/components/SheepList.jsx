@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';
-import { Trash2, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, RotateCcw } from 'lucide-react';
 import '../styles/design-tokens.css';
 import './SheepList.css';
 
@@ -291,7 +291,7 @@ export const SheepList = ({ onSelect }) => {
                                     onClick={() => setShowAddModal(true)}
                                     style={{ opacity: isCollapsed ? 0.6 : 1 }}
                                 >
-                                    ➕
+                                    <Plus size={18} strokeWidth={2.5} />
                                 </button>
 
                                 {/* 2. Search Bar */}

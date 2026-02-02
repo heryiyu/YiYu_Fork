@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { ASSETS } from '../utils/AssetRegistry';
 
 export const Login = () => {
     const { loginWithLine, loginAsAdmin, isLoading, message, isInClient } = useGame();
@@ -34,8 +35,19 @@ export const Login = () => {
     return (
         <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
             <div className="simple-editor" style={{ width: '320px', textAlign: 'center', padding: '30px', background: 'var(--bg-card)' }}>
-                <h2 style={{ margin: '0 0 20px 0', color: 'var(--text-header)' }}>
-                    {showAdminLogin ? '🔧 管理員後台' : '🐑 牧羊人登入'}
+                <h2 style={{ margin: '0 0 20px 0', color: 'var(--text-header)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    {showAdminLogin ? (
+                        <>🔧 管理員後台</>
+                    ) : (
+                        <>
+                            <img
+                                src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY}
+                                alt=""
+                                style={{ width: '32px', height: '32px', objectFit: 'contain', display: 'block' }}
+                            />
+                            牧羊人登入
+                        </>
+                    )}
                 </h2>
 
                 {/* Status Message */}
@@ -72,7 +84,7 @@ export const Login = () => {
                                     {isLocal ? 'Test Login' : 'Login 登入'}
                                 </button>
 
-                                {!isInClient && (
+                                {isLocal && (
                                     <div style={{ marginTop: '30px', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
                                         <button
                                             onClick={() => setShowAdminLogin(true)}
@@ -93,7 +105,7 @@ export const Login = () => {
                                         value={adminUser}
                                         onChange={(e) => setAdminUser(e.target.value)}
                                         style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-subtle)', boxSizing: 'border-box', background: 'white' }}
-                                        placeholder="預設: admin"
+                                        placeholder="請輸入管理員密碼"
                                     />
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px' }}>
