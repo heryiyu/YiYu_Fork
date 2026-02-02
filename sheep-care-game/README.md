@@ -35,3 +35,8 @@
 - **小羊圖鑑**: 查看所有小羊列表、搜尋、批次管理。
 - **點擊頭像**: 編輯小羊外觀（顏色、配件、圖片造型）。
 - **編輯資料**: 點擊欄位直接編輯姓名、靈程、備註。
+
+## Database (Supabase)
+
+- Migrations: See [MIGRATIONS.md](MIGRATIONS.md) for schema changes and run order.
+- Run scripts in `supabase/migrations/` sequentially in Supabase SQL Editor.

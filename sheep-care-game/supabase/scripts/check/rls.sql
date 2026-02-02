@@ -1,4 +1,4 @@
--- CHECK RLS POLICIES
+-- Originally: check_rls.sql
 -- See if Row Level Security is enabled and what policies exist
 
 SELECT schemaname, tablename, rowsecurity 

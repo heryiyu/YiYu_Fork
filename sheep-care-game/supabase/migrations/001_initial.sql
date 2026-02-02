@@ -1,3 +1,6 @@
+-- Originally: migration.sql
+-- Part of migration chain. See MIGRATIONS.md for full index.
+
 -- SAFE MIGRATION SCRIPT
 -- Copy and paste this into Supabase SQL Editor to update existing tables.
 

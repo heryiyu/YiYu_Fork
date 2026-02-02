@@ -1,4 +1,6 @@
--- CHECK USERS TABLE COLUMNS
+-- Originally: check_users_schema.sql
+-- Inspect users table columns.
+
 select column_name, data_type 
 from information_schema.columns 
 where table_name = 'users';

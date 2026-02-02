@@ -1,3 +1,6 @@
+-- Originally: migration_v2.sql
+-- Part of migration chain. See MIGRATIONS.md for full index.
+
 -- MIGRATION V2 (Adapted for Existing Schema)
 -- Run this in Supabase SQL Editor
 

@@ -1,4 +1,4 @@
--- DIAGNOSTIC: Check Sheep Ownership and Integrity
+-- Originally: debug_sheep_ownership.sql
 -- Run this to see why "0 Sheep" are loading.
 
 select 

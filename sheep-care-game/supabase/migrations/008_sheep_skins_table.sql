@@ -1,3 +1,6 @@
+-- Originally: migration_v8_skins_normalization.sql
+-- Part of migration chain. See MIGRATIONS.md for full index.
+
 -- MIGRATION V8: Normalize Visual Data into sheep_skins Table (Revision 4 - Clean Up)
 -- Run this AFTER migration_v7
 
@@ -29,15 +32,12 @@ declare
     new_skin_id uuid;
     clean_visual jsonb;
 begin
-    -- Only process rows that HAVE visual_data AND broken/missing skin_id
     for sheep_record in select * from public.sheep where visual_data is not null and (skin_id is null or skin_id::text = '') loop
         
-        -- Clean the JSON (Remove physics/gameplay state)
         clean_visual := sheep_record.visual_data 
             - 'x' - 'y' - 'angle' - 'direction' 
             - 'health' - 'status' - 'careLevel' - 'prayedCount';
 
-        -- Create a new Skin for this sheep
         insert into public.sheep_skins (name, type, u_data)
         values (
             'Sheep ' || coalesce(sheep_record.name, 'Unknown') || ' Visual', 
@@ -46,7 +46,6 @@ begin
         )
         returning id into new_skin_id;
 
-        -- Update the sheep to point to this new skin
         update public.sheep 
         set skin_id = new_skin_id::text
         where id = sheep_record.id;
@@ -55,6 +54,5 @@ begin
 end $$;
 
 -- 3. DROP old columns
--- Now that we have migrated data to sheep_skins and skin_id is set, we can drop the old columns.
 alter table public.sheep drop column if exists visual_data;
 alter table public.sheep drop column if exists visual;

@@ -1,21 +1,19 @@
+-- Originally: migration_v7_backfill_existing.sql
+-- Part of migration chain. See MIGRATIONS.md for full index.
+
 -- MIGRATION V7: Backfill & Randomize Existing Data (Revision 3 - FK Fix)
 -- Run this AFTER migration_v6
 
 -- 0. FIX SKIN_ID TYPE & CONSTRAINT
--- We need to drop the foreign key because 'skins.id' is likely UUID, but we want 'sheep.skin_id' to be TEXT
--- to support static skin IDs (e.g., 'rainbow_sheep') that might not be in the skins table yet.
 alter table public.sheep drop constraint if exists sheep_skin_id_fkey;
-
--- Now strictly convert to TEXT
 alter table public.sheep alter column skin_id type text using skin_id::text;
 
 -- 1. Randomize Position for existing sheep
--- (Because we defaulted them to 50,50, they are all stacked)
 update public.sheep
 set 
-  x = 20 + floor(random() * 60), -- Random X between 20-80
-  y = 20 + floor(random() * 60)  -- Random Y between 20-80
-where x = 50 and y = 50; -- Only target the ones we just added defaults to
+  x = 20 + floor(random() * 60),
+  y = 20 + floor(random() * 60)
+where x = 50 and y = 50;
 
 -- 2. Initialize Gameplay Stats (if null)
 update public.sheep set care_level = 0 where care_level is null;

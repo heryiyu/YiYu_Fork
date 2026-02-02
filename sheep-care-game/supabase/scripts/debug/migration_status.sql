@@ -1,4 +1,4 @@
--- DIAGNOSTIC SCRIPT
+-- Originally: debug_migration_status.sql
 -- Run this to see the current state of your data
 
 select 

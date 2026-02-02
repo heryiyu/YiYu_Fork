@@ -1,3 +1,6 @@
+-- Originally: supabase_schema.sql
+-- Reference schema. Production may differ. See MIGRATIONS.md for evolution.
+
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
@@ -28,14 +31,14 @@ create table public.sheep (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.users(id) not null,
   name text not null,
-  status text default 'healthy', -- healthy, sick, dead, injured
+  status text default 'healthy',
   health float default 100.0,
   care_level float default 50.0,
   type text default 'LAMB',
-  visual jsonb default '{}'::jsonb, -- color, accessory, etc.
+  visual jsonb default '{}'::jsonb,
   spiritual_maturity text default '新朋友',
   created_at timestamptz default now(),
-  updated_at timestamptz default now() -- Important for offline calc
+  updated_at timestamptz default now()
 );
 
 -- Enable RLS for sheep
@@ -67,8 +70,3 @@ begin
   return new;
 end;
 $$ language plpgsql security definer;
-
--- Trigger for new user
--- create trigger on_auth_user_created
---   after insert on auth.users
---   for each row execute procedure public.handle_new_user();

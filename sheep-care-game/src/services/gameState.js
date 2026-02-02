@@ -157,7 +157,7 @@ export const gameState = {
         if (sheep.skinId) return sheep.skinId;
 
         // V13 Pivot: Always link new sheep to the 'Standard Sheep Template'
-        // We assume this template was created by migration_v13.
+        // We assume this template was created by supabase/migrations/013_parametric_skins.sql.
         const { data: masterSkin } = await supabase
             .from('sheep_skins')
             .select('id')

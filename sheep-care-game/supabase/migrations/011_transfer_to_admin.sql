@@ -1,3 +1,6 @@
+-- Originally: migration_v11_transfer_ownership.sql
+-- Part of migration chain. See MIGRATIONS.md for full index.
+
 -- MIGRATION V11: Transfer Ownership to Admin
 -- Run this to move ALL sheep to the 'admin' account so you can see them.
 
