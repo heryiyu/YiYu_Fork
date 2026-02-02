@@ -92,6 +92,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
                     health={sheep.health}
                     direction={sheep.direction}
                     centered={true}
+                    animated={true}
                 />
             </div>
 

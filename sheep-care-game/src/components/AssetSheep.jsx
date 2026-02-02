@@ -11,7 +11,8 @@ export const AssetSheep = ({
     visual = {},
     onClick,
     scale = 1,
-    centered = false
+    centered = false,
+    animated = undefined
 }) => {
     const isDead = status === 'dead';
     const isWalking = state === 'walking';
@@ -74,9 +75,11 @@ export const AssetSheep = ({
         }
     };
 
-    // Select Animation (disabled in card/centered mode so PNGs stay static)
+    // Select Animation (disabled in card/centered mode unless overridden)
+    const shouldAnimate = animated !== undefined ? animated : !centered;
+
     let activeAnim = {};
-    if (!centered) {
+    if (shouldAnimate) {
         if (isDead) activeAnim = ghostAnim;
         else if (isWalking) activeAnim = walkAnim;
         else if (state === 'sleep') activeAnim = sleepAnim;
