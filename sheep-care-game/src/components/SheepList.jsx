@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
+import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';
 import { Plus, Trash2, RotateCcw } from 'lucide-react';
@@ -7,9 +8,9 @@ import '../styles/design-tokens.css';
 import './SheepList.css';
 
 // --- Card Component (tag design aligned with SheepListModal.tsx) ---
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isDead, isSick, isPinned, onTogglePin }) => {
-    const tagVariant = isDead ? 'dead' : (isSick ? 'sick' : (s.name.length > 3 ? 'companion' : 'new'));
-    const tagLabel = isDead ? '已離世' : (isSick ? '生病' : (s.name.length > 3 ? '夥伴' : '新朋友'));
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin }) => {
+    const tagVariant = isSleepingState ? 'dead' : (isSick ? 'sick' : (s.name.length > 3 ? 'companion' : 'new'));
+    const tagLabel = isSleepingState ? '已沉睡' : (isSick ? '生病' : (s.name.length > 3 ? '夥伴' : '新朋友'));
     const healthFull = Math.ceil(s.health || 0) >= 100;
 
     return (
@@ -71,8 +72,8 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             <div className="sheep-card-footer">
                 <div className="sheep-card-name">{s.name}</div>
                 {!isSelectionMode && (
-                    <div className={`sheep-card-pray ${isDead ? 'sheep-card-pray--dead' : ''}`}>
-                        {isDead ? `🕯️ 迫切禱告 ${s.resurrectionProgress || 0}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
+                    <div className={`sheep-card-pray ${isSleepingState ? 'sheep-card-pray--dead' : ''}`}>
+                        {isSleepingState ? `🕯️ 喚醒禱告 ${getAwakeningProgress(s)}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
                     </div>
                 )}
             </div>
@@ -104,31 +105,31 @@ export const SheepList = ({ onSelect }) => {
 
     const filteredSheep = useMemo(() => sortedSheep.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const isDead = s.status === 'dead';
+        const isSleepingState = isSleeping(s);
         const isSick = s.status === 'sick';
         const isPinned = settings?.pinnedSheepIds?.includes(s.id);
 
         if (!matchesSearch) return false;
-        if (filterStatus === 'DEAD') return isDead;
+        if (filterStatus === 'SLEEPING') return isSleepingState;
         if (filterStatus === 'SICK') return isSick;
-        if (filterStatus === 'HEALTHY') return !isDead && !isSick;
+        if (filterStatus === 'HEALTHY') return !isSleepingState && !isSick;
         if (filterStatus === 'PINNED') return isPinned;
         return true;
     }), [sortedSheep, searchTerm, filterStatus, settings?.pinnedSheepIds]);
 
     const counts = useMemo(() => sortedSheep.reduce((acc, s) => {
-        const isDead = s.status === 'dead';
+        const isSleepingState = isSleeping(s);
         const isSick = s.status === 'sick';
         const isPinned = settings?.pinnedSheepIds?.includes(s.id);
 
-        if (isDead) acc.DEAD++;
+        if (isSleepingState) acc.SLEEPING++;
         else if (isSick) acc.SICK++;
         else acc.HEALTHY++;
 
         if (isPinned) acc.PINNED++;
 
         return acc;
-    }, { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, DEAD: 0, PINNED: 0 }), [sortedSheep, settings?.pinnedSheepIds]);
+    }, { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, SLEEPING: 0, PINNED: 0 }), [sortedSheep, settings?.pinnedSheepIds]);
 
     const toggleSelection = (id) => {
         const newSet = new Set(selectedIds);
@@ -155,8 +156,7 @@ export const SheepList = ({ onSelect }) => {
                 status: 'healthy',
                 careLevel: 0,
                 resurrectionProgress: 0,
-                // keep lastPrayedDate? Maybe clear it so they can be prayed for again?
-                // Request says "Reset data", usually implies fresh start.
+                awakeningProgress: 0,
                 lastPrayedDate: null,
                 prayedCount: 0
             });
@@ -323,7 +323,7 @@ export const SheepList = ({ onSelect }) => {
                                     { id: 'PINNED', label: '📌 釘選' },
                                     { id: 'HEALTHY', label: '健康' },
                                     { id: 'SICK', label: '生病' },
-                                    { id: 'DEAD', label: '離世' }
+                                    { id: 'SLEEPING', label: '沉睡' }
                                 ].map(f => (
                                     <button
                                         type="button"
@@ -396,7 +396,7 @@ export const SheepList = ({ onSelect }) => {
                                         if (onSelect) onSelect(sheep);
                                     }}
                                     onToggleSelect={toggleSelection}
-                                    isDead={s.status === 'dead'}
+                                    isSleepingState={isSleeping(s)}
                                     isSick={s.status === 'sick'}
                                 />
                             </div>

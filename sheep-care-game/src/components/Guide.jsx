@@ -64,12 +64,12 @@ export const Guide = ({ onClose }) => {
                             <li><strong>狀態影響:</strong> 生病或受傷流失更快 (每天約 <strong>17-20%</strong>)。</li>
                         </ul>
 
-                        <h4>3. 死亡與復活 (Miracle)</h4>
-                        <p>死亡不是終點，信心能喚回生命：</p>
+                        <h4>3. 沉睡與甦醒 (Miracle)</h4>
+                        <p>沉睡不是終點，信心能喚回生命：</p>
                         <ul>
-                            <li><strong>墓碑:</strong> 小羊死亡後會化為墓碑，您可以修改墓誌銘與追憶。</li>
-                            <li><strong>復活儀式:</strong> 連續 <strong>5 天</strong> 進行「迫切認領禱告」(每天1次)。</li>
-                            <li><strong>奇蹟:</strong> 第 5 次禱告後，小羊將復活！(保留姓名與靈程，重置為健康小羊)。</li>
+                            <li><strong>沉睡紀錄:</strong> 小羊沉睡後會化為沉睡紀錄，您可以修改紀錄與追憶。</li>
+                            <li><strong>甦醒儀式:</strong> 連續 <strong>5 天</strong> 進行「喚醒禱告」(每天1次)。</li>
+                            <li><strong>奇蹟:</strong> 第 5 次禱告後，小羊將甦醒！(保留姓名與靈程，重置為健康小羊)。</li>
                             <li><strong>中斷歸零:</strong> 若中斷一天沒禱告，進度將歸零重來。</li>
                         </ul>
 

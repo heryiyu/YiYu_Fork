@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SHEEP_TYPES } from '../data/sheepData';
-import { calculateTick, generateVisuals, getSheepMessage, calculateSheepState, calculateOfflineDecay } from '../utils/gameLogic';
+import { calculateTick, generateVisuals, getSheepMessage, calculateSheepState, calculateOfflineDecay, isSleeping, getAwakeningProgress, SLEEPING_STATUS } from '../utils/gameLogic';
 import { gameState } from '../services/gameState';
 import { supabase } from '../services/supabaseClient';
 
@@ -308,7 +308,7 @@ export const GameProvider = ({ children }) => {
             spiritualMaturity,
             careLevel: 0, health: initHealth, status: initStatus,
             state: 'idle', note: '', prayedCount: 0, lastPrayedDate: null,
-            resurrectionProgress: 0,
+            resurrectionProgress: 0, awakeningProgress: 0,
             visual: safeVisual,
             skinId: skinId || null,
             x: Math.random() * 60 + 20, y: Math.random() * 60 + 20,
@@ -709,8 +709,8 @@ export const GameProvider = ({ children }) => {
         const tick = setInterval(() => {
             setSheep(prev => prev.filter(s => s).map(s => {
                 const updated = calculateTick(s, prev); // Pass 'prev' (all sheep) for flocking
-                if (updated.status === 'dead' && s.status !== 'dead') {
-                    showMessage(`🕊️ ${s.name} 不幸離世了...`);
+                if (isSleeping(updated) && !isSleeping(s)) {
+                    showMessage(`🕊️ ${s.name} 進入沉睡了...`);
                 }
                 return updated;
             }));
@@ -746,7 +746,7 @@ export const GameProvider = ({ children }) => {
         setSheep(prev => {
             const nextState = prev.map(s => {
                 if (s.id !== id) return s;
-                if (s.status === 'dead') {
+                if (isSleeping(s)) {
                     const todayDate = new Date(today);
                     const lastDate = s.lastPrayedDate ? new Date(s.lastPrayedDate) : null;
                     let diffDays = -1;
@@ -755,26 +755,25 @@ export const GameProvider = ({ children }) => {
                     }
                     const isContinuous = diffDays === 1 || diffDays === -1;
 
-                    // Admin Bypass: Allow unlimited resurrection progress per day if needed? 
-                    // User requirement said "Unlimited Prayers", usually implies the daily limit.
-                    // Let's allow Admin to spam resurrection too if they want
+                    // Admin Bypass: Allow unlimited awakening progress per day if needed
                     if (!isAdmin && diffDays === 0) {
                         showMessage("今天已經為這隻小羊禱告過了，請明天再來！🙏");
                         return s;
                     }
 
-                    let newProgress = (isContinuous || isAdmin) ? (s.resurrectionProgress || 0) + 1 : 1;
+                    const currentProgress = getAwakeningProgress(s);
+                    let newProgress = (isContinuous || isAdmin) ? currentProgress + 1 : 1;
 
                     if (newProgress >= 5) {
-                        showMessage(`✨ 奇蹟發生了！${s.name} 復活了！`);
+                        showMessage(`✨ 奇蹟發生了！${s.name} 甦醒了！`);
                         return {
                             ...s, status: 'healthy', health: 100, type: 'LAMB', careLevel: 0,
-                            resurrectionProgress: 0, lastPrayedDate: today, prayedCount: 0
+                            resurrectionProgress: 0, awakeningProgress: 0, lastPrayedDate: today, prayedCount: 0
                         };
                     } else {
-                        const statusMsg = (!isAdmin && diffDays > 1) ? "禱告中斷了，重新開始..." : "迫切認領禱告進行中...";
+                        const statusMsg = (!isAdmin && diffDays > 1) ? "禱告中斷了，重新開始..." : "喚醒禱告進行中...";
                         showMessage(`🙏 ${statusMsg} (${newProgress}/5)`);
-                        return { ...s, resurrectionProgress: newProgress, lastPrayedDate: today };
+                        return { ...s, resurrectionProgress: newProgress, awakeningProgress: newProgress, lastPrayedDate: today };
                     }
                 }
 

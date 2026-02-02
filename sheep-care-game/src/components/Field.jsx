@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Eye } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { isSleeping } from '../utils/gameLogic';
 import { Sheep } from './Sheep';
 import { AssetBackground } from './AssetBackground';
 import { AssetPreloader } from './AssetPreloader';
@@ -10,8 +11,8 @@ export const Field = ({ onSelectSheep }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     // --- 1. Separate Sheep ---
-    const livingSheep = useMemo(() => sheep.filter(s => s.status !== 'dead'), [sheep]);
-    const deadSheep = useMemo(() => sheep.filter(s => s.status === 'dead'), [sheep]);
+    const livingSheep = useMemo(() => sheep.filter(s => !isSleeping(s)), [sheep]);
+    const sleepingSheep = useMemo(() => sheep.filter(s => isSleeping(s)), [sheep]);
 
     // --- 2. Living Sheep Rotation (Existing Logic) ---
     // --- 2. Visibility Logic (Pinned > Random) ---
@@ -61,15 +62,15 @@ export const Field = ({ onSelectSheep }) => {
 
     // Derived Lists for Rendering
     const visibleLiving = useMemo(() => {
-        return sheep.filter(s => s.status !== 'dead' && visibleIds.has(s.id));
+        return sheep.filter(s => !isSleeping(s) && visibleIds.has(s.id));
     }, [sheep, visibleIds]);
 
-    const visibleDead = useMemo(() => {
-        return sheep.filter(s => s.status === 'dead' && visibleIds.has(s.id));
+    const visibleSleeping = useMemo(() => {
+        return sheep.filter(s => isSleeping(s) && visibleIds.has(s.id));
     }, [sheep, visibleIds]);
 
     // --- 3. Ghost Sheep Positioning (Random Roam Simulation) ---
-    // Since dead sheep are no longer graveyard bound, we give them random positions
+    // Since sleeping sheep are no longer graveyard bound, we give them random positions
     // In a real physics system, they would trigger 'move' updates.
     // Here we just map them to static random float positions if they lack coordinates.
     // Or we rely on the fact that they MIGHT have last known coordinates? 
@@ -77,9 +78,8 @@ export const Field = ({ onSelectSheep }) => {
     // No, simple is stable: Assign random X/Y based on ID hash if X/Y is missing/zero.
 
     // Seeded random for Ghosts
-    // Seeded random for Ghosts
     const ghostSheep = useMemo(() => {
-        return visibleDead.map(s => {
+        return visibleSleeping.map(s => {
             // If sheep has coordinates, use them (maybe they died there).
             // But we want them to float around.
             // Let's override X/Y with a "Ghost Position".
@@ -98,7 +98,7 @@ export const Field = ({ onSelectSheep }) => {
                 zIndex: 200 // Above ground items, below UI
             };
         });
-    }, [visibleDead]);
+    }, [visibleSleeping]);
 
 
     if (!isLoaded) {

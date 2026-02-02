@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { calculateSheepState, parseMaturity } from '../utils/gameLogic';
+import { calculateSheepState, parseMaturity, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 
 export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin } = useGame();
@@ -63,29 +63,27 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
     const handlePray = () => {
         const todayStr = new Date().toDateString();
-        // Check if Dead and already prayed today
-        if (target.status === 'dead' && target.lastPrayedDate === todayStr && !isAdmin) {
+        // Check if sleeping and already prayed today
+        if (isSleeping(target) && target.lastPrayedDate === todayStr && !isAdmin) {
             setLocalMsg("今天已經為這隻小羊禱告過了，請明天再來！🙏");
             return;
         }
 
         prayForSheep(target.id);
-        // Optional: Set success feedback? Global toast handles it.
-        // But if successful, maybe clear error msg?
         setLocalMsg('');
     };
 
-    const isDead = target.status === 'dead';
+    const isSleepingState = isSleeping(target);
 
-    // Prayer / Resurrection Logic
+    // Prayer / Awakening Logic
     const today = new Date().toDateString();
     const currentCount = (target.lastPrayedDate === today) ? (target.prayedCount || 0) : 0;
-    const isFull = !isDead && currentCount >= 3;
+    const isFull = !isSleepingState && currentCount >= 3;
 
     // Button Text
     let buttonText = '';
-    if (isDead) {
-        buttonText = `🔮 迫切認領禱告 (${target.resurrectionProgress || 0}/5)`;
+    if (isSleepingState) {
+        buttonText = `🔮 喚醒禱告 (${getAwakeningProgress(target)}/5)`;
     } else {
         if (isAdmin) {
             buttonText = `🙏 為牠禱告 (今日: ${currentCount}/∞)`;
@@ -96,7 +94,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
     // Status Text
     const getStatusText = (status, health) => {
-        if (status === 'dead') return '已安息 🪦';
+        if (isSleeping({ status })) return '已沉睡 🪦';
         if (status === 'sick') return '生病 (需禱告恢復)';
         if (status === 'injured') return '受傷 (需禱告恢復)';
         if (health >= 80) return '強壯 💪';
@@ -133,7 +131,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="sheep-detail-title">
             <div className="modal-card" ref={modalRef} onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h3 id="sheep-detail-title">{isDead ? '🪦 墓碑' : '📝 小羊資料'}</h3>
+                    <h3 id="sheep-detail-title">{isSleepingState ? '🪦 沉睡紀錄' : '📝 小羊資料'}</h3>
                     <button ref={closeBtnRef} className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
                 </div>
 
@@ -160,7 +158,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                     {activeTab === 'BASIC' && (
                         <>
                             <div className="form-group">
-                                <label>{isDead ? '墓誌銘 (姓名)' : '姓名'}</label>
+                                <label>{isSleepingState ? '沉睡紀錄 (姓名)' : '姓名'}</label>
                                 <input
                                     type="text"
                                     value={name}
@@ -173,11 +171,11 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
                             <div className="form-group">
                                 <label>狀態</label>
-                                <div className="modal-status-box" style={{ color: isDead ? '#666' : (target.health >= 80 ? '#2196f3' : (target.status === 'healthy' ? 'green' : 'var(--palette-danger)')) }}>
+                                <div className="modal-status-box" style={{ color: isSleepingState ? '#666' : (target.health >= 80 ? '#2196f3' : (target.status === 'healthy' ? 'green' : 'var(--palette-danger)')) }}>
                                     <div>
                                         {getStatusText(target.status, target.health)}
-                                        {!isDead && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
-                                        {!isDead && <span style={{ marginLeft: '10px', color: '#ff9800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
+                                        {!isSleepingState && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
+                                        {!isSleepingState && <span style={{ marginLeft: '10px', color: '#ff9800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
                                     </div>
                                 </div>
                             </div>
@@ -203,7 +201,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                 <div className="modal-info-box">
                                     {target.health < 40 ? '🍂 虛弱' : (target.health >= 80 ? '💪 強壯' : '🐑 正常')}
                                 </div>
-                                {isAdmin && !isDead && (
+                                {isAdmin && !isSleepingState && (
                                     <div className="modal-admin-box">
                                         <label>🔧 管理員調整: {Math.ceil(target.health)}%</label>
                                         <div className="admin-actions">
@@ -222,7 +220,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                 type="button"
                                                 className="admin-reset-btn btn-destructive"
                                                 onClick={() => updateSheep(target.id, { health: 0 })}
-                                                title="直接歸零 (測試死亡)"
+                                                title="直接歸零 (測試沉睡)"
                                             >
                                                 💀 歸零
                                             </button>
@@ -238,17 +236,17 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                     onChange={(e) => setNote(e.target.value)}
                                     onBlur={() => handleBasicAutoSave('note', note)}
                                     rows={3}
-                                    placeholder={isDead ? "寫下對牠的負擔..." : "記錄這隻小羊的狀況..."}
+                                    placeholder={isSleepingState ? "寫下對牠的負擔..." : "記錄這隻小羊的狀況..."}
                                 />
                             </div>
 
                             <button
                                 className="pray-action-btn"
                                 onClick={handlePray}
-                                disabled={!isDead && isFull && !isAdmin}
+                                disabled={!isSleepingState && isFull && !isAdmin}
                                 style={{
-                                    opacity: (!isDead && isFull && !isAdmin) ? 0.6 : 1,
-                                    cursor: (!isDead && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
+                                    opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
+                                    cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
                                 }}
                             >
                                 {buttonText}

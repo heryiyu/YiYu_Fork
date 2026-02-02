@@ -1,6 +1,16 @@
 // --- Constants ---
 const BOUNDS = { minX: 5, maxX: 95, minY: 35, maxY: 64 }; // minY 35 to stay above Foreground Line (33)
-const GRAVEYARD_RADIUS = 33; // Fan shape from Top-Left (x=0, y=100)
+const SLEEP_AREA_RADIUS = 33; // Fan shape from Top-Left (x=0, y=100) - where sleeping sheep rest
+const GRAVEYARD_RADIUS = SLEEP_AREA_RADIUS; // Alias for backward compat
+
+/** Status value for sleeping (沉睡) sheep. Legacy 'dead' is also accepted. */
+export const SLEEPING_STATUS = 'sleeping';
+
+/** Returns true if sheep is in sleeping state (accepts legacy 'dead'). */
+export const isSleeping = (s) => s && (s.status === 'dead' || s.status === SLEEPING_STATUS);
+
+/** Returns awakening progress (accepts legacy resurrectionProgress). */
+export const getAwakeningProgress = (s) => (s?.awakeningProgress ?? s?.resurrectionProgress ?? 0);
 
 // Configuration for game balance
 // Configuration for game balance
@@ -70,6 +80,17 @@ const SHEEP_MESSAGES = {
         "又是美好的一天！"
     ],
     dead: [
+        "救救我...我不想要消失... 😭",
+        "好黑好冷...誰能聽見我？ 🌑",
+        "不要遺忘我...求求你... 🙏",
+        "只有你能喚醒我...拜託...",
+        "我還不想就這樣結束... 💔",
+        "聽得到我的聲音嗎...？",
+        "請為我禱告...我好害怕...",
+        "相信奇蹟...請不要放棄我...",
+        "等待你的呼喚... 🕯️"
+    ],
+    sleeping: [
         "救救我...我不想要消失... 😭",
         "好黑好冷...誰能聽見我？ 🌑",
         "不要遺忘我...求求你... 🙏",
@@ -152,9 +173,9 @@ export const sanitizeSheep = (s) => {
     if (typeof y !== 'number' || isNaN(y)) y = Math.random() * (BOUNDS.maxY - BOUNDS.minY) + BOUNDS.minY;
     if (typeof angle !== 'number' || isNaN(angle)) angle = Math.random() * Math.PI * 2;
 
-    // Ensure not spawning in graveyard or buffer zone (Radius + 20)
-    const distToGrave = Math.sqrt(x * x + (100 - y) * (100 - y));
-    if (s.status !== 'dead' && distToGrave < GRAVEYARD_RADIUS + 20) {
+    // Ensure not spawning in sleep area or buffer zone (Radius + 20)
+    const distToSleepArea = Math.sqrt(x * x + (100 - y) * (100 - y));
+    if (!isSleeping(s) && distToSleepArea < SLEEP_AREA_RADIUS + 20) {
         // Shift out
         x += 20;
         y -= 20;
@@ -174,8 +195,8 @@ export const calculateSheepState = (currentHealth, currentStatus) => {
     let newHealth = Math.max(0, currentHealth);
     let newStatus = currentStatus;
 
-    if (newHealth <= 0 && currentStatus !== 'dead') {
-        newStatus = 'dead';
+    if (newHealth <= 0 && currentStatus !== 'dead' && currentStatus !== SLEEPING_STATUS) {
+        newStatus = SLEEPING_STATUS;
         newHealth = 0;
     } else if (newHealth < 40 && currentStatus === 'healthy') {
         // Deterministic Sick Rule
@@ -195,7 +216,7 @@ export const calculateSheepState = (currentHealth, currentStatus) => {
  * Calculates decay for a sheep over a period of time (offline).
  */
 export const calculateOfflineDecay = (s, diffHours) => {
-    if (s.status === 'dead') return s;
+    if (isSleeping(s)) return s;
 
     let ratePerHour = SHEEP_CONFIG.DECAY.HOUR.HEALTHY;
 
@@ -208,7 +229,7 @@ export const calculateOfflineDecay = (s, diffHours) => {
     else if (s.status === 'injured') ratePerHour = SHEEP_CONFIG.DECAY.HOUR.INJURED;
 
     const decayAmount = diffHours * ratePerHour;
-    let rawHealth = s.status === 'dead' ? 0 : (s.health - decayAmount);
+    let rawHealth = isSleeping(s) ? 0 : (s.health - decayAmount);
 
     const { health, status, type } = calculateSheepState(rawHealth, s.status);
 
@@ -216,23 +237,22 @@ export const calculateOfflineDecay = (s, diffHours) => {
 };
 
 export const calculateTick = (s, allSheep = []) => {
-    // Allow dead sheep to process message logic
-
+    // Allow sleeping sheep to process message logic
 
     let { x, y, state, angle, direction, message, messageTimer } = s;
     const oldX = x;
     const oldY = y;
 
     // 1. Movement Logic
-    if (s.status === 'dead') {
+    if (isSleeping(s)) {
         state = 'idle';
-        // Graveyard Logic: Fan shape from Top-Left (x=0, y=100)
+        // Sleep area logic: Fan shape from Top-Left (x=0, y=100)
         const distSq = x * x + (100 - y) * (100 - y);
-        const graveRadiusSq = GRAVEYARD_RADIUS * GRAVEYARD_RADIUS;
+        const sleepRadiusSq = SLEEP_AREA_RADIUS * SLEEP_AREA_RADIUS;
 
-        if (distSq > graveRadiusSq) {
+        if (distSq > sleepRadiusSq) {
             // Teleport inside
-            const r = Math.random() * (GRAVEYARD_RADIUS - 5);
+            const r = Math.random() * (SLEEP_AREA_RADIUS - 5);
             const theta = Math.random() * (Math.PI / 2); // 0 to 90 degrees
             x = r * Math.sin(theta);
             y = 100 - r * Math.cos(theta);
@@ -272,8 +292,8 @@ export const calculateTick = (s, allSheep = []) => {
     }
 
     // --- Global Constraints (Apply to ALL live sheep, even idle) ---
-    // Forces sheep out of graveyard and bounds, regardless of state
-    if (s.status !== 'dead') {
+    // Forces sheep out of sleep area and bounds, regardless of state
+    if (!isSleeping(s)) {
         const SAFE_RADIUS = 58; // 33 + 25
         const SAFE_RADIUS_SQ = SAFE_RADIUS * SAFE_RADIUS;
         const distSqToCorner = x * x + (100 - y) * (100 - y);
@@ -314,7 +334,7 @@ export const calculateTick = (s, allSheep = []) => {
 
             for (let other of allSheep) {
                 if (other.id === s.id) continue;
-                if (other.status === 'dead') continue; // Don't avoid graves strictly here
+                if (isSleeping(other)) continue; // Don't avoid sleep area strictly here
 
                 const dx = x - other.x;
                 const dy = y - other.y;
@@ -377,7 +397,7 @@ export const calculateTick = (s, allSheep = []) => {
     else if (s.status === 'injured') decayRate = SHEEP_CONFIG.DECAY.TICK.INJURED;
 
     // Decay
-    let rawHealth = s.status === 'dead' ? 0 : (s.health - decayRate);
+    let rawHealth = isSleeping(s) ? 0 : (s.health - decayRate);
 
     // Use Helper
     const { health: newHealth, status: newStatus, type: newType } = calculateSheepState(rawHealth, s.status);
@@ -389,11 +409,12 @@ export const calculateTick = (s, allSheep = []) => {
     let msg = timer > 0 ? message : null;
 
     // Dynamic speak chance
-    const speakChance = newStatus === 'dead' ? 0.003 : (newHealth < 30 ? 0.02 : (newHealth < 60 ? 0.008 : 0.001));
+    const isNewlySleeping = newStatus === 'dead' || newStatus === SLEEPING_STATUS;
+    const speakChance = isNewlySleeping ? 0.003 : (newHealth < 30 ? 0.02 : (newHealth < 60 ? 0.008 : 0.001));
 
     if (timer <= 0 && Math.random() < speakChance) {
         timer = 5;
-        if (newStatus === 'dead') msg = getRandomItem(SHEEP_MESSAGES.dead);
+        if (isNewlySleeping) msg = getRandomItem(SHEEP_MESSAGES.sleeping);
         else if (newHealth < 30) msg = getRandomItem(SHEEP_MESSAGES.critical);
         else if (newHealth < 60) msg = getRandomItem(SHEEP_MESSAGES.neglected);
         else if (Math.random() < 0.4) {

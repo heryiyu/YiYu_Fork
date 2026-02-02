@@ -1,5 +1,5 @@
 import { supabase, supabaseUrl, supabaseKey } from './supabaseClient';
-import { calculateOfflineDecay, sanitizeSheep } from '../utils/gameLogic';
+import { calculateOfflineDecay, sanitizeSheep, isSleeping, SLEEPING_STATUS } from '../utils/gameLogic';
 
 export const gameState = {
     // Helper: Get ISO string with local timezone offset (e.g. +08:00)
@@ -130,7 +130,7 @@ export const gameState = {
             const diffHours = (now - lastTime) / (1000 * 60 * 60);
 
             if (diffHours > 0.1) {
-                if (sheep.status !== 'dead') {
+                if (!isSleeping(sheep)) {
                     sheep = calculateOfflineDecay(sheep, diffHours);
                 }
             }
@@ -175,13 +175,14 @@ export const gameState = {
 
     // Helper: Map Sheep to DB (camel -> snake)
     _toDbSheep(sheep) {
+        const status = (sheep.status === SLEEPING_STATUS || sheep.status === 'dead') ? 'dead' : sheep.status;
+        const awakeningProgress = sheep.awakeningProgress ?? sheep.resurrectionProgress ?? 0;
         return {
             id: sheep.id,
             user_id: sheep.user_id,
             name: sheep.name,
             type: sheep.type,
-            status: sheep.status,
-            status: sheep.status,
+            status,
             health: sheep.health,
 
             // V13: Save attributes here
@@ -198,7 +199,7 @@ export const gameState = {
             spiritual_maturity: sheep.spiritualMaturity,
             prayed_count: sheep.prayedCount,
             last_prayed_date: sheep.lastPrayedDate,
-            resurrection_progress: sheep.resurrectionProgress,
+            resurrection_progress: awakeningProgress,
             skin_id: sheep.skinId,
             note: sheep.note,
             state: sheep.state,
@@ -209,14 +210,15 @@ export const gameState = {
 
     // Helper: Map DB to Sheep (snake -> camel)
     _fromDbSheep(row) {
+        const rawStatus = row.status;
+        const status = (rawStatus === 'dead' || rawStatus === SLEEPING_STATUS) ? SLEEPING_STATUS : rawStatus;
+        const awakeningProgress = row.resurrection_progress ?? row.awakening_progress ?? 0;
         return {
             id: row.id,
             user_id: row.user_id,
             name: row.name,
             type: row.type,
-            status: row.status,
-            health: row.health,
-            status: row.status,
+            status,
             health: row.health,
             // V13: Load from new flow. (This helper is for raw row conversion)
             // But _fromDbSheep is mostly used inside loadGame where we handle the merge.
@@ -247,7 +249,8 @@ export const gameState = {
             spiritualMaturity: row.spiritual_maturity ?? 0,
             prayedCount: row.prayed_count ?? 0,
             lastPrayedDate: row.last_prayed_date,
-            resurrectionProgress: row.resurrection_progress ?? 0,
+            awakeningProgress,
+            resurrectionProgress: awakeningProgress,
             skinId: row.skin_id,
             note: row.note || '',
             state: row.state || 'idle',

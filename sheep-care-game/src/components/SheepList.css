@@ -124,7 +124,7 @@
   line-height: 1.2;
 }
 
-/* 已離世 – same as 失喪的靈魂 */
+/* 已沉睡 – same as 失喪的靈魂 */
 .sheep-card-tag--dead {
   background: var(--tag-dead-bg);
   color: var(--tag-dead-text);

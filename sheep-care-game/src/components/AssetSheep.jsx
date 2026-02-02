@@ -1,20 +1,21 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ASSETS } from '../utils/AssetRegistry';
+import { isSleeping } from '../utils/gameLogic';
 import '../styles/design-tokens.css';
 
 export const AssetSheep = ({
     x, y,
     state, // 'walking', 'idle', 'sleep'
     direction, // 1 or -1
-    status, // 'healthy', 'sick', 'dead'
+    status, // 'healthy', 'sick', 'sleeping' (legacy 'dead' accepted)
     visual = {},
     onClick,
     scale = 1,
     centered = false,
     animated = undefined
 }) => {
-    const isDead = status === 'dead';
+    const isSleepingState = isSleeping({ status });
     const isWalking = state === 'walking';
 
     // --- 1. Determine Image Source ---
@@ -22,8 +23,8 @@ export const AssetSheep = ({
     // If Dead, use Ghost Asset.
     // Else default to Classic White.
     const imgSrc = useMemo(() => {
-        // Priority 1: GHOST (Dead)
-        if (isDead) return ASSETS.SHEEP_VARIANTS.GHOST;
+        // Priority 1: GHOST (Sleeping)
+        if (isSleepingState) return ASSETS.SHEEP_VARIANTS.GHOST;
 
         // Determine Variant Key
         let variantKey = 'CLASSIC_WHITE';
@@ -38,7 +39,7 @@ export const AssetSheep = ({
         if (status === 'sick') return variant.SICK;
         return variant.HEALTHY;
 
-    }, [isDead, status, visual.skinUrl]);
+    }, [isSleepingState, status, visual.skinUrl]);
 
     // --- 2. Animations ---
     // Object Animation: We animate the CONTAINER or the IMG itself.
@@ -80,7 +81,7 @@ export const AssetSheep = ({
 
     let activeAnim = {};
     if (shouldAnimate) {
-        if (isDead) activeAnim = ghostAnim;
+        if (isSleepingState) activeAnim = ghostAnim;
         else if (isWalking) activeAnim = walkAnim;
         else if (state === 'sleep') activeAnim = sleepAnim;
     }
@@ -130,12 +131,12 @@ export const AssetSheep = ({
 
                         // Direction Flip
                         transform: `scaleX(${direction})`,
-                        filter: isDead ? 'grayscale(100%) drop-shadow(0 0 5px rgba(255,255,255,0.5))' : 'none'
+                        filter: isSleepingState ? 'grayscale(100%) drop-shadow(0 0 5px rgba(255,255,255,0.5))' : 'none'
                     }}
                     onError={(e) => {
                         // Fallback to text if image fails
                         e.target.style.display = 'none';
-                        e.target.parentElement.innerText = isDead ? '👻' : '🐑';
+                        e.target.parentElement.innerText = isSleepingState ? '👻' : '🐑';
                     }}
                 />
             </motion.div>
