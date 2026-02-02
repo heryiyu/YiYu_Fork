@@ -43,7 +43,6 @@ export const SettingsModal = ({ onClose }) => {
                             step="5"
                             value={settings.maxVisibleSheep}
                             onChange={handleChange}
-                            style={{ width: '100%', cursor: 'pointer' }}
                         />
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>
