@@ -1,14 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { AssetSheep } from './AssetSheep';
-import { getStableSheepMessage } from '../utils/gameLogic';
 import { AddSheepModal } from './AddSheepModal';
 import { Trash2, RotateCcw } from 'lucide-react';
 import '../styles/design-tokens.css';
 import './SheepList.css';
 
-// --- Card Component ---
+// --- Card Component (tag design aligned with SheepListModal.tsx) ---
 const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isDead, isSick, isPinned, onTogglePin }) => {
+    const tagVariant = isDead ? 'dead' : (isSick ? 'sick' : (s.name.length > 3 ? 'companion' : 'new'));
+    const tagLabel = isDead ? '已離世' : (isSick ? '生病' : (s.name.length > 3 ? '夥伴' : '新朋友'));
+    const healthFull = Math.ceil(s.health || 0) >= 100;
+
     return (
         <div
             className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''} ${isSelectionMode ? 'sheep-card--select-mode' : ''}`}
@@ -23,44 +26,31 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 </div>
             )}
 
-            {/* 1. Header (Fixed Height) */}
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
-                {/* Health Text: Dynamic size (Smaller if 100%) */}
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: '2px',
-                    fontSize: Math.ceil(s.health || 0) >= 100 ? 'clamp(0.8rem, 3.5vw, 1.0rem)' : 'clamp(0.9rem, 4vw, 1.1rem)',
-                    color: 'var(--color-action-pink)', fontWeight: 'bold'
-                }}>
-                    <span style={{ fontSize: '1.2em' }}>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
+            <div className="sheep-card-header">
+                <div className={`sheep-card-health ${healthFull ? 'sheep-card-health--full' : ''}`}>
+                    <span className="sheep-card-health-icon">♥</span>
+                    <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
-                {/* Status Badge: No wrap, dynamic size, Using Design Tokens */}
-                <div style={{
-                    background: isDead ? 'var(--palette-disabled)' : (isSick ? 'var(--palette-danger)' : (s.name.length > 3 ? 'var(--tag-seeker-bg)' : 'var(--tag-new-bg)')),
-                    color: isDead ? 'white' : (isSick ? 'white' : (s.name.length > 3 ? 'var(--tag-seeker-text)' : 'var(--tag-new-text)')),
-                    padding: '2px 6px', borderRadius: 'var(--radius-tag)', // Reduced padding
-                    fontSize: 'clamp(0.55rem, 2.5vw, 0.65rem)', fontWeight: 'bold',
-                    whiteSpace: 'nowrap', // Prevent wrapping
-                    flexShrink: 0,
-                    marginLeft: '4px' // Little spacer
-                }}>
-                    {isDead ? '已離世' : (isSick ? '生病' : s.name.length > 3 ? '夥伴' : '新朋友')}
+                <div className={`sheep-card-tag sheep-card-tag--${tagVariant}`}>
+                    {tagLabel}
                 </div>
-                <div className="sheep-card-header-actions" style={{ display: 'flex', gap: '4px' }}>
-                    {!isSelectionMode && (
+                <div className="sheep-card-header-actions">
+                    {!isSelectionMode && onTogglePin && (
                         <button
+                            type="button"
                             className="pin-btn"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onTogglePin && onTogglePin(s.id);
+                                onTogglePin(s.id);
                             }}
                             style={{
-                                background: 'transparent', border: 'none', cursor: 'pointer', padding: '0',
-                                opacity: isPinned ? 1 : 0.2, // Check logic
-                                fontSize: '1.0rem',
+                                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                                opacity: isPinned ? 1 : 0.2,
+                                fontSize: '1rem',
                                 transition: 'transform 0.2s, opacity 0.2s'
                             }}
                         >
-                            {isPinned ? '📌' : '📌'}
+                            📌
                         </button>
                     )}
                 </div>
@@ -108,6 +98,7 @@ export const SheepList = ({ onSelect }) => {
     const filteredSheep = useMemo(() => sortedSheep.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
         const isDead = s.status === 'dead';
+        const isSick = s.status === 'sick';
         const isPinned = settings?.pinnedSheepIds?.includes(s.id);
 
         if (!matchesSearch) return false;
@@ -180,7 +171,7 @@ export const SheepList = ({ onSelect }) => {
     // --- Interaction Handlers ---
 
     // Toggle via Toolbar Background
-    const handleToolbarClick = (e) => {
+    const handleToolbarClick = () => {
         // If collapsed, any click on the toolbar (including disabled buttons) should open it.
         // If open, we only toggle if clicking the background.
         if (isCollapsed) {
@@ -322,7 +313,7 @@ export const SheepList = ({ onSelect }) => {
                                 {/* 3. Filters (chip style like SheepListModal) */}
                                 {[
                                     { id: 'ALL', label: '全部' },
-                                    { id: 'PINNED', label: '📌釘選' },
+                                    { id: 'PINNED', label: '📌 釘選' },
                                     { id: 'HEALTHY', label: '健康' },
                                     { id: 'SICK', label: '生病' },
                                     { id: 'DEAD', label: '離世' }

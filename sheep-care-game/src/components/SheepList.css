@@ -68,7 +68,7 @@
   font-weight: bold;
 }
 
-/* Header row: health + tag */
+/* Header row: health + tag + actions (pin) */
 .sheep-card-header {
   width: 100%;
   display: flex;
@@ -76,6 +76,20 @@
   align-items: center;
   flex-shrink: 0;
   gap: 4px;
+}
+
+.sheep-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.pin-btn:focus,
+.pin-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .sheep-card-health {
@@ -95,9 +109,9 @@
   font-size: 1.2em;
 }
 
-/* Tag pill - base (compact to avoid overflow) */
+/* Tag pill – aligned with SheepListModal, compact size */
 .sheep-card-tag {
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 6px;
   font-size: clamp(0.5rem, 2vw, 0.65rem);
   font-weight: bold;
@@ -110,21 +124,25 @@
   line-height: 1.2;
 }
 
+/* 已離世 – same as 失喪的靈魂: bg #f5d6d6, text #b65a5a */
 .sheep-card-tag--dead {
-  background: #9e9e9e;
-  color: white;
+  background: #f5d6d6;
+  color: #b65a5a;
 }
 
+/* 生病 – same as 虛弱: bg #fde8ec, text #f39fac */
 .sheep-card-tag--sick {
   background: #fde8ec;
-  color: var(--palette-pink-action);
+  color: #f39fac;
 }
 
+/* 新朋友 – same as reference: bg #d2dbea, text #5385db */
 .sheep-card-tag--new {
   background: var(--tag-new-bg);
   color: var(--tag-new-text);
 }
 
+/* 夥伴 – same as 基督徒: bg #e5d6f1, text #7f5b9b */
 .sheep-card-tag--companion {
   background: var(--tag-christian-bg);
   color: var(--tag-christian-text);

@@ -59,6 +59,7 @@ export const AssetPreloader = ({ onLoaded }) => {
                     direction={1}
                     status="healthy"
                     centered
+                    animated
                 />
             </div>
             <div style={{
