@@ -1153,6 +1153,121 @@ input[type="range"]::-moz-range-thumb:hover {
   pointer-events: auto;
 }
 
-.dock-scroll-area::-webkit-scrollbar {
-  display: none;
+
+/* --- New Modal Styles (Restored) --- */
+.modal-card {
+  width: 90%;
+  max-width: 420px; /* Default small */
+  background: var(--bg-card);
+  border: var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  max-height: 90vh;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-header);
+}
+
+.modal-form {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.modal-content {
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+/* Tabs */
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.modal-tab {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.modal-tab:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.modal-tab-active {
+  color: var(--palette-blue-action);
+  border-bottom-color: var(--palette-blue-action);
+  background: white;
+}
+
+.modal-btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--btn-primary-bg);
+  color: white;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  transition: background 0.2s;
+}
+
+.modal-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.modal-info-box {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  color: #0d47a1;
+  margin: 10px 0;
+}
+
+.modal-info-box-blue {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+/* Bullet list in modal */
+.modal-content ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.modal-content li {
+  margin-bottom: 5px;
 }

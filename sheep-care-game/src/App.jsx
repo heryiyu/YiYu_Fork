@@ -11,6 +11,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkinManager } from './components/SkinManager';
 import { UserProfile } from './components/UserProfile';
 import { AdminWeatherControl } from './components/AdminWeatherControl';
+
 import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
@@ -31,6 +32,7 @@ function App() {
     setShowGuide(false);
     setShowSettings(false);
     setShowSkinManager(false);
+
   }, [currentUser]);
 
   // 0. Global Loading (Use AssetPreloader for consistency)
@@ -160,6 +162,8 @@ function App() {
       {showSkinManager && (
         <SkinManager onClose={() => setShowSkinManager(false)} />
       )}
+
+
     </div>
   );
 }
