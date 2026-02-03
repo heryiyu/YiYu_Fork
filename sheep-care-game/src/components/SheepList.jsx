@@ -58,16 +58,18 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             </div>
 
             <div className="sheep-card-avatar">
-                <AssetSheep
-                    status={s.status}
-                    visual={s.visual}
-                    health={s.health}
-                    type={s.type}
-                    scale={0.55}
-                    direction={1}
-                    centered={true}
-                    showStatusIcon={false}
-                />
+                <div className="sheep-card-avatar-inner">
+                    <AssetSheep
+                        status={s.status}
+                        visual={s.visual}
+                        health={s.health}
+                        type={s.type}
+                        scale={0.55}
+                        direction={1}
+                        centered={true}
+                        showStatusIcon={false}
+                    />
+                </div>
             </div>
 
             <div className="sheep-card-footer">
