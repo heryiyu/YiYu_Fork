@@ -418,6 +418,7 @@
   overflow-y: auto;
   font-size: 0.9rem;
   line-height: 1.5;
+  text-align: left;
 }
 
 .modal-btn-primary {
@@ -923,7 +924,13 @@ input[type="range"]::-moz-range-thumb:hover {
   right: 10px;
   display: flex;
   gap: 10px;
-  z-index: 100;
+  z-index: 5000;
+  align-items: center;
+}
+
+.hud-right-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .hud-btn {
@@ -947,6 +954,41 @@ input[type="range"]::-moz-range-thumb:hover {
 .hud-btn:hover {
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.hud-menu-btn {
+  display: none;
+}
+
+@media (max-width: 320px) {
+  .hud-menu-btn {
+    display: inline-flex;
+  }
+
+  .hud-right-actions {
+    display: none;
+    position: absolute;
+    top: 52px;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+    background: var(--bg-card);
+    border: var(--glass-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    z-index: 5001;
+  }
+
+  .hud-right-actions--open {
+    display: flex;
+  }
+
+  .hud-right-actions .hud-btn {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Modal Overlay - Full Screen with Dimming */
@@ -985,6 +1027,13 @@ input[type="range"]::-moz-range-thumb:hover {
   overflow: hidden;
   width: auto;
   max-width: 90vw;
+}
+
+@media (max-width: 480px) {
+  .profile-hud-widget {
+    top: 10px;
+    left: 10px;
+  }
 }
 
 .profile-hud-widget.expanded {

@@ -15,7 +15,7 @@ import { AdminWeatherControl } from './components/AdminWeatherControl';
 import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
-import { Bell, BellOff, BookOpen, Settings } from 'lucide-react';
+import { Bell, BellOff, BookOpen, Settings, Menu } from 'lucide-react';
 
 function App() {
   const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather } = useGame();
@@ -24,7 +24,7 @@ function App() {
   // showList removed - permanent dock
   const [showSettings, setShowSettings] = useState(false);
   const [showSkinManager, setShowSkinManager] = useState(false);
-
+  const [isHudMenuOpen, setIsHudMenuOpen] = useState(false);
 
   // Reset state when user changes
   useEffect(() => {
@@ -70,48 +70,69 @@ function App() {
 
       {/* --- HUD: Top Right System Buttons (Lucide icons) --- */}
       <div className="hud-right">
-        {/* Bell */}
         <button
-          className="hud-btn"
-          style={{ background: notificationEnabled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)' }}
-          onClick={toggleNotification}
-          title={notificationEnabled ? "關閉提醒" : "開啟提醒"}
+          className="hud-btn hud-menu-btn"
+          onClick={() => setIsHudMenuOpen((prev) => !prev)}
+          title="選單"
+          aria-expanded={isHudMenuOpen}
+          aria-haspopup="true"
         >
-          {notificationEnabled ? <Bell size={18} strokeWidth={2.5} /> : <BellOff size={18} strokeWidth={2.5} />}
+          <Menu size={18} strokeWidth={2.5} />
         </button>
 
-        {/* Guide */}
-        <button
-          className="hud-btn"
-          onClick={() => setShowGuide(true)}
-          title="使用說明"
-        >
-          <BookOpen size={18} strokeWidth={2.5} />
-        </button>
-
-        {/* Seven Steps Map */}
-
-
-        {/* Display Settings (Sheep Count) */}
-        <button
-          className="hud-btn"
-          onClick={() => setShowSettings(true)}
-          title="設定"
-        >
-          <Settings size={18} strokeWidth={2.5} />
-        </button>
-
-        {/* Skin Manager button hidden – not in use anymore */}
-        {false && isAdmin && (
+        <div className={`hud-right-actions ${isHudMenuOpen ? 'hud-right-actions--open' : ''}`}>
+          {/* Bell */}
           <button
             className="hud-btn"
-            style={{ background: '#e3f2fd', border: '1px solid #90caf9' }}
-            onClick={() => setShowSkinManager(true)}
-            title="皮膚管理"
+            style={{ background: notificationEnabled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)' }}
+            onClick={() => {
+              toggleNotification();
+              setIsHudMenuOpen(false);
+            }}
+            title={notificationEnabled ? "關閉提醒" : "開啟提醒"}
           >
-            🎨
+            {notificationEnabled ? <Bell size={18} strokeWidth={2.5} /> : <BellOff size={18} strokeWidth={2.5} />}
           </button>
-        )}
+
+          {/* Guide */}
+          <button
+            className="hud-btn"
+            onClick={() => {
+              setShowGuide(true);
+              setIsHudMenuOpen(false);
+            }}
+            title="使用說明"
+          >
+            <BookOpen size={18} strokeWidth={2.5} />
+          </button>
+
+          {/* Display Settings (Sheep Count) */}
+          <button
+            className="hud-btn"
+            onClick={() => {
+              setShowSettings(true);
+              setIsHudMenuOpen(false);
+            }}
+            title="設定"
+          >
+            <Settings size={18} strokeWidth={2.5} />
+          </button>
+
+          {/* Skin Manager button hidden – not in use anymore */}
+          {false && isAdmin && (
+            <button
+              className="hud-btn"
+              style={{ background: '#e3f2fd', border: '1px solid #90caf9' }}
+              onClick={() => {
+                setShowSkinManager(true);
+                setIsHudMenuOpen(false);
+              }}
+              title="皮膚管理"
+            >
+              🎨
+            </button>
+          )}
+        </div>
       </div>
 
       <Field onSelectSheep={handleSelectSheep} />

@@ -4,12 +4,13 @@
   position: relative;
   background: var(--card-inner-bg);
   border-radius: var(--card-inner-radius);
-  padding: 12px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   box-sizing: border-box;
+  width: max-content;
   height: 100%;
   overflow: hidden;
   cursor: pointer;
@@ -70,12 +71,13 @@
 
 /* Header row: health + tag + actions (pin) */
 .sheep-card-header {
-  width: 100%;
+  width: max-content;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
   gap: 4px;
+  margin-right: 18px;
 }
 
 .sheep-card-header-actions {
@@ -90,6 +92,12 @@
 .pin-btn:focus-visible {
   outline: none;
   box-shadow: none;
+}
+
+.pin-btn {
+  position: absolute;
+  top: 8px;
+  right: 11px;
 }
 
 .sheep-card-health {
@@ -111,16 +119,12 @@
 
 /* Tag pill – aligned with SheepListModal, compact size */
 .sheep-card-tag {
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 6px;
   font-size: clamp(0.5rem, 2vw, 0.65rem);
   font-weight: bold;
   white-space: nowrap;
   flex-shrink: 1;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   line-height: 1.2;
 }
 
@@ -151,20 +155,34 @@
 /* Avatar area */
 .sheep-card-avatar {
   flex: 1;
-  min-height: 40px;
-  width: 100%;
+  min-height: 24px;
+  width: max-content;
+  max-width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  padding: 2px 0;
+  overflow: visible;
+  margin: 15% 0% 15% 0%;
+}
+
+@media (max-width: 480px) {
+  .sheep-card-avatar {
+    max-width: 96px;
+  }
+}
+
+.sheep-card-avatar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0% 15% 0% 15%;
 }
 
 /* Footer */
 .sheep-card-footer {
-  width: 100%;
+  width: max-content;
   text-align: center;
-  margin-top: auto;
+  margin-top: 2px;
   flex-shrink: 0;
 }
 
@@ -172,16 +190,13 @@
   font-weight: bold;
   font-size: 0.85rem;
   color: var(--palette-sheep-brown);
-  margin-bottom: 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .sheep-card-pray {
   font-size: 0.7rem;
   font-weight: bold;
-  margin-top: 2px;
+  margin-bottom: 25%;
 }
 
 .sheep-card-pray.sheep-card-pray--dead {

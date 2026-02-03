@@ -13,7 +13,8 @@ export const AssetSheep = ({
     onClick,
     scale = 1,
     centered = false,
-    animated = undefined
+    animated = undefined,
+    showStatusIcon = true
 }) => {
     const isSleepingState = isSleeping({ status });
     const isWalking = state === 'walking';
@@ -142,10 +143,11 @@ export const AssetSheep = ({
             </motion.div>
 
             {/* Health/Status Indicators can be overlaid here or handled by Parent UI */}
-            {status === 'sick' && (
+            {showStatusIcon && status === 'sick' && (
                 <div style={{
-                    position: 'absolute', top: -10, right: 0,
-                    fontSize: '20px', animation: 'pulse 1s infinite'
+                    position: 'absolute', top: -14, right: 0,
+                    fontSize: '20px', animation: 'pulse 1s infinite',
+                    marginBottom: '2px'
                 }}>
                     🤒
                 </div>
