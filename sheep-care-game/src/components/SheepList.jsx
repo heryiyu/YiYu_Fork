@@ -66,6 +66,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                     scale={0.55}
                     direction={1}
                     centered={true}
+                    showStatusIcon={false}
                 />
             </div>
 
@@ -369,7 +370,7 @@ export const SheepList = ({ onSelect }) => {
                         flexDirection: 'row',
                         alignItems: 'flex-end',
                         gap: '12px', // Slightly reduced gap
-                        padding: '10px 16px 20px 16px', // Adjusted padding
+                        padding: '10px 16px 12px 16px', // Adjusted padding
                         overflowX: 'auto',
                         overflowY: 'hidden',
                         scrollBehavior: 'smooth',
@@ -378,9 +379,8 @@ export const SheepList = ({ onSelect }) => {
                     }}>
                         {filteredSheep.map(s => (
                             <div key={s.id} style={{
-                                // Adjusted Width: Narrower for mobile as requested
-                                /* Wider so tag text (e.g. 新朋友) fits without overflow */
-                                minWidth: 'clamp(100px, 26vw, 150px)',
+                                width: 'max-content',
+                                minWidth: 'max-content',
                                 height: '100%',
                                 paddingBottom: '5px',
                                 pointerEvents: 'auto'
