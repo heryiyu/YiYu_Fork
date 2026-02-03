@@ -136,6 +136,19 @@
     left: 12px;
 }
 
+/* Hint: tap step for details */
+.map-step-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-label);
+    pointer-events: none;
+    z-index: 40;
+}
+
 /* Video modal overlay */
 .map-video-overlay {
     position: absolute;

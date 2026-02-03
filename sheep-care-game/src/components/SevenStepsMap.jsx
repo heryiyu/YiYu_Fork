@@ -246,6 +246,11 @@ export function SevenStepsMap() {
                 </div>
             )}
 
+            {/* Hint: tap step for details (only when expanded, no step selected) */}
+            {isExpanded && !selectedStep && (
+                <p className="map-step-hint">點擊步驟可查看詳細說明</p>
+            )}
+
             {/* Expand / Unexpand control */}
             <button
                 type="button"
