@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 
 export const SettingsModal = ({ onClose }) => {
-    const { settings, updateSetting } = useGame();
+    const { settings, updateSetting, saveToCloud } = useGame();
     const closeBtnRef = useRef(null);
 
     useEffect(() => {
@@ -55,7 +55,18 @@ export const SettingsModal = ({ onClose }) => {
                         </p>
                     </div>
 
-
+                    <div className="form-group">
+                        <button
+                            type="button"
+                            className="modal-btn-secondary-outline"
+                            onClick={() => saveToCloud()}
+                        >
+                            ☁️ 手動備份至雲端
+                        </button>
+                        <p className="modal-hint">
+                            (通常關閉視窗時會自動儲存)
+                        </p>
+                    </div>
 
                     <button className="modal-btn-primary" onClick={onClose}>
                         確定
