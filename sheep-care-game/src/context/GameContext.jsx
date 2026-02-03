@@ -779,7 +779,7 @@ export const GameProvider = ({ children }) => {
 
                 let count = (s.lastPrayedDate === today) ? s.prayedCount : 0;
                 if (!isAdmin && count >= 3) {
-                    showMessage("這隻小羊今天已經接受過 3 次禱告了，讓牠休息一下吧！🙏");
+                    showMessage("這隻小羊今天已經接受過 3 次禱告了，讓他休息一下吧！🙏");
                     return s;
                 }
                 const rawNewHealth = Math.min(100, s.health + 6);

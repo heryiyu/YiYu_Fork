@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { calculateSheepState, parseMaturity, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
+import { supabase } from '../services/supabaseClient';
 
 export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin } = useGame();
+    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId } = useGame();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
 
@@ -12,40 +13,51 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const [name, setName] = useState('');
     const [note, setNote] = useState('');
 
-    // Admin States
-    // const [selectedType, setSelectedType] = useState('LAMB'); // removed manual control
-
     // Spiritual Maturity State
     const [sLevel, setSLevel] = useState('');
     const [sStage, setSStage] = useState('');
 
     // Spiritual Plan State
-    const [planTime, setPlanTime] = useState('');
-    const [planLocation, setPlanLocation] = useState('');
-    const [planContent, setPlanContent] = useState('');
+    const [plans, setPlans] = useState([]);
+    const [viewMode, setViewMode] = useState('LIST');
+    const [editingPlanId, setEditingPlanId] = useState(null);
+    const [tempPlan, setTempPlan] = useState({ name: '', time: '', location: '', content: '' });
+    const [reminderOffset, setReminderOffset] = useState(0); // 0 = On time, 15 = 15m before, -1 = No reminder
 
     // Tab State: 'BASIC' | 'PLAN'
     const [activeTab, setActiveTab] = useState('BASIC');
     const [localMsg, setLocalMsg] = useState('');
 
+    // Fetch Plans from DB
+    const fetchPlans = async () => {
+        if (!target?.id) return;
+        try {
+            const { data, error } = await supabase
+                .from('spiritual_plans')
+                .select('*')
+                .eq('sheep_id', target.id)
+                .order('scheduled_time', { ascending: true });
+
+            if (error) throw error;
+            setPlans(data || []);
+        } catch (error) {
+            console.error('Error fetching plans:', error);
+        }
+    };
+
     useEffect(() => {
         if (target) {
             setName(target.name);
             setNote(target.note || '');
-            // Parse "Level (Stage)" or just "Level"
             const { level, stage } = parseMaturity(target.spiritualMaturity);
             setSLevel(level);
             setSStage(stage);
-
-            // Init Plan
-            const plan = target.plan || {};
-            setPlanTime(plan.time || '');
-            setPlanLocation(plan.location || '');
-            setPlanContent(plan.content || '');
-
             setLocalMsg('');
+            // Fetch remote plans
+            fetchPlans();
+            setViewMode('LIST');
         }
-    }, [target?.id, activeTab]); // Re-run if ID changes. ActiveTab change shouldn't reset, but keeping data synced is good.
+    }, [target?.id]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -63,36 +75,30 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
     const handlePray = () => {
         const todayStr = new Date().toDateString();
-        // Check if sleeping and already prayed today
         if (isSleeping(target) && target.lastPrayedDate === todayStr && !isAdmin) {
             setLocalMsg("今天已經為這隻小羊禱告過了，請明天再來！🙏");
             return;
         }
-
         prayForSheep(target.id);
         setLocalMsg('');
     };
 
     const isSleepingState = isSleeping(target);
-
-    // Prayer / Awakening Logic
     const today = new Date().toDateString();
     const currentCount = (target.lastPrayedDate === today) ? (target.prayedCount || 0) : 0;
     const isFull = !isSleepingState && currentCount >= 3;
 
-    // Button Text
     let buttonText = '';
     if (isSleepingState) {
         buttonText = `🔮 喚醒禱告 (${getAwakeningProgress(target)}/5)`;
     } else {
         if (isAdmin) {
-            buttonText = `🙏 為牠禱告 (今日: ${currentCount}/∞)`;
+            buttonText = `🙏 為他禱告 (今日: ${currentCount}/∞)`;
         } else {
-            buttonText = isFull ? '🙏 今日禱告已達上限' : `🙏 為牠禱告 (今日: ${currentCount}/3)`;
+            buttonText = isFull ? '🙏 今日禱告已達上限' : `🙏 為他禱告 (今日: ${currentCount}/3)`;
         }
     }
 
-    // Status Text
     const getStatusText = (status, health) => {
         if (isSleeping({ status })) return '已沉睡 🪦';
         if (status === 'sick') return '生病 (需禱告恢復)';
@@ -101,27 +107,107 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         return '健康';
     };
 
-    const startMat = target?.spiritualMaturity || '';
-    let currentMat = sLevel;
-    if (sLevel && sStage) currentMat = `${sLevel} (${sStage})`;
+    // Plan Management (DB Operations)
+    const handleSavePlan = async () => {
+        if (!tempPlan.name.trim()) {
+            alert('請輸入規劃行動');
+            return;
+        }
 
-    const hasChanges = target && (
-        name !== target.name ||
-        note !== (target.note || '') ||
-        currentMat !== startMat ||
-        planTime !== (target.plan?.time || '') ||
-        planLocation !== (target.plan?.location || '') ||
-        planContent !== (target.plan?.content || '')
-    );
+        // Calculate notify_at
+        let notifyAt = null;
+        let scheduledTime = null;
 
-    // Content: Basic
+        if (tempPlan.time) {
+            const dateObj = new Date(tempPlan.time);
+            scheduledTime = dateObj.toISOString();
+
+            if (reminderOffset !== -1) {
+                // Calculate Reminder Time: Event Time - Offset
+                const notifyTime = new Date(dateObj.getTime() - (reminderOffset * 60 * 1000));
+                notifyAt = notifyTime.toISOString();
+            }
+        }
+
+        const payload = {
+            user_id: lineId,
+            sheep_id: target.id,
+            action: tempPlan.name,
+            scheduled_time: scheduledTime,
+            notify_at: notifyAt,
+            reminder_offset: reminderOffset,
+            location: tempPlan.location,
+            content: tempPlan.content,
+            is_notified: false
+        };
+
+        try {
+            if (editingPlanId) {
+                const { error } = await supabase.from('spiritual_plans').update(payload).eq('id', editingPlanId);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from('spiritual_plans').insert([payload]);
+                if (error) throw error;
+            }
+            await fetchPlans();
+            setViewMode('LIST');
+        } catch (error) {
+            alert('儲存失敗: ' + error.message);
+        }
+    };
+
+    const handleDeletePlan = async (id) => {
+        if (window.confirm('確定要刪除此規劃嗎？')) {
+            try {
+                const { error } = await supabase
+                    .from('spiritual_plans')
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
+                await fetchPlans();
+            } catch (error) {
+                alert('刪除失敗');
+            }
+        }
+    };
+
+    const openEditPlan = (plan) => {
+        let timeStr = '';
+        if (plan.scheduled_time) {
+            const d = new Date(plan.scheduled_time);
+            const offset = d.getTimezoneOffset() * 60000;
+            timeStr = new Date(d.getTime() - offset).toISOString().slice(0, 16);
+        }
+
+        setTempPlan({
+            name: plan.action || '',
+            time: timeStr,
+            location: plan.location || '',
+            content: plan.content || ''
+        });
+        setReminderOffset(plan.reminder_offset !== undefined ? plan.reminder_offset : 0);
+        setEditingPlanId(plan.id);
+        setViewMode('EDIT');
+    };
+
+    const openAddPlan = () => {
+        setTempPlan({ name: '', time: '', location: '', content: '' });
+        setReminderOffset(15); // Default to 15 mins before
+        setEditingPlanId(null);
+        setViewMode('EDIT');
+    };
+
+    // Helper to display time
+    const formatDisplayTime = (isoString) => {
+        if (!isoString) return '';
+        const d = new Date(isoString);
+        return d.toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'short' });
+    };
+
     const handleBasicAutoSave = (field, value) => {
         const payload = { [field]: value };
-        // If updating maturity, we need partial merge logic if needed, but here simple value is fine or handled by service
-        // Actually for Maturity 'sLevel', we update 'spiritualMaturity'
         if (field === 'sLevel') {
-            payload.spiritualMaturity = value; // Simple level for now, or maintain existing stage logic?
-            // The original handleSave used just sLevel.
+            payload.spiritualMaturity = value;
             delete payload.sLevel;
         }
         updateSheep(target.id, payload);
@@ -136,8 +222,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                 </div>
 
                 <div className="modal-form">
-
-                    {/* Tabs */}
                     <div className="modal-tabs">
                         <button
                             className={`modal-tab ${activeTab === 'BASIC' ? 'modal-tab-active' : ''}`}
@@ -154,7 +238,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                         </button>
                     </div>
 
-                    {/* Content: Basic */}
                     {activeTab === 'BASIC' && (
                         <>
                             <div className="form-group">
@@ -236,7 +319,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                     onChange={(e) => setNote(e.target.value)}
                                     onBlur={() => handleBasicAutoSave('note', note)}
                                     rows={3}
-                                    placeholder={isSleepingState ? "寫下對牠的負擔..." : "記錄這隻小羊的狀況..."}
+                                    placeholder={isSleepingState ? "寫下對他的負擔..." : "記錄這隻小羊的狀況..."}
                                 />
                             </div>
 
@@ -264,48 +347,163 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                         </>
                     )}
 
-                    {/* Content: Spiritual Plan (Auto-Save, No Buttons) */}
                     {activeTab === 'PLAN' && (
-                        <div className="spiritual-plan-form">
-                            <div className="form-group">
-                                <label>📅 時間</label>
-                                <input
-                                    type="text"
-                                    value={planTime}
-                                    onChange={(e) => setPlanTime(e.target.value)}
-                                    onBlur={() => updateSheep(target.id, { plan: { time: planTime, location: planLocation, content: planContent } })}
-                                    placeholder="例如：週日早上 10:00"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>📍 地點</label>
-                                <input
-                                    type="text"
-                                    value={planLocation}
-                                    onChange={(e) => setPlanLocation(e.target.value)}
-                                    onBlur={() => updateSheep(target.id, { plan: { time: planTime, location: planLocation, content: planContent } })}
-                                    placeholder="例如：教會小組室"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>📝 內容規劃</label>
-                                <textarea
-                                    value={planContent}
-                                    onChange={(e) => setPlanContent(e.target.value)}
-                                    onBlur={() => updateSheep(target.id, { plan: { time: planTime, location: planLocation, content: planContent } })}
-                                    rows={5}
-                                    placeholder="例如：讀經分享、生活關懷..."
-                                />
-                            </div>
-                            <div className="modal-hint">
-                                (內容將自動儲存)
-                            </div>
+                        <div className="spiritual-plan-container">
+                            {viewMode === 'LIST' ? (
+                                <>
+                                    <div style={{
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 10,
+                                        paddingBottom: '10px',
+                                        display: 'flex',
+                                        justifyContent: 'flex-end',
+                                        background: 'linear-gradient(to bottom, var(--card-bg) 80%, rgba(255,255,255,0) 100%)'
+                                    }}>
+                                        <button
+                                            className="modal-btn-primary"
+                                            onClick={openAddPlan}
+                                            style={{
+                                                width: '36px',
+                                                height: '36px',
+                                                borderRadius: '50%',
+                                                padding: 0,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '1.2rem',
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                                            }}
+                                        >
+                                            ➕
+                                        </button>
+                                    </div>
+
+                                    <div className="plan-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                                        {plans.length === 0 ? (
+                                            <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                                                目前沒有靈程規劃
+                                            </div>
+                                        ) : (
+                                            plans.map(p => (
+                                                <div
+                                                    key={p.id}
+                                                    className="plan-item"
+                                                    onClick={() => openEditPlan(p)}
+                                                    style={{
+                                                        padding: '12px',
+                                                        background: 'var(--bg-canvas)',
+                                                        border: '1px solid var(--border-subtle)',
+                                                        borderRadius: '12px',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        transition: 'background 0.2s'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <span style={{ fontWeight: 'bold', color: 'var(--text-body)' }}>{p.action}</span>
+                                                        {p.scheduled_time && (
+                                                            <span style={{ fontSize: '0.8rem', color: '#666' }}>
+                                                                {formatDisplayTime(p.scheduled_time)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span style={{ fontSize: '1.2rem', color: '#ccc' }}>›</span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="spiritual-plan-form">
+                                    <div className="form-group">
+                                        <label>📝 行動</label>
+                                        <input
+                                            type="text"
+                                            value={tempPlan.name}
+                                            onChange={(e) => setTempPlan({ ...tempPlan, name: e.target.value })}
+                                            placeholder="例如：探訪、陪讀..."
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>📅 時間</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={tempPlan.time}
+                                            onChange={(e) => setTempPlan({ ...tempPlan, time: e.target.value })}
+                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '8px' }}
+                                        />
+                                    </div>
+
+                                    {tempPlan.time && (
+                                        <div className="form-group">
+                                            <label>⏰ 提醒設定</label>
+                                            <select
+                                                value={reminderOffset}
+                                                onChange={(e) => setReminderOffset(Number(e.target.value))}
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '8px' }}
+                                            >
+                                                <option value={-1}>🔕 不提醒</option>
+                                                <option value={0}>⚡ 準時提醒</option>
+                                                <option value={15}>🔔 提前 15 分鐘</option>
+                                                <option value={30}>🔔 提前 30 分鐘</option>
+                                                <option value={60}>🔔 提前 1 小時</option>
+                                                <option value={120}>🔔 提前 2 小時</option>
+                                                <option value={1440}>📅 提前 1 天</option>
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div className="form-group">
+                                        <label>📍 地點</label>
+                                        <input
+                                            type="text"
+                                            value={tempPlan.location}
+                                            onChange={(e) => setTempPlan({ ...tempPlan, location: e.target.value })}
+                                            placeholder="例如：教會小組室"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>📋 內容規劃</label>
+                                        <textarea
+                                            value={tempPlan.content}
+                                            onChange={(e) => setTempPlan({ ...tempPlan, content: e.target.value })}
+                                            rows={5}
+                                            placeholder="例如：讀經分享、生活關懷..."
+                                        />
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button
+                                            className="modal-btn-secondary"
+                                            onClick={() => setViewMode('LIST')}
+                                        >
+                                            取消
+                                        </button>
+                                        {editingPlanId && (
+                                            <button
+                                                className="modal-btn-secondary btn-destructive"
+                                                onClick={() => handleDeletePlan(editingPlanId)}
+                                                style={{ flex: '0 0 auto', width: 'auto', padding: '0 16px' }}
+                                            >
+                                                刪除
+                                            </button>
+                                        )}
+                                        <button
+                                            className="modal-btn-primary"
+                                            onClick={handleSavePlan}
+                                        >
+                                            儲存
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
-
         </div>
-
     );
 };
