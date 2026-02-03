@@ -79,11 +79,25 @@ const generatePath = () => {
     return d;
 };
 
+const useMediaQuery = (query) => {
+    const [matches, setMatches] = useState(() =>
+        typeof window !== 'undefined' ? window.matchMedia(query).matches : false
+    );
+    useEffect(() => {
+        const m = window.matchMedia(query);
+        const handler = () => setMatches(m.matches);
+        m.addEventListener('change', handler);
+        return () => m.removeEventListener('change', handler);
+    }, [query]);
+    return matches;
+};
+
 export function SevenStepsMap() {
     const [visible, setVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedStep, setSelectedStep] = useState(null);
     const [videoModalOpen, setVideoModalOpen] = useState(false);
+    const isCompactView = useMediaQuery('(max-width: 480px)');
 
     useEffect(() => {
         setVisible(true);
@@ -92,6 +106,9 @@ export function SevenStepsMap() {
     useEffect(() => {
         if (!isExpanded) setVideoModalOpen(false);
     }, [isExpanded]);
+
+    /* At 480px and below, expanded map uses collapsed viewBox/sizing */
+    const useExpandedLayout = isExpanded && !isCompactView;
 
     // Render step node: circular badge + Lucide icon (flat solid colors, no gradients)
     const renderNodeImage = (step) => {
@@ -141,8 +158,8 @@ export function SevenStepsMap() {
         <>
             {/* Full SVG Landscape */}
             <svg
-                className="map-svg-layer"
-                viewBox={isExpanded ? "-50 -50 200 200" : "-10 -10 120 120"}
+                className={`map-svg-layer ${useExpandedLayout ? 'map-svg-layer--expanded' : 'map-svg-layer--collapsed'}`}
+                viewBox={useExpandedLayout ? "-50 -50 200 200" : "-10 -10 120 120"}
                 preserveAspectRatio="xMidYMid meet"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -209,12 +226,11 @@ export function SevenStepsMap() {
                 })}
             </svg>
 
-            {/* Title Overlay (HTML) - only when expanded */}
-            {isExpanded && <h2 className="map-title-overlay">領人歸主秘笈</h2>}
-
-            {/* Video button - only when expanded */}
+            {/* Header: title + video btn (only when expanded) */}
             {isExpanded && (
-                <button
+                <div className="map-header">
+                    <h2 className="map-title-overlay">領人歸主秘笈</h2>
+                    <button
                     type="button"
                     className="map-video-btn"
                     onClick={(e) => {
@@ -224,9 +240,10 @@ export function SevenStepsMap() {
                     title="觀看教學影片"
                     aria-label="觀看教學影片"
                 >
-                    <Play size={18} strokeWidth={2} />
-                    <span>教學影片</span>
-                </button>
+                        <Play size={18} strokeWidth={2} />
+                        <span>教學影片</span>
+                    </button>
+                </div>
             )}
 
             {/* Expand / Unexpand control */}
@@ -306,7 +323,7 @@ export function SevenStepsMap() {
                     }}
                     role="presentation"
                 >
-                    <div className="map-container map-container--expanded" onClick={(e) => e.stopPropagation()}>
+                    <div className={`map-container map-container--expanded ${isCompactView ? 'map-container--expanded-compact' : ''}`} onClick={(e) => e.stopPropagation()}>
                         {mapContent}
                     </div>
                 </div>

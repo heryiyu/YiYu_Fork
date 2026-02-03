@@ -14,8 +14,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 16px;
+    padding: 12px;
     box-sizing: border-box;
+}
+
+@media (min-width: 481px) {
+    .map-overlay {
+        padding: 16px;
+    }
 }
 
 .map-container--expanded {
@@ -23,6 +29,14 @@
     min-height: 95vh;
     flex-shrink: 0;
     align-items: stretch;
+}
+
+/* At 480px and below: expanded uses collapsed viewBox/step sizes, but container stays 90vh */
+.map-container.map-container--expanded.map-container--expanded-compact {
+    width: 100%;
+    max-width: 100%;
+    min-height: 90vh;
+    height: 90vh;
 }
 
 .map-container--expanded .map-svg-layer {
@@ -66,12 +80,26 @@
     box-shadow: 0 0 0 2px var(--palette-blue-action);
 }
 
-/* Video button - top right, when expanded */
-.map-video-btn {
+/* Header: title + video btn, 2px gap, right-aligned */
+.map-header {
     position: absolute;
     top: 16px;
     right: 16px;
     z-index: 60;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+}
+
+.map-container--expanded-compact .map-header {
+    flex-direction: column;
+    align-items: flex-end;
+    top: 12px;
+}
+
+/* Video button - always show full "教學影片" label */
+.map-video-btn {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -86,6 +114,11 @@
     cursor: pointer;
     transition: background 0.2s, transform 0.2s;
     box-shadow: var(--shadow-card);
+    white-space: nowrap;
+}
+
+.map-video-btn span {
+    flex-shrink: 0;
 }
 
 .map-video-btn:hover {
@@ -97,9 +130,10 @@
     box-shadow: 0 0 0 2px var(--palette-blue-action);
 }
 
-/* Title shifts left when video btn present (both in top-right) */
-.map-container--expanded .map-title-overlay {
-    right: 130px;
+
+.map-container--expanded-compact .map-expand-btn {
+    top: 12px;
+    left: 12px;
 }
 
 /* Video modal overlay */
@@ -126,6 +160,13 @@
     box-shadow: var(--shadow-card);
     padding: 12px;
     animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 480px) {
+    .map-video-modal {
+        width: 98%;
+        padding: 8px;
+    }
 }
 
 .map-video-modal .close-btn {
@@ -291,9 +332,6 @@
 
 /* --- Overlay Title (design-system badge) --- */
 .map-title-overlay {
-    position: absolute;
-    top: 16px;
-    right: 16px;
     margin: 0;
 
     font-family: 'Inter', sans-serif;
@@ -332,15 +370,10 @@
 .step-detail-card {
     /* Using System Card Tokens */
     background: var(--bg-card);
-    /* System Card Background */
     border: var(--glass-border);
-    /* System Border */
     border-radius: 20px;
-    /* Slightly tighter radius for internal modal */
     box-shadow: var(--shadow-card);
-    /* System Shadow */
     color: var(--text-body);
-    /* System Text Color */
 
     width: 85%;
     max-width: 280px;
@@ -349,6 +382,14 @@
     position: relative;
     text-align: center;
     animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 480px) {
+    .step-detail-card {
+        width: 92%;
+        max-width: none;
+        padding: 20px 16px;
+    }
 }
 
 .step-detail-card .close-btn {
