@@ -157,11 +157,18 @@
   flex: 1;
   min-height: 24px;
   width: max-content;
+  max-width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
   margin: 15% 0% 15% 0%;
+}
+
+@media (max-width: 480px) {
+  .sheep-card-avatar {
+    max-width: 96px;
+  }
 }
 
 .sheep-card-avatar-inner {
