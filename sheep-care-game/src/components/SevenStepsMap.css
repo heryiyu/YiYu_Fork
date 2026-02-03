@@ -1,13 +1,15 @@
 /* SevenStepsMap.css */
 
-/* Re-designed using Origin/Main Design System Tokens */
+/* Aligned with design system: flat colors, no gradients, scene-like aesthetic */
+
+@import '../styles/design-tokens.css';
 
 /* Full-viewport overlay when expanded */
 .map-overlay {
     position: fixed;
     inset: 0;
     z-index: 11000;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--bg-modal-overlay);
     backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
@@ -39,44 +41,152 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.7);
+    background: var(--bg-card);
+    border: 2px solid var(--border-main);
+    border-radius: var(--radius-tag);
+    color: var(--text-body);
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
+    box-shadow: var(--shadow-card);
 }
 
 .map-expand-btn svg {
     width: 20px;
     height: 20px;
     flex-shrink: 0;
-    opacity: 0.85;
 }
 
 .map-expand-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.95);
+    background: var(--bg-card-secondary);
+    color: var(--text-primary);
 }
 
 .map-expand-btn:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 0 2px var(--palette-blue-action);
+}
+
+/* Video button - top right, when expanded */
+.map-video-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: 2px solid var(--border-main);
+    border-radius: var(--radius-tag);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: var(--shadow-card);
+}
+
+.map-video-btn:hover {
+    background: var(--btn-primary-hover);
+}
+
+.map-video-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blue-action);
+}
+
+/* Title shifts left when video btn present (both in top-right) */
+.map-container--expanded .map-title-overlay {
+    right: 130px;
+}
+
+/* Video modal overlay */
+.map-video-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 55;
+    background: var(--bg-modal-overlay);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--radius-card);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.map-video-modal {
+    position: relative;
+    width: 95%;
+    max-width: 560px;
+    background: var(--bg-card);
+    border: var(--glass-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 12px;
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.map-video-modal .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 2px solid var(--border-main);
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-body);
+    box-sizing: border-box;
+}
+
+.map-video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    border-radius: var(--radius-tag);
+}
+
+.map-video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.map-video-hint {
+    margin: 8px 0 0;
+    font-size: 0.75rem;
+    color: var(--text-label);
+    text-align: center;
 }
 
 .map-container {
     position: relative;
     width: 100%;
-    /* Collapsed: compact height so full map fits without extra scroll in Guide modal */
-    height: clamp(280px, 45vh, 420px);
+    /* Collapsed: height to fit all steps without cropping */
+    height: clamp(320px, 55vh, 480px);
 
-    /* System Container Styling */
-    background: radial-gradient(circle at center, #23253a 0%, #101018 100%);
-    /* Deep, premium dark background for contrast with glowing steps */
+    /* Scene-like: sky top, grass bottom (flat solid blocks, no gradients) */
+    background: var(--color-grass-base);
     border: var(--glass-border);
     border-radius: var(--radius-card);
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4);
-    /* Deep inset shadow for depth */
+    box-shadow: var(--shadow-card);
 
     overflow: hidden;
     display: flex;
@@ -84,29 +194,51 @@
     align-items: center;
     font-family: inherit;
     margin-top: 10px;
-    /* Spacing from tabs */
+}
+
+/* Sky block (top half) - matches scene design */
+.map-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: var(--color-sky);
+    z-index: 0;
+}
+
+/* Grass block (bottom half) */
+.map-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: var(--color-grass-base);
+    z-index: 0;
 }
 
 .map-container--collapsed {
     cursor: pointer;
 }
 
-/* SVG Layer */
+/* SVG Layer - above sky/grass blocks */
 .map-svg-layer {
     width: 100%;
     height: 100%;
-    /* Responsive scaling handled by viewBox */
+    position: relative;
+    z-index: 1;
 }
 
-/* Path Styles - Elegant and Spiritual */
+/* Path Styles - taupe, scene-aligned */
 .map-path-line {
-    stroke: rgba(255, 255, 255, 0.15);
+    stroke: var(--border-subtle);
     stroke-width: 1.5;
     stroke-dasharray: 4 6;
     stroke-linecap: round;
-    animation: dashMove 60s linear infinite;
-    filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.3));
-    /* Subtle gold glow */
+    animation: dashMove 180s ease-in-out infinite;
 }
 
 @keyframes dashMove {
@@ -115,14 +247,19 @@
     }
 }
 
+/* Label tag background - cream + taupe border */
+.island-label-bg {
+    fill: var(--bg-card);
+    stroke: var(--border-main);
+    stroke-width: 0.4;
+}
+
 /* --- SVG Text Styles --- */
 .island-svg-label {
     font-family: 'Inter', sans-serif;
     font-size: 3.5px;
-    /* Scaled to 0-100 ViewBox */
     font-weight: 700;
-    fill: #443333;
-    /* Darker text for readability on light tag */
+    fill: var(--text-body);
     pointer-events: none;
     letter-spacing: 0.2px;
 }
@@ -144,7 +281,7 @@
 
 .island-visual-group:hover {
     transform: scale(1.15);
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+    filter: drop-shadow(0 2px 6px rgba(143, 125, 103, 0.35));
 }
 
 .island-visual-group:active {
@@ -152,39 +289,34 @@
 }
 
 
-/* --- Overlay Title (System Header Style) --- */
+/* --- Overlay Title (design-system badge) --- */
 .map-title-overlay {
     position: absolute;
     top: 16px;
     right: 16px;
     margin: 0;
 
-    /* Using System Fonts */
     font-family: 'Inter', sans-serif;
     font-size: 1.1rem;
     font-weight: 800;
-    color: white;
+    color: var(--text-primary);
 
-    /* Glassmorphic Badge Effect */
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--bg-card);
+    border: 2px solid var(--border-main);
     padding: 6px 14px;
-    border-radius: 20px;
-
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-tag);
+    box-shadow: var(--shadow-card);
     pointer-events: none;
 }
 
-/* --- Detail Overlay (System Modal Aesthetic) --- */
+/* --- Detail Overlay --- */
 .step-detail-overlay {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
 
-    background: rgba(0, 0, 0, 0.4);
-    /* Standard dimmer */
+    background: var(--bg-modal-overlay);
     backdrop-filter: blur(3px);
     z-index: 50;
 
@@ -246,7 +378,7 @@
     gap: 10px;
 }
 
-/* Number Badge */
+/* Number Badge - solid fill, no gradient */
 .detail-number {
     display: flex;
     justify-content: center;
@@ -255,12 +387,11 @@
     height: 42px;
     border-radius: 50%;
 
-    /* Using Action Gradients from System Context if available, else standard Gold/Orange */
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(255, 165, 0, 0.3);
+    background: var(--palette-orange-action);
+    border: 2px solid var(--palette-white);
+    box-shadow: var(--shadow-card);
 
-    color: white;
+    color: var(--palette-white);
     font-weight: 800;
     font-size: 1.2rem;
 }

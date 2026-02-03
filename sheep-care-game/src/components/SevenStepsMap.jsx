@@ -1,6 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import {
+    Maximize2,
+    Minimize2,
+    Play,
+    HeartHandshake,
+    Search,
+    MessageCircle,
+    Zap,
+    Cross,
+    BookOpen,
+    Mic
+} from 'lucide-react';
 import './SevenStepsMap.css';
+
+// Lucide icon per step (semantic mapping)
+const STEP_ICONS = {
+    1: HeartHandshake, // 接觸關懷 - contact & care
+    2: Search,      // 發現需要 - discover needs
+    3: MessageCircle, // 見證分享 - testimony sharing
+    4: Zap,         // 權能服事 - power ministry
+    5: Cross,       // 決志信主 - commit to faith
+    6: BookOpen,    // 靈修生活 - devotional life
+    7: Mic          // 作主見證 - be a witness
+};
+
+// Solid fill per step (design-system: no gradients, flat palette)
+const STEP_COLORS = {
+    1: '#54afcb',   // palette-blue-action
+    2: '#4ba762',   // palette-deep-green
+    3: '#f39fac',   // palette-pink-action
+    4: '#7f5b9b',   // palette-purple
+    5: '#fcb751',   // palette-orange-action
+    6: '#5385db',   // palette-blue-text
+    7: '#fcb751'    // palette-orange-action (final step)
+};
 
 // Mobile-First Vertical Zig-Zag Layout: Bottom-Left (1) -> Top (7)
 // Coordinates in 0-100 ViewBox Scale
@@ -13,6 +46,8 @@ const stepPositions = {
     6: { x: 80, y: 22 },
     7: { x: 50, y: 8 }
 };
+
+const VIDEO_EMBED_ID = '_W72XdpyqC0';
 
 const steps = [
     { id: 1, title: '接觸關懷' },
@@ -48,30 +83,43 @@ export function SevenStepsMap() {
     const [visible, setVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedStep, setSelectedStep] = useState(null);
+    const [videoModalOpen, setVideoModalOpen] = useState(false);
 
     useEffect(() => {
         setVisible(true);
     }, []);
 
-    // Simplified rendering using external assets
+    useEffect(() => {
+        if (!isExpanded) setVideoModalOpen(false);
+    }, [isExpanded]);
+
+    // Render step node: circular badge + Lucide icon (flat solid colors, no gradients)
     const renderNodeImage = (step) => {
-        const imagePath = `/assets/map_levels/step_${step.id}.svg`;
-        // Size configuration
-        const size = step.id === 7 ? 22 : 18;
-        const offset = size / 2;
+        const IconComponent = STEP_ICONS[step.id];
+        const fillColor = STEP_COLORS[step.id];
+        const radius = step.id === 7 ? 11 : 9;
+        const iconSize = step.id === 7 ? 14 : 12;
+        const iconOffset = iconSize / 2;
 
         return (
-            <g className="island-shape">
-                {/* Visual Object: External SVG Image */}
-                <image
-                    href={imagePath}
-                    x={-offset}
-                    y={-offset}
-                    width={size}
-                    height={size}
-                    preserveAspectRatio="xMidYMid meet"
-                    filter="url(#dropShadow)"
+            <g className="island-shape" filter="url(#dropShadow)">
+                {/* Circular badge - solid fill */}
+                <circle
+                    r={radius}
+                    fill={fillColor}
+                    stroke="rgba(255,255,255,0.85)"
+                    strokeWidth="0.8"
                 />
+                {/* Lucide icon centered */}
+                <g transform={`translate(-${iconOffset}, -${iconOffset})`}>
+                    <IconComponent
+                        size={iconSize}
+                        strokeWidth={2}
+                        stroke="white"
+                        fill="none"
+                        style={{ overflow: 'visible' }}
+                    />
+                </g>
             </g>
         );
     };
@@ -94,7 +142,7 @@ export function SevenStepsMap() {
             {/* Full SVG Landscape */}
             <svg
                 className="map-svg-layer"
-                viewBox={isExpanded ? "-50 -50 200 200" : "0 0 100 100"}
+                viewBox={isExpanded ? "-50 -50 200 200" : "-10 -10 120 120"}
                 preserveAspectRatio="xMidYMid meet"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -117,9 +165,8 @@ export function SevenStepsMap() {
                 <path
                     d={generatePath()}
                     fill="none"
-                    stroke="rgba(255, 255, 255, 0.2)"
                     strokeWidth="1.5"
-                    strokeDasharray="3"
+                    strokeDasharray="4 6"
                     className="map-path-line"
                 />
 
@@ -142,12 +189,10 @@ export function SevenStepsMap() {
                                 {/* Label Tag */}
                                 <g transform="translate(0, 13)">
                                     <rect
-                                        x="-14" y="-3.5"
-                                        width="28" height="7"
+                                        x="-16" y="-3.5"
+                                        width="32" height="7"
                                         rx="2.5"
-                                        fill="rgba(255,255,255,0.9)"
-                                        stroke="rgba(255,215,0,0.5)"
-                                        strokeWidth="0.2"
+                                        className="island-label-bg"
                                     />
                                     <text
                                         textAnchor="middle"
@@ -155,7 +200,7 @@ export function SevenStepsMap() {
                                         className="island-svg-label"
                                         y="0.3"
                                     >
-                                        {step.title}
+                                        {step.id}. {step.title}
                                     </text>
                                 </g>
                             </g>
@@ -164,8 +209,25 @@ export function SevenStepsMap() {
                 })}
             </svg>
 
-            {/* Title Overlay (HTML) - only when expanded to avoid duplicate with tab */}
+            {/* Title Overlay (HTML) - only when expanded */}
             {isExpanded && <h2 className="map-title-overlay">領人歸主秘笈</h2>}
+
+            {/* Video button - only when expanded */}
+            {isExpanded && (
+                <button
+                    type="button"
+                    className="map-video-btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setVideoModalOpen(true);
+                    }}
+                    title="觀看教學影片"
+                    aria-label="觀看教學影片"
+                >
+                    <Play size={18} strokeWidth={2} />
+                    <span>教學影片</span>
+                </button>
+            )}
 
             {/* Expand / Unexpand control */}
             <button
@@ -181,6 +243,24 @@ export function SevenStepsMap() {
             >
                 {isExpanded ? <Minimize2 size={20} strokeWidth={2} /> : <Maximize2 size={20} strokeWidth={2} />}
             </button>
+
+            {/* Video Modal - only when expanded */}
+            {isExpanded && videoModalOpen && (
+                <div className="map-video-overlay" onClick={() => setVideoModalOpen(false)}>
+                    <div className="map-video-modal" onClick={e => e.stopPropagation()}>
+                        <button className="close-btn" onClick={() => setVideoModalOpen(false)}>✖</button>
+                        <div className="map-video-wrapper">
+                            <iframe
+                                src={`https://www.youtube.com/embed/${VIDEO_EMBED_ID}?autoplay=1`}
+                                title="領人歸主秘笈 教學影片"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                        <p className="map-video-hint">(點擊畫面空白處關閉)</p>
+                    </div>
+                </div>
+            )}
 
             {/* Detail Overlay (HTML) - only when expanded */}
             {isExpanded && selectedStep && (
