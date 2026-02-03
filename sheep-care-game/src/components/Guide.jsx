@@ -14,7 +14,7 @@ export const Guide = ({ onClose }) => {
                     <button ref={closeBtnRef} className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
                 </div>
 
-                <div className="modal-form">
+                <div className="modal-form guide-modal-form">
                     <div className="modal-tabs">
                         <button
                             className={`modal-tab ${activeTab === 'MANUAL' ? 'modal-tab-active' : ''}`}
@@ -32,13 +32,10 @@ export const Guide = ({ onClose }) => {
                     </div>
 
                     <div
-                        className="modal-content"
+                        className="modal-content guide-modal-content"
                         style={{
                             color: '#000',
-                            padding: activeTab === 'MANUAL' ? '0' : '0 10px',
-                            maxHeight: activeTab === 'MANUAL' ? '80vh' : '60vh',
-                            overflowY: 'auto',
-                            transition: 'max-height 0.3s ease'
+                            padding: activeTab === 'MANUAL' ? '0' : '0 10px'
                         }}
                     >
                         {activeTab === 'MANUAL' ? (
@@ -96,7 +93,7 @@ export const Guide = ({ onClose }) => {
                     </div>
 
 
-                    <button className="modal-btn-primary" onClick={onClose} style={{ marginTop: '16px' }}>
+                    <button className="modal-btn-primary guide-action-btn" onClick={onClose}>
                         我瞭解了
                     </button>
                 </div>

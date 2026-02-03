@@ -421,6 +421,22 @@
   text-align: left;
 }
 
+/* Guide modal: single scroll area so action button appears at bottom */
+.guide-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide-modal-content {
+  max-height: none;
+  overflow: visible;
+}
+
+.guide-action-btn {
+  margin-top: 0;
+}
+
 .modal-btn-primary {
   width: 100%;
   padding: 12px;
