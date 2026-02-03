@@ -17,11 +17,12 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const [sLevel, setSLevel] = useState('');
     const [sStage, setSStage] = useState('');
 
-    // Spiritual Plan State (DB)
+    // Spiritual Plan State
     const [plans, setPlans] = useState([]);
     const [viewMode, setViewMode] = useState('LIST');
     const [editingPlanId, setEditingPlanId] = useState(null);
     const [tempPlan, setTempPlan] = useState({ name: '', time: '', location: '', content: '' });
+    const [reminderOffset, setReminderOffset] = useState(0); // 0 = On time, 15 = 15m before, -1 = No reminder
 
     // Tab State: 'BASIC' | 'PLAN'
     const [activeTab, setActiveTab] = useState('BASIC');
@@ -112,13 +113,29 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
             alert('請輸入規劃行動');
             return;
         }
-        // Time is now optional
+
+        // Calculate notify_at
+        let notifyAt = null;
+        let scheduledTime = null;
+
+        if (tempPlan.time) {
+            const dateObj = new Date(tempPlan.time);
+            scheduledTime = dateObj.toISOString();
+
+            if (reminderOffset !== -1) {
+                // Calculate Reminder Time: Event Time - Offset
+                const notifyTime = new Date(dateObj.getTime() - (reminderOffset * 60 * 1000));
+                notifyAt = notifyTime.toISOString();
+            }
+        }
 
         const payload = {
-            user_id: lineId, // Required for security/filtering
+            user_id: lineId,
             sheep_id: target.id,
-            action: tempPlan.name, // Mapping UI 'name' to DB 'action'
-            scheduled_time: tempPlan.time ? new Date(tempPlan.time).toISOString() : null,
+            action: tempPlan.name,
+            scheduled_time: scheduledTime,
+            notify_at: notifyAt,
+            reminder_offset: reminderOffset,
             location: tempPlan.location,
             content: tempPlan.content,
             is_notified: false
@@ -126,18 +143,13 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
         try {
             if (editingPlanId) {
-                const { error } = await supabase
-                    .from('spiritual_plans')
-                    .update(payload)
-                    .eq('id', editingPlanId);
+                const { error } = await supabase.from('spiritual_plans').update(payload).eq('id', editingPlanId);
                 if (error) throw error;
             } else {
-                const { error } = await supabase
-                    .from('spiritual_plans')
-                    .insert([payload]);
+                const { error } = await supabase.from('spiritual_plans').insert([payload]);
                 if (error) throw error;
             }
-            await fetchPlans(); // Refresh list
+            await fetchPlans();
             setViewMode('LIST');
         } catch (error) {
             alert('儲存失敗: ' + error.message);
@@ -160,27 +172,27 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     };
 
     const openEditPlan = (plan) => {
-        // Format ISO timestamp to datetime-local input string (YYYY-MM-DDTHH:mm)
         let timeStr = '';
         if (plan.scheduled_time) {
             const d = new Date(plan.scheduled_time);
-            // Adjust to local timezone for input
             const offset = d.getTimezoneOffset() * 60000;
             timeStr = new Date(d.getTime() - offset).toISOString().slice(0, 16);
         }
 
         setTempPlan({
-            name: plan.action || '', // DB 'action' -> UI 'name'
+            name: plan.action || '',
             time: timeStr,
             location: plan.location || '',
             content: plan.content || ''
         });
+        setReminderOffset(plan.reminder_offset !== undefined ? plan.reminder_offset : 0);
         setEditingPlanId(plan.id);
         setViewMode('EDIT');
     };
 
     const openAddPlan = () => {
         setTempPlan({ name: '', time: '', location: '', content: '' });
+        setReminderOffset(15); // Default to 15 mins before
         setEditingPlanId(null);
         setViewMode('EDIT');
     };
@@ -416,7 +428,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>📅 時間 (設定提醒)</label>
+                                        <label>📅 時間</label>
                                         <input
                                             type="datetime-local"
                                             value={tempPlan.time}
@@ -424,6 +436,26 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                             style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '8px' }}
                                         />
                                     </div>
+
+                                    {tempPlan.time && (
+                                        <div className="form-group">
+                                            <label>⏰ 提醒設定</label>
+                                            <select
+                                                value={reminderOffset}
+                                                onChange={(e) => setReminderOffset(Number(e.target.value))}
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '8px' }}
+                                            >
+                                                <option value={-1}>🔕 不提醒</option>
+                                                <option value={0}>⚡ 準時提醒</option>
+                                                <option value={15}>🔔 提前 15 分鐘</option>
+                                                <option value={30}>🔔 提前 30 分鐘</option>
+                                                <option value={60}>🔔 提前 1 小時</option>
+                                                <option value={120}>🔔 提前 2 小時</option>
+                                                <option value={1440}>📅 提前 1 天</option>
+                                            </select>
+                                        </div>
+                                    )}
+
                                     <div className="form-group">
                                         <label>📍 地點</label>
                                         <input

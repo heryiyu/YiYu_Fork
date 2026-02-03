@@ -29,17 +29,15 @@ Deno.serve(async (req) => {
 
         console.log(`[Notify] Checking plans between ${now.toISOString()} and ${future.toISOString()}`)
 
-        // 3. Query Plans
+        // 3. Query Plans (Check notify_at)
         const { data: plans, error } = await supabaseClient
             .from('spiritual_plans')
             .select('*')
             .is('is_notified', false)
-            .not('scheduled_time', 'is', null) // Only valid times
-            .lte('scheduled_time', future.toISOString()) // Include past un-notified too? Yes, catch up.
-            // Ideally we filter out very old ones (e.g. > 24 hours ago) so we don't spam outdated stuff if cron failed for a day.
-            // Let's add .gte('scheduled_time', new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString())
-            .gt('scheduled_time', new Date(now.getTime() - 60 * 60 * 1000).toISOString()) // Only catch up 1 hour back
-            .order('scheduled_time')
+            .not('notify_at', 'is', null) // Must have a notification time
+            .lte('notify_at', future.toISOString()) // Trigger if notify_at is now or past
+            .gt('notify_at', new Date(now.getTime() - 60 * 60 * 1000).toISOString()) // Catch up 1h
+            .order('notify_at')
 
         if (error) throw error
 
@@ -61,10 +59,13 @@ Deno.serve(async (req) => {
 
         for (const plan of plans) {
             // Construct Message
-            const timeString = new Date(plan.scheduled_time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
+            const timeString = new Date(plan.scheduled_time).toLocaleTimeString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+
+            // Text different based on offset? 
+            // Simple generic message is fine:
             const message = {
                 type: 'text',
-                text: `📅 牧養提醒：${timeString}\n行動：${plan.action}\n地點：${plan.location || '無地點'}\n\n加油！願神與你同在！💪`
+                text: `🔔 牧養提醒：${plan.action}\n📅 時間：${timeString}\n📍 地點：${plan.location || '無'}\n\n記得要準備喔！願神祝福你的擺上！💪`
             }
 
             // Send to LINE
