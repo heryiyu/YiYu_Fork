@@ -11,6 +11,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkinManager } from './components/SkinManager';
 import { UserProfile } from './components/UserProfile';
 import { AdminWeatherControl } from './components/AdminWeatherControl';
+
 import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
@@ -24,12 +25,14 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showSkinManager, setShowSkinManager] = useState(false);
 
+
   // Reset state when user changes
   useEffect(() => {
     setSelectedSheepId(null);
     setShowGuide(false);
     setShowSettings(false);
     setShowSkinManager(false);
+
   }, [currentUser]);
 
   // 0. Global Loading (Use AssetPreloader for consistency)
@@ -86,6 +89,9 @@ function App() {
           <BookOpen size={18} strokeWidth={2.5} />
         </button>
 
+        {/* Seven Steps Map */}
+
+
         {/* Display Settings (Sheep Count) */}
         <button
           className="hud-btn"
@@ -135,6 +141,8 @@ function App() {
       {showSkinManager && (
         <SkinManager onClose={() => setShowSkinManager(false)} />
       )}
+
+
     </div>
   );
 }
