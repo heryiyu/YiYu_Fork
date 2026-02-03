@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import './SevenStepsMap.css';
 
 // Mobile-First Vertical Zig-Zag Layout: Bottom-Left (1) -> Top (7)
@@ -45,6 +46,7 @@ const generatePath = () => {
 
 export function SevenStepsMap() {
     const [visible, setVisible] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [selectedStep, setSelectedStep] = useState(null);
 
     useEffect(() => {
@@ -74,12 +76,25 @@ export function SevenStepsMap() {
         );
     };
 
-    return (
-        <div className={`map-container ${visible ? 'visible' : ''}`}>
+    const handleMapAreaClick = (e) => {
+        if (!isExpanded) {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsExpanded(true);
+        }
+    };
+
+    const handleStepClick = (step) => {
+        if (!isExpanded) return;
+        setSelectedStep(step);
+    };
+
+    const mapContent = (
+        <>
             {/* Full SVG Landscape */}
             <svg
                 className="map-svg-layer"
-                viewBox="0 0 100 100"
+                viewBox={isExpanded ? "-50 -50 200 200" : "0 0 100 100"}
                 preserveAspectRatio="xMidYMid meet"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -115,9 +130,9 @@ export function SevenStepsMap() {
                         <g
                             key={step.id}
                             transform={`translate(${pos.x}, ${pos.y})`}
-                            onClick={() => setSelectedStep(step)}
+                            onClick={() => handleStepClick(step)}
                             className="island-group-container"
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: isExpanded ? 'pointer' : 'default', pointerEvents: isExpanded ? 'all' : 'none' }}
                         >
                             {/* Inner Group for Hover Animation - Isolates Scale form Translate */}
                             <g className="island-visual-group">
@@ -149,11 +164,26 @@ export function SevenStepsMap() {
                 })}
             </svg>
 
-            {/* Title Overlay (HTML) */}
-            <h2 className="map-title-overlay">領人歸主秘笈</h2>
+            {/* Title Overlay (HTML) - only when expanded to avoid duplicate with tab */}
+            {isExpanded && <h2 className="map-title-overlay">領人歸主秘笈</h2>}
 
-            {/* Detail Overlay (HTML) */}
-            {selectedStep && (
+            {/* Expand / Unexpand control */}
+            <button
+                type="button"
+                className="map-expand-btn"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded((prev) => !prev);
+                    if (isExpanded) setSelectedStep(null);
+                }}
+                title={isExpanded ? '縮小' : '展開'}
+                aria-label={isExpanded ? '縮小' : '展開'}
+            >
+                {isExpanded ? <Minimize2 size={20} strokeWidth={2} /> : <Maximize2 size={20} strokeWidth={2} />}
+            </button>
+
+            {/* Detail Overlay (HTML) - only when expanded */}
+            {isExpanded && selectedStep && (
                 <div className="step-detail-overlay" onClick={() => setSelectedStep(null)}>
                     <div className="step-detail-card" onClick={e => e.stopPropagation()}>
                         <button className="close-btn" onClick={() => setSelectedStep(null)}>✖</button>
@@ -168,6 +198,39 @@ export function SevenStepsMap() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
+    );
+
+    return (
+        <>
+            {/* Collapsed: inline in Guide modal, tap to expand */}
+            {!isExpanded && (
+                <div
+                    className={`map-container map-container--collapsed ${visible ? 'visible' : ''}`}
+                    onClick={handleMapAreaClick}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && setIsExpanded(true)}
+                    aria-label="點擊展開地圖"
+                >
+                    {mapContent}
+                </div>
+            )}
+
+            {/* Expanded: full-viewport overlay */}
+            {isExpanded && (
+                <div
+                    className="map-overlay"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setIsExpanded(false);
+                    }}
+                    role="presentation"
+                >
+                    <div className="map-container map-container--expanded" onClick={(e) => e.stopPropagation()}>
+                        {mapContent}
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
