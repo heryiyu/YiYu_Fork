@@ -2,12 +2,73 @@
 
 /* Re-designed using Origin/Main Design System Tokens */
 
+/* Full-viewport overlay when expanded */
+.map-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.map-container--expanded {
+    width: min(95vw, 900px);
+    min-height: 95vh;
+    flex-shrink: 0;
+    align-items: stretch;
+}
+
+.map-container--expanded .map-svg-layer {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Expand / Unexpand button */
+.map-expand-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 60;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.map-expand-btn svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.map-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.map-expand-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5);
+}
+
 .map-container {
     position: relative;
     width: 100%;
-    /* Ensure it fills the modal content width */
-    height: 750px;
-    /* Tall vertical map */
+    /* Collapsed: compact height so full map fits without extra scroll in Guide modal */
+    height: clamp(280px, 45vh, 420px);
 
     /* System Container Styling */
     background: radial-gradient(circle at center, #23253a 0%, #101018 100%);
@@ -24,6 +85,10 @@
     font-family: inherit;
     margin-top: 10px;
     /* Spacing from tabs */
+}
+
+.map-container--collapsed {
+    cursor: pointer;
 }
 
 /* SVG Layer */
@@ -92,6 +157,7 @@
     position: absolute;
     top: 16px;
     right: 16px;
+    margin: 0;
 
     /* Using System Fonts */
     font-family: 'Inter', sans-serif;
