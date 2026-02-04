@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';
-import { Plus, Trash2, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, CheckSquare } from 'lucide-react';
 import '../styles/design-tokens.css';
 import './SheepList.css';
 
@@ -265,6 +265,26 @@ export const SheepList = ({ onSelect }) => {
 
                                 <button
                                     type="button"
+                                    className="dock-toolbar-action-btn"
+                                    onClick={() => {
+                                        if (selectedIds.size === sortedSheep.length) {
+                                            setSelectedIds(new Set());
+                                        } else {
+                                            setSelectedIds(new Set(sortedSheep.map(s => s.id)));
+                                        }
+                                    }}
+                                    style={{
+                                        background: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'var(--palette-blue-action)' : 'rgba(255, 255, 255, 0.9)',
+                                        color: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'white' : 'var(--palette-sheep-brown)',
+                                        borderColor: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'transparent' : 'var(--palette-sheep-brown)'
+                                    }}
+                                >
+                                    <CheckSquare size={14} strokeWidth={2.5} />
+                                    {selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'}
+                                </button>
+
+                                <button
+                                    type="button"
                                     className="dock-toolbar-action-btn dock-toolbar-action-btn--delete btn-destructive"
                                     onClick={handleDeleteSelected}
                                     disabled={selectedIds.size === 0}
@@ -323,7 +343,7 @@ export const SheepList = ({ onSelect }) => {
                                 {/* 3. Filters (chip style like SheepListModal) */}
                                 {[
                                     { id: 'ALL', label: '全部' },
-                                    { id: 'PINNED', label: '📌 釘選' },
+                                    { id: 'PINNED', label: '📌釘選' },
                                     { id: 'HEALTHY', label: '健康' },
                                     { id: 'SICK', label: '生病' },
                                     { id: 'SLEEPING', label: '沉睡' }
@@ -343,7 +363,11 @@ export const SheepList = ({ onSelect }) => {
                                 <button
                                     type="button"
                                     className={`dock-toolbar-select-btn ${isSelectionMode ? 'dock-toolbar-select-btn--active' : ''}`}
-                                    onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
+                                    onClick={() => {
+                                        setIsSelectionMode(!isSelectionMode);
+                                        setSelectedIds(new Set());
+                                        setFilterStatus('ALL');
+                                    }}
                                     style={{ opacity: isCollapsed ? 0.6 : 1 }}
                                 >
                                     {isSelectionMode ? '取消' : '選取'}

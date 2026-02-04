@@ -23,7 +23,11 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const [editingPlanId, setEditingPlanId] = useState(null);
     const [tempPlan, setTempPlan] = useState({ name: '', time: '', location: '', content: '' });
     const [reminderOffset, setReminderOffset] = useState(0); // 0 = On time, 15 = 15m before, -1 = No reminder
+
     const [planActionLoading, setPlanActionLoading] = useState(false);
+
+    // Animation State
+    const [isPrayingAnim, setIsPrayingAnim] = useState(false);
 
     // Tab State: 'BASIC' | 'PLAN'
     const [activeTab, setActiveTab] = useState('BASIC');
@@ -81,6 +85,11 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
             return;
         }
         prayForSheep(target.id);
+
+        // Trigger Animation
+        setIsPrayingAnim(true);
+        setTimeout(() => setIsPrayingAnim(false), 800);
+
         setLocalMsg('');
     };
 
@@ -350,15 +359,24 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                 </div>
 
                                 <button
-                                    className="pray-action-btn"
+                                    className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
                                     onClick={handlePray}
                                     disabled={!isSleepingState && isFull && !isAdmin}
                                     style={{
                                         opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
                                         cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
+                                        position: 'relative', // Ensure particles position correctly
+                                        overflow: 'visible'   // Allow particles to float out
                                     }}
                                 >
                                     {buttonText}
+                                    {isPrayingAnim && (
+                                        <>
+                                            <span className="pray-particle p1">🙏</span>
+                                            <span className="pray-particle p2">❤️</span>
+                                            <span className="pray-particle p3">✨</span>
+                                        </>
+                                    )}
                                 </button>
 
                                 {localMsg && (

@@ -348,6 +348,7 @@
   box-sizing: border-box;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 32px;
 }
 
 .dock-toolbar-action-btn:disabled {

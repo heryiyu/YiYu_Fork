@@ -423,12 +423,12 @@
 }
 
 /* Ensure scrollable content doesn't clip at right edge */
-.modal-scroll > * {
+.modal-scroll>* {
   max-width: 100%;
   box-sizing: border-box;
 }
 
-.sheep-detail-scroll > * {
+.sheep-detail-scroll>* {
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -1006,8 +1006,72 @@ input[type="range"]::-moz-range-thumb:hover {
   border-radius: 12px;
   font-size: 1rem;
   cursor: pointer;
-  font-weight: bold;
   margin-top: 10px;
+  position: relative;
+  overflow: visible;
+}
+
+.pray-action-btn.praying {
+  animation: pulse-press 0.4s ease-out;
+  background: var(--palette-pink-action);
+}
+
+@keyframes pulse-press {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pray-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 10;
+}
+
+.pray-action-btn.praying .p1 {
+  animation: floatUp 0.8s ease-out forwards;
+}
+
+.pray-action-btn.praying .p2 {
+  animation: floatUp 0.8s 0.1s ease-out forwards;
+  font-size: 1.2rem;
+  margin-left: -20px;
+}
+
+.pray-action-btn.praying .p3 {
+  animation: floatUp 0.8s 0.2s ease-out forwards;
+  font-size: 1rem;
+  margin-left: 20px;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(0.5);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -80%) scale(1.2);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -250%) scale(1);
+  }
 }
 
 .hint-text {
@@ -1081,7 +1145,9 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* --- Mobile: Prevent scroll / black space --- */
 @media (max-width: 768px) {
-  html, body {
+
+  html,
+  body {
     overflow: hidden;
     overscroll-behavior: none;
     height: 100dvh;
@@ -1099,6 +1165,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* --- Modal Responsiveness --- */
 @media (max-width: 640px) {
+
   /* Single visible container: overlay provides backdrop only; modal-card is the frame */
   .debug-editor-overlay {
     padding: 12px;
