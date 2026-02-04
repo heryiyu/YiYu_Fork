@@ -309,12 +309,8 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                     </select>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>負擔狀態 (依照數值)</label>
-                                    <div className="modal-info-box">
-                                        {target.health < 40 ? '🍂 虛弱' : (target.health >= 80 ? '💪 強壯' : '🐑 正常')}
-                                    </div>
-                                    {isAdmin && !isSleepingState && (
+                                {isAdmin && !isSleepingState && (
+                                    <div className="form-group">
                                         <div className="modal-admin-box">
                                             <label>🔧 管理員調整: {Math.ceil(target.health)}%</label>
                                             <div className="admin-actions">
@@ -339,8 +335,8 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                 </button>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
 
                                 <div className="form-group">
                                     <label>備註 (狀況需要)</label>
