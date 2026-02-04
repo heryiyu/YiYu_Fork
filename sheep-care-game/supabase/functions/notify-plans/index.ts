@@ -77,16 +77,24 @@ Deno.serve(async (req) => {
             const sheepName = plan.sheep?.name || '未知小羊';
             const randomBlessing = blessings[Math.floor(Math.random() * blessings.length)];
 
-            const messageText = [
+            const messageLines = [
                 `🔔 靈程規劃提醒`,
                 `🐑 小羊姓名：${sheepName}`,
                 `📝 行動：${plan.action}`,
-                `📅 時間：${timeString}`,
-                `📍 地點：${plan.location || '無'}`,
-                `📋 內容規劃：${plan.content || '無'}`,
-                ``,
-                randomBlessing
-            ].join('\n');
+                `📅 時間：${timeString}`
+            ];
+
+            if (plan.location && plan.location.trim()) {
+                messageLines.push(`📍 地點：${plan.location.trim()}`);
+            }
+            if (plan.content && plan.content.trim()) {
+                messageLines.push(`📋 內容規劃：${plan.content.trim()}`);
+            }
+
+            messageLines.push(``);
+            messageLines.push(randomBlessing);
+
+            const messageText = messageLines.join('\n');
 
             const message = {
                 type: 'text',
