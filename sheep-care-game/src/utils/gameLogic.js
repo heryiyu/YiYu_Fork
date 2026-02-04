@@ -25,7 +25,6 @@ const SHEEP_CONFIG = {
         TICK: {
             HEALTHY: 0.000075, // ~13%/day
             SICK: 0.000115,    // ~20%/day
-            INJURED: 0.0001,   // ~17%/day
             PROTECTED: 0.000035 // ~6%/day
         },
         // Per Hour (Derived approx for offline calc: TickRate * 2 * 3600)
@@ -33,7 +32,6 @@ const SHEEP_CONFIG = {
         HOUR: {
             HEALTHY: 0.54,
             SICK: 0.828,
-            INJURED: 0.72,
             PROTECTED: 0.252
         }
     }
@@ -79,17 +77,6 @@ const SHEEP_MESSAGES = {
         "你真是個好牧羊人！",
         "又是美好的一天！"
     ],
-    dead: [
-        "救救我...我不想要消失... 😭",
-        "好黑好冷...誰能聽見我？ 🌑",
-        "不要遺忘我...求求你... 🙏",
-        "只有你能喚醒我...拜託...",
-        "我還不想就這樣結束... 💔",
-        "聽得到我的聲音嗎...？",
-        "請為我禱告...我好害怕...",
-        "相信奇蹟...請不要放棄我...",
-        "等待你的呼喚... 🕯️"
-    ],
     sleeping: [
         "救救我...我不想要消失... 😭",
         "好黑好冷...誰能聽見我？ 🌑",
@@ -104,39 +91,21 @@ const SHEEP_MESSAGES = {
 };
 
 const MATURITY_MESSAGES = {
-    "新朋友": {
-        "學習中": [
-            "這裡是什麼地方？", "有點害羞...", "可以帶我去認識大家嗎？", "你好...", "想找人說說話..."
-        ],
-        "穩定": [
-            "這裡感覺很溫馨。", "我喜歡這裡的氛圍。", "今天也是美好的一天。", "認識新朋友真好。", "牧羊人對我很好。"
-        ],
-        "突破": [
-            "我會帶新朋友一起來！", "這裡很棒，你也來看看！", "大家一起來參加！"
-        ]
-    },
-    "慕道友": {
-        "學習中": [
-            "我想更多認識牧羊人。", "這句話是什麼意思呢？", "正在思考信仰的問題...", "想聽更多故事。", "有點疑惑..."
-        ],
-        "穩定": [
-            "禱告讓我心裡平安。", "想要更穩定來這裡。", "牧羊人的聲音真好聽。", "覺得被安慰了。", "喜歡這裡的詩歌。"
-        ],
-        "突破": [
-            "我也可以分享我的感動！", "帶了朋友一起來聽。", "這週要不要一起來？", "我被改變了！"
-        ]
-    },
-    "基督徒": {
-        "學習中": [
-            "主啊，教導我...", "正在學習順服。", "想要突破生命的關卡。", "求主修剪我...", "願我更像祢。"
-        ],
-        "穩定": [
-            "感謝主的恩典！", "凡事謝恩。", "喜樂的心乃是良藥。", "主是我的牧者。", "不住禱告。"
-        ],
-        "突破": [
-            "我們一起為羊群禱告！", "去關心那隻迷途的小羊吧。", "主要使用我！", "看顧羊群是我的責任。", "願主的名得榮耀！"
-        ]
-    }
+    "新朋友": [
+        "這裡是什麼地方？", "有點害羞...", "可以帶我去認識大家嗎？", "你好...", "想找人說說話...",
+        "這裡感覺很溫馨。", "我喜歡這裡的氛圍。", "今天也是美好的一天。", "認識新朋友真好。", "牧羊人對我很好。",
+        "我會帶新朋友一起來！", "這裡很棒，你也來看看！", "大家一起來參加！"
+    ],
+    "慕道友": [
+        "我想更多認識牧羊人。", "這句話是什麼意思呢？", "正在思考信仰的問題...", "想聽更多故事。", "有點疑惑...",
+        "禱告讓我心裡平安。", "想要更穩定來這裡。", "牧羊人的聲音真好聽。", "覺得被安慰了。", "喜歡這裡的詩歌。",
+        "我也可以分享我的感動！", "帶了朋友一起來聽。", "這週要不要一起來？", "我被改變了！"
+    ],
+    "基督徒": [
+        "主啊，教導我...", "正在學習順服。", "想要突破生命的關卡。", "求主修剪我...", "願我更像祢。",
+        "感謝主的恩典！", "凡事謝恩。", "喜樂的心乃是良藥。", "主是我的牧者。", "不住禱告。",
+        "我們一起為羊群禱告！", "去關心那隻迷途的小羊吧。", "主要使用我！", "看顧羊群是我的責任。", "願主的名得榮耀！"
+    ]
 };
 
 // --- Helpers ---
@@ -144,12 +113,14 @@ const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export const parseMaturity = (matString) => {
-    if (!matString) return { level: '', stage: '' };
-    const match = matString.match(/^(.+?)(?:\s*\((.+)\))?$/);
+    if (!matString) return { level: '' };
+    // Just return the string as level, ignoring any brackets or extra specific logic for stages
+    // If it has brackets like "Level (Stage)", just take the Level part
+    const match = matString.match(/^(.+?)(?:\s*\(.+\))?$/);
     if (match) {
-        return { level: match[1], stage: match[2] || '' };
+        return { level: match[1] };
     }
-    return { level: matString, stage: '' };
+    return { level: matString };
 };
 
 export const generateVisuals = () => {
@@ -195,7 +166,7 @@ export const calculateSheepState = (currentHealth, currentStatus) => {
     let newHealth = Math.max(0, currentHealth);
     let newStatus = currentStatus;
 
-    if (newHealth <= 0 && currentStatus !== 'dead' && currentStatus !== SLEEPING_STATUS) {
+    if (newHealth <= 0 && !isSleeping({ status: currentStatus })) {
         newStatus = SLEEPING_STATUS;
         newHealth = 0;
     } else if (newHealth < 40 && currentStatus === 'healthy') {
@@ -205,6 +176,10 @@ export const calculateSheepState = (currentHealth, currentStatus) => {
         // Auto-recover
         newStatus = 'healthy';
     }
+
+    // Ensure no 'injured' or 'dead' status leaks in new calculations
+    if (newStatus === 'injured') newStatus = 'healthy'; // Fallback
+    if (newStatus === 'dead') newStatus = SLEEPING_STATUS; // Normalize
 
     // Enforce Type
     const newType = (newHealth >= 80) ? 'STRONG' : 'LAMB';
@@ -226,7 +201,8 @@ export const calculateOfflineDecay = (s, diffHours) => {
 
     if (s.status === 'sick') ratePerHour = SHEEP_CONFIG.DECAY.HOUR.SICK;
     else if (isProtected) ratePerHour = SHEEP_CONFIG.DECAY.HOUR.PROTECTED;
-    else if (s.status === 'injured') ratePerHour = SHEEP_CONFIG.DECAY.HOUR.INJURED;
+
+    // Injured fallback to healthy rate if somehow persists
 
     const decayAmount = diffHours * ratePerHour;
     let rawHealth = isSleeping(s) ? 0 : (s.health - decayAmount);
@@ -394,7 +370,6 @@ export const calculateTick = (s, allSheep = []) => {
     let decayRate = SHEEP_CONFIG.DECAY.TICK.HEALTHY;
     if (s.status === 'sick') decayRate = SHEEP_CONFIG.DECAY.TICK.SICK;
     else if (isProtected) decayRate = SHEEP_CONFIG.DECAY.TICK.PROTECTED;
-    else if (s.status === 'injured') decayRate = SHEEP_CONFIG.DECAY.TICK.INJURED;
 
     // Decay
     let rawHealth = isSleeping(s) ? 0 : (s.health - decayRate);
@@ -409,7 +384,7 @@ export const calculateTick = (s, allSheep = []) => {
     let msg = timer > 0 ? message : null;
 
     // Dynamic speak chance
-    const isNewlySleeping = newStatus === 'dead' || newStatus === SLEEPING_STATUS;
+    const isNewlySleeping = newStatus === SLEEPING_STATUS;
     const speakChance = isNewlySleeping ? 0.003 : (newHealth < 30 ? 0.02 : (newHealth < 60 ? 0.008 : 0.001));
 
     if (timer <= 0 && Math.random() < speakChance) {
@@ -420,17 +395,10 @@ export const calculateTick = (s, allSheep = []) => {
         else if (Math.random() < 0.4) {
             // Maturity based messaging
             let specificMsg = null;
-            const { level, stage } = parseMaturity(s.spiritualMaturity);
+            const { level } = parseMaturity(s.spiritualMaturity);
 
-            if (stage && MATURITY_MESSAGES[level] && MATURITY_MESSAGES[level][stage]) {
-                specificMsg = getRandomItem(MATURITY_MESSAGES[level][stage]);
-            }
-            // If only level is known (old data or simple input), try to pick from any stage or default
-            if (!specificMsg && MATURITY_MESSAGES[level]) {
-                // Try '學習中' or random stage
-                const stages = Object.values(MATURITY_MESSAGES[level]);
-                const randomStage = getRandomItem(stages);
-                specificMsg = getRandomItem(randomStage);
+            if (level && MATURITY_MESSAGES[level]) {
+                specificMsg = getRandomItem(MATURITY_MESSAGES[level]);
             }
 
             msg = specificMsg || getRandomItem(SHEEP_MESSAGES.happy);

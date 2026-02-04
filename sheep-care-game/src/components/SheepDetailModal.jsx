@@ -15,7 +15,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
     // Spiritual Maturity State
     const [sLevel, setSLevel] = useState('');
-    const [sStage, setSStage] = useState('');
 
     // Spiritual Plan State
     const [plans, setPlans] = useState([]);
@@ -54,9 +53,8 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         if (target) {
             setName(target.name);
             setNote(target.note || '');
-            const { level, stage } = parseMaturity(target.spiritualMaturity);
+            const { level } = parseMaturity(target.spiritualMaturity);
             setSLevel(level);
-            setSStage(stage);
             setLocalMsg('');
             // Fetch remote plans
             fetchPlans();
@@ -112,7 +110,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const getStatusText = (status, health) => {
         if (isSleeping({ status })) return '已沉睡 🪦';
         if (status === 'sick') return '生病 (需禱告恢復)';
-        if (status === 'injured') return '受傷 (需禱告恢復)';
         if (health >= 80) return '強壯 💪';
         return '健康';
     };
