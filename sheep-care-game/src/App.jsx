@@ -17,7 +17,7 @@ import { AssetPreloader } from './components/AssetPreloader';
 import { Bell, BellOff, BookOpen, Settings, Menu } from 'lucide-react';
 
 function App() {
-  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather } = useGame();
+  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather, showIntroVideo, markIntroWatched } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   // showList removed - permanent dock
@@ -159,6 +159,47 @@ function App() {
 
       {showSkinManager && (
         <SkinManager onClose={() => setShowSkinManager(false)} />
+      )}
+
+      {showIntroVideo && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.9)', zIndex: 9999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(5px)'
+        }}>
+          <div style={{ width: '90%', maxWidth: '640px', background: '#000', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+              <iframe
+                src="https://www.youtube.com/embed/tqupdMUIVWQ?start=16&autoplay=1"
+                title="Intro Video"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+          <button
+            onClick={markIntroWatched}
+            style={{
+              marginTop: '30px', padding: '10px 30px', fontSize: '1.1rem',
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.5)',
+              color: '#fff',
+              borderRadius: '30px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '8px'
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.borderColor = '#fff'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'; }}
+          >
+            略過 (Skip)
+          </button>
+          <p style={{ color: '#888', marginTop: '12px', fontSize: '0.9rem' }}>
+            ※ 日後可至「牧羊人手冊」重溫
+          </p>
+        </div>
       )}
     </div>
   );

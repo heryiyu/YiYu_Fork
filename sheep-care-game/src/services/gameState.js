@@ -60,6 +60,7 @@ export const gameState = {
                 return { user: { line_id: userId, nickname: defaultNickname, name: displayName, avatar: pictureUrl }, sheep: [] };
             }
             profile = newProfile;
+            return { user: profile, sheep: [], isNewUser: true };
         } else {
             // Returning user: optionally update name/nickname/avatar if stale (null in DB but we have from LINE)
             const updates = {};
@@ -145,7 +146,7 @@ export const gameState = {
             .update({ last_login: this._getLocalISOString() })
             .eq('line_id', userId);
 
-        return { user: profile, sheep: updatedSheepList };
+        return { user: profile, sheep: updatedSheepList, isNewUser: false };
     },
 
     // Helper: Ensure a skin exists for the sheep (Programmatic)

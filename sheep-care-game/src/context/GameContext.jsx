@@ -17,8 +17,11 @@ const defaultGameContext = {
     weather: { type: 'sunny', isDay: true, temp: 25 },
     settings: { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [] },
     notificationEnabled: false,
-    toggleNotification: () => {},
+    toggleNotification: () => { },
     isAdmin: false,
+    introWatched: false,
+    showIntroVideo: false,
+    markIntroWatched: () => { },
 };
 
 const GameContext = createContext(defaultGameContext);
@@ -62,6 +65,8 @@ export const GameProvider = ({ children }) => {
     const [message, setMessage] = useState(null);
 
     const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
+    const [introWatched, setIntroWatched] = useState(true); // Default true to avoid flash on init, set to false if confirmed new
+    const [showIntroVideo, setShowIntroVideo] = useState(false);
 
     const [skins, setSkins] = useState([]); // New Skins State
 
@@ -216,14 +221,25 @@ export const GameProvider = ({ children }) => {
                 const gameData = user.game_data || {};
                 setInventory(gameData.inventory || []);
                 // Update Settings from Cloud (Merge with local default structure)
+                // Update Settings from Cloud (Merge with local default structure)
                 if (gameData.settings) {
                     setSettings(prev => ({ ...prev, ...gameData.settings }));
+                }
+
+                // Intro Video Logic
+                // Only show for BRAND NEW users (Registration session)
+                // Existing users rely on Manual to see it if they want.
+                if (data.isNewUser) {
+                    setShowIntroVideo(true);
+                } else {
+                    // Start introWatched as true for existing users so they don't see it
+                    setIntroWatched(true);
                 }
 
                 setIsDataLoaded(true);
                 showMessage(`歡迎回來，${effectiveNickname}! 👋`);
             } else {
-                // Should not happen as loadGame creates user
+                // Fallback for edge cases
                 showMessage("設定完成！");
                 setIsDataLoaded(true);
             }
@@ -244,6 +260,7 @@ export const GameProvider = ({ children }) => {
             const currentInventory = overrides.inventory || inventory;
             // notificationEnabled is removed. We rely on settings object now.
             const currentNickname = overrides.nickname !== undefined ? overrides.nickname : nickname;
+            const currentIntroWatched = overrides.introWatched !== undefined ? overrides.introWatched : introWatched;
 
             // Construct gameData object
             // If overrides.settings exists, use it as the authoritative source.
@@ -261,6 +278,7 @@ export const GameProvider = ({ children }) => {
             const gameData = {
                 inventory: currentInventory,
                 settings: currentSettings,
+                introWatched: currentIntroWatched,
                 lastSave: Date.now()
             };
 
@@ -565,6 +583,10 @@ export const GameProvider = ({ children }) => {
             setSettings(prev => ({ ...prev, ...loadedData.settings }));
         }
 
+        if (loadedData.introWatched) {
+            setIntroWatched(true);
+        }
+
         lastSaveTimeRef.current = lastSave; // Update Ref with loaded time
 
         // Cache Locally
@@ -611,9 +633,9 @@ export const GameProvider = ({ children }) => {
 
     // Ref Sync: Keep Ref up to date for saveToCloud and handleUnload (async access)
     useEffect(() => {
-        stateRef.current = { sheep, inventory, settings, nickname, currentUser, userAvatarUrl };
+        stateRef.current = { sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched };
         lastSaveTimeRef.current = Date.now(); // Optional: track local changes? No, unsafe.
-    }, [sheep, inventory, settings, nickname, currentUser, userAvatarUrl]);
+    }, [sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched]);
 
     useEffect(() => {
         // Setup only
@@ -631,6 +653,7 @@ export const GameProvider = ({ children }) => {
                 game_data: {
                     inventory: profileRef.inventory,
                     settings: profileRef.settings,
+                    introWatched: profileRef.introWatched,
                     lastSave: Date.now()
                 },
                 last_login: new Date().toISOString(),
@@ -648,7 +671,8 @@ export const GameProvider = ({ children }) => {
             saveToCloud({
                 sheep: stateRef.current.sheep,
                 inventory: stateRef.current.inventory,
-                settings: stateRef.current.settings
+                settings: stateRef.current.settings,
+                introWatched: stateRef.current.introWatched
             });
         };
 
@@ -862,7 +886,14 @@ export const GameProvider = ({ children }) => {
             saveToCloud, forceLoadFromCloud, // Exposed
             notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
             updateNickname, // Exposed
-            settings, updateSetting, // Exposed Settings
+            isAdmin,
+            showIntroVideo,
+            markIntroWatched: () => {
+                setIntroWatched(true);
+                setShowIntroVideo(false);
+                saveToCloud({ introWatched: true });
+            },
+            settings, // expose settings
             setWeather // Exposed for Admin Control
         }}>
             {children}

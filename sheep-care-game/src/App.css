@@ -469,7 +469,7 @@
 }
 
 .modal-tab {
-  padding: 8px 16px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
   font-weight: 600;
@@ -477,6 +477,8 @@
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .modal-tab:hover {
