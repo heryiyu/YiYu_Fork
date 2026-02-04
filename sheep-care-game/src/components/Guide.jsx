@@ -101,7 +101,6 @@ const ManualSection = () => {
                 return (
                     <div style={{ padding: '20px' }}>
                         <h4 style={{ textAlign: 'center', marginBottom: '8px' }}>🤲 五綑綁五釋放</h4>
-                        <div style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem', marginBottom: '20px' }}>New Life 福音認領 VIP</div>
 
                         <div style={{ background: '#fff0f0', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #ffcdd2' }}>
                             <h5 style={{ color: '#d32f2f', marginBottom: '10px', borderBottom: '1px solid #ffcdd2', paddingBottom: '5px' }}>❌ 5個綑綁 HELLS</h5>
@@ -114,7 +113,7 @@ const ManualSection = () => {
                             </ul>
                         </div>
 
-                        <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '10px', border: '1px solid #c8e6c9' }}>
+                        <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '10px', border: '1px solid #c8e6c9', marginBottom: '20px' }}>
                             <h5 style={{ color: '#2e7d32', marginBottom: '10px', borderBottom: '1px solid #c8e6c9', paddingBottom: '5px' }}>✅ 5個釋放 BLESS</h5>
                             <ul style={{ paddingLeft: '0', listStyle: 'none', lineHeight: '1.6', fontSize: '0.95rem' }}>
                                 <li style={{ marginBottom: '8px' }}><strong>Body:</strong> 身體健康、喜樂平安</li>
@@ -123,6 +122,19 @@ const ManualSection = () => {
                                 <li style={{ marginBottom: '8px' }}><strong>Social:</strong> 人際、溝通、社交</li>
                                 <li><strong>Spiritual:</strong> 決志信主、信靠真神</li>
                             </ul>
+                        </div>
+
+                        <div style={{ marginTop: '20px' }}>
+                            <h5 style={{ textAlign: 'center', marginBottom: '10px', color: '#555' }}>📺 相關教學影片</h5>
+                            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                                <iframe
+                                    src="https://www.youtube.com/embed/tZ_Yt9Yt5v4"
+                                    title="五綑綁五釋放教學"
+                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </div>
                         </div>
                     </div>
                 );
