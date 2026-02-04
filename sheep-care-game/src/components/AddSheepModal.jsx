@@ -233,13 +233,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                     </div>
                 )}
 
-                {!isEditing && !isBatchMode && (
-                    <div style={{ textAlign: 'center', color: '#666', fontSize: '0.9rem', marginBottom: '10px', background: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-                        🎲 系統將為新小羊隨機分配一個可愛的外觀！
-                        <br />
-                        <small>(建立後可再點選頭像進行更換)</small>
-                    </div>
-                )}
+
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1, overflowY: 'auto' }}>
 
@@ -439,7 +433,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                         <textarea
                                             value={note}
                                             onChange={e => setNote(e.target.value)}
-                                            placeholder="記錄這隻小羊的故事..."
+                                            placeholder="記錄這隻小羊的狀況..."
                                             style={{
                                                 width: '100%', padding: '8px', border: '1px solid #ccc',
                                                 borderRadius: '5px', resize: 'vertical', minHeight: '60px'
@@ -452,12 +446,11 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                     ) : (
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>批量輸入</label>
-                            <label style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>* 將會隨機分配每隻羊的外觀</label>
                             <textarea
                                 value={batchInput}
                                 onChange={(e) => setBatchInput(e.target.value)}
                                 placeholder="王大明 新朋友 學習中..."
-                                style={{ flex: 1, width: '100%', padding: '8px', border: '1px solid #ccc', resize: 'none' }}
+                                style={{ flex: 1, width: '95%', padding: '8px', border: '1px solid #ccc', resize: 'none' }}
                                 required
                             />
                         </div>

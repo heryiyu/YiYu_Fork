@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         // 3. Query Plans (Check notify_at)
         const { data: plans, error } = await supabaseClient
             .from('spiritual_plans')
-            .select('*')
+            .select('*, sheep(name)')
             .is('is_notified', false)
             .not('notify_at', 'is', null) // Must have a notification time
             .lte('notify_at', future.toISOString()) // Trigger if notify_at is now or past
@@ -50,6 +50,14 @@ Deno.serve(async (req) => {
         }
 
         const results = []
+        const blessings = [
+            "願神祝福你的牧養行程，加倍與你同在！💪",
+            "神必紀念你的百上與辛勞，願祂的榮光照耀你！✨",
+            "帶著平安與喜樂前行，主必引領你的每一步！🚶‍♂️",
+            "願你的探訪充滿恩典，使人的心靈得著飽足！🙏",
+            "你是神所喜悅的僕人，願祂賜你智慧與愛心！❤️",
+            "在服事的路上，主的名必成為你的盾牌與力量！🛡️"
+        ];
 
         // 4. Iterate and Send Push
         const LINE_ACCESS_TOKEN = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN')
@@ -61,19 +69,28 @@ Deno.serve(async (req) => {
             // Construct Message
             const timeString = new Date(plan.scheduled_time).toLocaleString('zh-TW', {
                 timeZone: 'Asia/Taipei',
-                month: 'numeric',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
-                weekday: 'short'
+                month: 'numeric', day: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+                hour12: false, weekday: 'short'
             })
 
-            // Text different based on offset? 
-            // Simple generic message is fine:
+            const sheepName = plan.sheep?.name || '未知小羊';
+            const randomBlessing = blessings[Math.floor(Math.random() * blessings.length)];
+
+            const messageText = [
+                `🔔 靈程規劃提醒`,
+                `🐑 小羊姓名：${sheepName}`,
+                `📝 行動：${plan.action}`,
+                `📅 時間：${timeString}`,
+                `📍 地點：${plan.location || '無'}`,
+                `📋 內容規劃：${plan.content || '無'}`,
+                ``,
+                randomBlessing
+            ].join('\n');
+
             const message = {
                 type: 'text',
-                text: `🔔 牧養提醒：${plan.action}\n📅 時間：${timeString}\n📍 地點：${plan.location || '無'}\n\n記得要準備喔！願神祝福你的擺上！💪`
+                text: messageText
             }
 
             // Send to LINE
@@ -102,7 +119,6 @@ Deno.serve(async (req) => {
                     .update({ is_notified: true })
                     .eq('id', plan.id)
             } else {
-                // Log failure but don't stop others
                 console.error(`Failed to send LINE message for plan ${plan.id}`)
             }
         }
