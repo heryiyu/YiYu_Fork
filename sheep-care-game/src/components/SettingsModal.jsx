@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from './ui/CloseButton';
+import { Slider } from './ui/Slider';
 
 export const SettingsModal = ({ onClose }) => {
     const { settings, updateSetting, tags } = useGame();
@@ -59,13 +60,13 @@ export const SettingsModal = ({ onClose }) => {
                                         <span style={{ color: 'var(--palette-blue-action)' }}>{settings.maxVisibleSheep} 隻</span>
                                     </label>
 
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="50"
-                                        step="5"
+                                    <Slider
+                                        min={10}
+                                        max={50}
+                                        step={5}
                                         value={settings.maxVisibleSheep}
                                         onChange={handleChange}
+                                        ariaLabel="畫面顯示小羊數量"
                                     />
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>

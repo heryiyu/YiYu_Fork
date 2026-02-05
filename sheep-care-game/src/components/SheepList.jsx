@@ -8,6 +8,7 @@ import { AddSheepModal } from './AddSheepModal';
 import { TagManagerModal } from './TagManagerModal';
 import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search } from 'lucide-react';
 import { CloseButton } from './ui/CloseButton';
+import { Checkbox } from './ui/Checkbox';
 import '../styles/design-tokens.css';
 import './SheepList.css';
 
@@ -111,10 +112,10 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
                                 fontSize: '0.9rem'
                             }}
                         >
-                            <input
-                                type="checkbox"
+                            <Checkbox
                                 checked={!isHidden}
                                 onChange={() => onToggle(f.id)}
+                                ariaLabel={f.label}
                             />
                             {f.color ? (
                                 <span

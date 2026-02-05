@@ -28,6 +28,8 @@
 |---------|-------|
 | form-group + label + input/select/textarea | SettingsModal, SheepDetailModal, TagManagerModal |
 | Inline styles (width, padding, border) | AddSheepModal, SheepDetailModal TagSelect, TagManagerModal |
+| Checkbox | FilterSettingsMenu |
+| Slider | SettingsModal, SheepDetailModal |
 
 ### Tags/Chips
 | Pattern | Usage |

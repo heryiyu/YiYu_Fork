@@ -7,6 +7,7 @@ import { supabase } from '../services/supabaseClient';
 import { TagManagerModal } from './TagManagerModal';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from './ui/CloseButton';
+import { Slider } from './ui/Slider';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     const [orderedIds, setOrderedIds] = useState(assignedIds);
@@ -457,16 +458,16 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                         <div className="modal-admin-box">
                                             <label>🔧 管理員調整: {Math.ceil(target.health)}%</label>
                                             <div className="admin-actions">
-                                                <input
-                                                    type="range"
-                                                    min="1"
-                                                    max="100"
+                                                <Slider
+                                                    min={1}
+                                                    max={100}
                                                     value={target.health}
                                                     onChange={(e) => {
                                                         const newHealth = Number(e.target.value);
                                                         const { health, status, type } = calculateSheepState(newHealth, target.status);
                                                         updateSheep(target.id, { health, type, status });
                                                     }}
+                                                    ariaLabel="管理員調整健康度"
                                                 />
                                                 <button
                                                     type="button"

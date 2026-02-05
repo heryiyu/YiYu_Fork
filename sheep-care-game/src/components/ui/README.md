@@ -33,6 +33,32 @@ Props: `message`, `variant` (default | info | success | warning | error), `durat
 
 ---
 
+### Checkbox
+Custom checkbox that hides native UI and uses design tokens.
+
+```jsx
+import { Checkbox } from './ui/Checkbox';
+
+<Checkbox checked={value} onChange={toggle} ariaLabel="顯示篩選" />
+```
+
+Props: `checked`, `onChange`, `disabled`, `ariaLabel`, `className`, `id`, `name`
+
+---
+
+### Slider
+Custom range input (subtle, modern styling).
+
+```jsx
+import { Slider } from './ui/Slider';
+
+<Slider value={value} min={10} max={50} step={5} onChange={handleChange} ariaLabel="畫面顯示小羊數量" />
+```
+
+Props: `value`, `min`, `max`, `step`, `onChange`, `ariaLabel`, `className`, `disabled`
+
+---
+
 ## Design Tokens
 
 All tokens live in `src/styles/design-tokens.css`. Prefer `var(--token-name)` over hex values.
