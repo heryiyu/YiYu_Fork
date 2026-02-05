@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, ChevronRight, Calendar } from 'lucide-react';
+import { Heart, Plus, ChevronRight, Calendar, Info } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { calculateSheepState, parseMaturity, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { supabase } from '../services/supabaseClient';
@@ -404,8 +404,9 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                 <span>新增規劃</span>
                                             </button>
                                         </div>
-                                        <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#ff9800', marginBottom: '10px' }}>
-                                            ⚠️ 系統將自動刪除超過一個月的過期行程
+                                        <div className="plan-retention-hint" role="note" aria-live="polite">
+                                            <Info size={14} strokeWidth={2} />
+                                            <span>系統會自動清理超過一個月的過期行程</span>
                                         </div>
 
                                         <div className="plan-list">
