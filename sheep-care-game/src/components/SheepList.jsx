@@ -188,6 +188,8 @@ export const SheepList = ({ onSelect }) => {
     // Collapsible State (Default Open)
     const [isCollapsed, setIsCollapsed] = useState(false);
 
+    const TAG_FILTER_PREFIX = 'TAG:';
+
     const filteredSheep = useMemo(() => sortedSheep.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
         const isSleepingState = isSleeping(s);
@@ -199,22 +201,32 @@ export const SheepList = ({ onSelect }) => {
         if (filterStatus === 'SICK') return isSick;
         if (filterStatus === 'HEALTHY') return !isSleepingState && !isSick;
         if (filterStatus === 'PINNED') return isPinned;
+        if (filterStatus.startsWith(TAG_FILTER_PREFIX)) {
+            const tagId = filterStatus.slice(TAG_FILTER_PREFIX.length);
+            const assigned = tagAssignmentsBySheep[s.id] || [];
+            return assigned.some(a => a.tagId === tagId);
+        }
         return true;
-    }), [sortedSheep, searchTerm, filterStatus, settings?.pinnedSheepIds]);
+    }), [sortedSheep, searchTerm, filterStatus, settings?.pinnedSheepIds, tagAssignmentsBySheep]);
 
-    const counts = useMemo(() => sortedSheep.reduce((acc, s) => {
-        const isSleepingState = isSleeping(s);
-        const isSick = s.status === 'sick';
-        const isPinned = settings?.pinnedSheepIds?.includes(s.id);
-
-        if (isSleepingState) acc.SLEEPING++;
-        else if (isSick) acc.SICK++;
-        else acc.HEALTHY++;
-
-        if (isPinned) acc.PINNED++;
-
+    const counts = useMemo(() => {
+        const acc = { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, SLEEPING: 0, PINNED: 0 };
+        (tags || []).forEach(t => { acc[`${TAG_FILTER_PREFIX}${t.id}`] = 0; });
+        sortedSheep.forEach(s => {
+            const isSleepingState = isSleeping(s);
+            const isSick = s.status === 'sick';
+            const isPinned = settings?.pinnedSheepIds?.includes(s.id);
+            if (isSleepingState) acc.SLEEPING++;
+            else if (isSick) acc.SICK++;
+            else acc.HEALTHY++;
+            if (isPinned) acc.PINNED++;
+            (tagAssignmentsBySheep[s.id] || []).forEach(a => {
+                const key = `${TAG_FILTER_PREFIX}${a.tagId}`;
+                if (acc[key] !== undefined) acc[key]++;
+            });
+        });
         return acc;
-    }, { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, SLEEPING: 0, PINNED: 0 }), [sortedSheep, settings?.pinnedSheepIds]);
+    }, [sortedSheep, settings?.pinnedSheepIds, tags, tagAssignmentsBySheep]);
 
     const toggleSelection = (id) => {
         const newSet = new Set(selectedIds);
@@ -435,22 +447,26 @@ export const SheepList = ({ onSelect }) => {
                                 {/* Divider */}
                                 <div className="dock-toolbar-divider" />
 
-                                {/* 3. Filters (chip style like SheepListModal) */}
+                                {/* 3. Filters (chip style) */}
                                 {[
                                     { id: 'ALL', label: '全部' },
                                     { id: 'PINNED', label: '📌釘選' },
                                     { id: 'HEALTHY', label: '健康' },
                                     { id: 'SICK', label: '生病' },
-                                    { id: 'SLEEPING', label: '沉睡' }
+                                    { id: 'SLEEPING', label: '沉睡' },
+                                    ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
                                 ].map(f => (
                                     <button
                                         type="button"
                                         key={f.id}
                                         className={`dock-toolbar-chip ${filterStatus === f.id ? 'dock-toolbar-chip--selected' : ''}`}
                                         onClick={() => setFilterStatus(f.id)}
-                                        style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                        style={{
+                                            opacity: isCollapsed ? 0.6 : 1,
+                                            ...(f.color && filterStatus === f.id && { borderColor: f.color, color: f.color, background: `${f.color}20` })
+                                        }}
                                     >
-                                        {f.label} {counts[f.id]}
+                                        {f.label} {counts[f.id] ?? 0}
                                     </button>
                                 ))}
 
