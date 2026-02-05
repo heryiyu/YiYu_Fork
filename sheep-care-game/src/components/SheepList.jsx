@@ -13,6 +13,7 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     const timeout = React.useRef();
     const target = React.useRef();
     const isMoved = React.useRef(false); // Track if movement occurred
+    const isTouch = React.useRef(false); // Track if interaction is touch-based
 
     const start = React.useCallback(
         (event) => {
@@ -45,10 +46,22 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     );
 
     return {
-        onMouseDown: (e) => start(e),
-        onTouchStart: (e) => start(e),
-        onMouseUp: (e) => clear(e),
-        onMouseLeave: (e) => clear(e, false),
+        onMouseDown: (e) => {
+            if (isTouch.current) return;
+            start(e);
+        },
+        onTouchStart: (e) => {
+            isTouch.current = true;
+            start(e);
+        },
+        onMouseUp: (e) => {
+            if (isTouch.current) return;
+            clear(e);
+        },
+        onMouseLeave: (e) => {
+            if (isTouch.current) return;
+            clear(e, false);
+        },
         onTouchMove: (e) => {
             isMoved.current = true; // Mark as moved
             clear(e, false);
