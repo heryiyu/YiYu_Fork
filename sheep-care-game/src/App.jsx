@@ -9,6 +9,7 @@ import { NicknameSetup } from './components/NicknameSetup';
 import { SheepList } from './components/SheepList';
 import { SettingsModal } from './components/SettingsModal';
 import { UserProfile } from './components/UserProfile';
+import { Toast } from './components/ui/Toast';
 import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
@@ -55,7 +56,7 @@ function App() {
 
   return (
     <div className="game-container" key={currentUser} data-theme={weather?.timeStatus || 'day'}>
-      {message && <div key={message} className="toast-message">{message}</div>}
+      <Toast key={message || 'toast'} message={message} />
 
       {/* --- Unified Top Left Widget --- */}
       <UserProfile />

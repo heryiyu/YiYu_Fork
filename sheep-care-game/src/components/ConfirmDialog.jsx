@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { CloseButton } from './ui/CloseButton';
 
 export const ConfirmDialog = ({
     open,
@@ -44,7 +45,7 @@ export const ConfirmDialog = ({
             <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '360px' }}>
                 <div className="modal-header">
                     <h3 id="confirm-dialog-title">{title}</h3>
-                    <button className="close-btn" onClick={onCancel} aria-label="關閉">✖</button>
+                    <CloseButton onClick={onCancel} ariaLabel="關閉" />
                 </div>
                 <div className="modal-form" style={{ padding: '16px' }}>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.5 }}>{message}</p>

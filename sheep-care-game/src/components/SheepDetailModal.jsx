@@ -6,6 +6,7 @@ import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/
 import { supabase } from '../services/supabaseClient';
 import { TagManagerModal } from './TagManagerModal';
 import { ModalHint } from './ModalHint';
+import { CloseButton } from './ui/CloseButton';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     const [orderedIds, setOrderedIds] = useState(assignedIds);
@@ -374,7 +375,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
             <div className="modal-card" ref={modalRef} onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h3 id="sheep-detail-title">{isSleepingState ? '🪦 沉睡紀錄' : '📝 小羊資料'}</h3>
-                    <button ref={closeBtnRef} className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
+                    <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                 </div>
 
                 <div className="modal-form sheep-detail-modal-form">

@@ -11,11 +11,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <GameProvider>
-        <ConfirmDialogProvider>
+      <ConfirmDialogProvider>
+        <GameProvider>
           <App />
-        </ConfirmDialogProvider>
-      </GameProvider>
+        </GameProvider>
+      </ConfirmDialogProvider>
     </ErrorBoundary>
   </StrictMode>,
 )

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { Plus, Trash2, Pencil } from 'lucide-react';
+import { CloseButton } from './ui/CloseButton';
 
 export const TagManagerModal = ({ onClose }) => {
     const { tags, createTag, updateTag, deleteTag, tagAssignmentsBySheep } = useGame();
@@ -74,7 +75,7 @@ export const TagManagerModal = ({ onClose }) => {
             <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '360px' }}>
                 <div className="modal-header">
                     <h3 id="tag-manager-title">管理標籤</h3>
-                    <button className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
+                    <CloseButton onClick={onClose} ariaLabel="關閉" />
                 </div>
                 <div className="modal-form" style={{ padding: '12px' }}>
                     <div className="form-group">

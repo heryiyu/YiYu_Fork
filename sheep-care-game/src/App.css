@@ -6,9 +6,7 @@
   --glass-shadow: var(--shadow-card);
   --glass-blur: none;
   /* Figma design is opaque */
-
-  --btn-shadow: 0 4px 0 rgba(143, 125, 103, 0.4);
-  --btn-shadow-active: 0 2px 0 rgba(143, 125, 103, 0.4);
+  /* --btn-shadow, --btn-shadow-active defined in design-tokens.css */
 
   width: 100vw;
   height: 100vh;
@@ -66,8 +64,7 @@
 }
 
 .snow .grass {
-  background: #f0faff;
-  /* White/Snow */
+  background: var(--bg-snow);
 }
 
 /* --- Global Weather Overlay (3D Parallax) --- */
@@ -181,7 +178,7 @@
 }
 
 .adopt-btn:disabled {
-  background-color: #ccc;
+  background-color: var(--btn-disabled-bg);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -197,44 +194,6 @@
   z-index: 10;
 }
 
-.toast-message {
-  position: absolute;
-  top: 10%;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: fit-content;
-  max-width: 80%;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--palette-sheep-brown);
-  padding: 10px 20px;
-  border-radius: 20px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  animation: fadeInOut 3s forwards;
-}
-
-@keyframes fadeInOut {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-
-  10% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  90% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-}
 
 /* --- Sheep Wrapper --- */
 .sheep-wrapper {
@@ -473,7 +432,7 @@
   border: none;
   background: transparent;
   font-weight: 600;
-  color: #999;
+  color: var(--text-muted-light);
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 20px;
@@ -482,11 +441,11 @@
 }
 
 .modal-tab:hover {
-  color: #666;
+  color: var(--text-muted);
 }
 
 .modal-tab.modal-tab-active {
-  color: #333;
+  color: var(--text-body);
   background: var(--color-primary-cream);
 }
 
@@ -563,7 +522,7 @@
 }
 
 .modal-btn-secondary:hover {
-  background: #8f7d7d;
+  background: var(--taupe-hover);
 }
 
 .modal-btn-secondary:disabled {
@@ -577,7 +536,7 @@
   padding: 12px;
   background: transparent;
   color: var(--palette-primary-strong);
-  border: 1px solid #90caf9;
+  border: 1px solid var(--border-info);
   border-radius: 12px;
   font-size: 0.9rem;
   cursor: pointer;
@@ -589,12 +548,12 @@
 }
 
 .modal-btn-secondary-outline:hover {
-  background: #e3f2fd;
+  background: var(--bg-info);
 }
 
 .modal-status-box {
   padding: 8px;
-  background: #f5f5f5;
+  background: var(--bg-light-gray);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -628,7 +587,7 @@
 }
 
 .modal-info-box-blue {
-  background: #e3f2fd;
+  background: var(--bg-info);
   font-size: 0.85rem;
 }
 
@@ -866,23 +825,23 @@
 .modal-hint {
   text-align: center;
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-muted-light);
   margin-top: 10px;
 }
 
 .modal-admin-box {
   margin-top: 10px;
   padding: 10px;
-  background: #e0f7fa;
+  background: var(--bg-admin);
   border-radius: 8px;
-  border: 1px dashed #00bcd4;
+  border: 1px dashed var(--border-admin);
 }
 
 .modal-admin-box label {
   display: block;
   margin-bottom: 5px;
   font-size: 0.85rem;
-  color: #006064;
+  color: var(--text-admin);
 }
 
 .modal-admin-box .admin-actions {
@@ -906,10 +865,10 @@
 
 .modal-local-msg {
   margin-top: 10px;
-  color: #e65100;
+  color: var(--text-local-msg);
   font-size: 0.9rem;
   text-align: center;
-  background: #fff3e0;
+  background: var(--bg-local-msg);
   padding: 8px;
   border-radius: 5px;
 }
@@ -1328,11 +1287,6 @@ input[type="range"]::-moz-range-thumb:hover {
     width: min(92vw, 420px) !important;
   }
 
-  .toast-message {
-    width: 80%;
-    font-size: 0.9rem;
-    top: 50px;
-  }
 }
 
 /* --- HUD --- */
@@ -1603,7 +1557,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .hud-tooltip {
   visibility: hidden;
   background-color: rgba(0, 0, 0, 0.9);
-  color: #fff;
+  color: var(--text-inverse);
   text-align: left;
   border-radius: 8px;
   padding: 8px 12px;

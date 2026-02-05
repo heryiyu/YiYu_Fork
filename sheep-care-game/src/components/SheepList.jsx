@@ -6,7 +6,8 @@ import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';
 import { TagManagerModal } from './TagManagerModal';
-import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, X, Search } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search } from 'lucide-react';
+import { CloseButton } from './ui/CloseButton';
 import '../styles/design-tokens.css';
 import './SheepList.css';
 
@@ -89,14 +90,7 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
             <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <div className="filter-settings-header">
                     <span>顯示篩選</span>
-                    <button
-                        type="button"
-                        className="filter-settings-close-btn"
-                        onClick={onClose}
-                        aria-label="關閉篩選設定"
-                    >
-                        <X size={16} strokeWidth={2.5} />
-                    </button>
+                    <CloseButton ariaLabel="關閉篩選設定" onClick={onClose} />
                 </div>
                 <div
                     ref={scrollRef}
@@ -352,6 +346,7 @@ export const SheepList = ({ onSelect }) => {
     const hiddenFilterIds = useMemo(() => new Set(settings?.hiddenFilters || []), [settings?.hiddenFilters]);
     const filterMenuAnchorRef = useRef(null);
     const searchWrapRef = useRef(null);
+    const searchInputRef = useRef(null);
 
     // Collapsible State (Default Open)
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -562,6 +557,7 @@ export const SheepList = ({ onSelect }) => {
                                     className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
                                 >
                                     <input
+                                        ref={searchInputRef}
                                         type="text"
                                         className="dock-toolbar-search-input"
                                         placeholder="搜尋..."
@@ -569,6 +565,17 @@ export const SheepList = ({ onSelect }) => {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         onFocus={() => setIsSearchExpanded(true)}
                                     />
+                                    {isSearchExpanded && (
+                                        <CloseButton
+                                            className="dock-toolbar-search-clear"
+                                            ariaLabel="收起搜尋"
+                                            variant="sm"
+                                            onClick={() => {
+                                                setIsSearchExpanded(false);
+                                                searchInputRef.current?.blur();
+                                            }}
+                                        />
+                                    )}
                                     <span className="dock-toolbar-search-icon" aria-hidden="true">
                                         <Search size={16} strokeWidth={2.5} />
                                     </span>
@@ -642,6 +649,7 @@ export const SheepList = ({ onSelect }) => {
                                     style={{ opacity: isCollapsed ? 0.6 : 1 }}
                                 >
                                     <input
+                                        ref={searchInputRef}
                                         type="text"
                                         className="dock-toolbar-search-input"
                                         placeholder="搜尋..."
@@ -649,6 +657,17 @@ export const SheepList = ({ onSelect }) => {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         onFocus={() => setIsSearchExpanded(true)}
                                     />
+                                    {isSearchExpanded && (
+                                        <CloseButton
+                                            className="dock-toolbar-search-clear"
+                                            ariaLabel="收起搜尋"
+                                            variant="sm"
+                                            onClick={() => {
+                                                setIsSearchExpanded(false);
+                                                searchInputRef.current?.blur();
+                                            }}
+                                        />
+                                    )}
                                     <span className="dock-toolbar-search-icon" aria-hidden="true">
                                         <Search size={16} strokeWidth={2.5} />
                                     </span>
