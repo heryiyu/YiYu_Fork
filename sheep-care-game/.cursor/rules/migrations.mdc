@@ -1,0 +1,11 @@
+---
+description: Supabase migrations and schema
+globs: ["**/*.sql", "**/gameState.js", "**/supabaseClient.js"]
+---
+
+# Supabase Schema and Migrations
+
+- Read MIGRATIONS.md for full migration history and run order.
+- Migrations live in supabase/migrations/ (001-016).
+- Utility scripts in supabase/scripts/check, debug, fix, inspect.
+- Production users table: line_id, name, nickname, avatar, game_data, last_login, coins.

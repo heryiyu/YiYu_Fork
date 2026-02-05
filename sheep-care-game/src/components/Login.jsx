@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { ASSETS } from '../utils/AssetRegistry';
 
 export const Login = () => {
     const { loginWithLine, loginAsAdmin, isLoading, message, isInClient } = useGame();
@@ -32,16 +33,27 @@ export const Login = () => {
     };
 
     return (
-        <div className="debug-editor-overlay" style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }}>
-            <div className="simple-editor" style={{ width: '320px', textAlign: 'center', padding: '30px' }}>
-                <h2 style={{ margin: '0 0 20px 0' }}>
-                    {showAdminLogin ? '🔧 管理員後台' : '🐑 牧羊人登入'}
+        <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
+            <div className="simple-editor" style={{ width: '320px', textAlign: 'center', padding: '30px', background: 'var(--bg-card)' }}>
+                <h2 style={{ margin: '0 0 20px 0', color: 'var(--text-header)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    {showAdminLogin ? (
+                        <>🔧 管理員後台</>
+                    ) : (
+                        <>
+                            <img
+                                src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY}
+                                alt=""
+                                style={{ width: '32px', height: '32px', objectFit: 'contain', display: 'block' }}
+                            />
+                            牧羊人登入
+                        </>
+                    )}
                 </h2>
 
                 {/* Status Message */}
                 {message && (
                     <div style={{
-                        background: '#fff3cd', color: '#856404', padding: '10px',
+                        background: 'var(--bg-card-secondary)', color: 'var(--text-status)', padding: '10px',
                         borderRadius: '5px', marginBottom: '15px', fontSize: '0.9rem'
                     }}>
                         {message}
@@ -49,7 +61,7 @@ export const Login = () => {
                 )}
 
                 {isLoading ? (
-                    <div style={{ color: '#666', padding: '20px' }}>
+                    <div style={{ color: 'var(--text-secondary)', padding: '20px' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '10px' }}>⏳</div>
                         正在連接 LINE...
                     </div>
@@ -58,7 +70,7 @@ export const Login = () => {
                         {!showAdminLogin ? (
                             // LINE LOGIN VIEW (Default for Mobile)
                             <>
-                                <p style={{ color: '#555', marginBottom: '20px', lineHeight: '1.5' }}>
+                                <p style={{ color: 'var(--text-body)', marginBottom: '20px', lineHeight: '1.5' }}>
                                     歡迎回到牧場！<br />
                                     請使用 LINE 帳號直接登入<br />
                                 </p>
@@ -72,11 +84,11 @@ export const Login = () => {
                                     {isLocal ? 'Test Login' : 'Login 登入'}
                                 </button>
 
-                                {!isInClient && (
-                                    <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                                {isLocal && (
+                                    <div style={{ marginTop: '30px', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
                                         <button
                                             onClick={() => setShowAdminLogin(true)}
-                                            style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: '0.8rem' }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
                                         >
                                             Admin Access
                                         </button>
@@ -87,19 +99,19 @@ export const Login = () => {
                             // ADMIN LOGIN VIEW (Default for Browser)
                             <form onSubmit={handleAdminLogin} style={{ textAlign: 'left' }}>
                                 <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#666', marginBottom: '5px' }}>帳號</label>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '5px' }}>帳號</label>
                                     <input
                                         type="text"
                                         value={adminUser}
                                         onChange={(e) => setAdminUser(e.target.value)}
-                                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', boxSizing: 'border-box' }}
-                                        placeholder="預設: admin"
+                                        style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-subtle)', boxSizing: 'border-box', background: 'white' }}
+                                        placeholder="請輸入管理員密碼"
                                     />
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <button
                                         type="submit"
-                                        style={{ flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
+                                        style={{ flex: 1, padding: '10px', background: 'var(--btn-primary-bg)', border: 'none', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
                                     >
                                         登入
                                     </button>
@@ -108,7 +120,7 @@ export const Login = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowAdminLogin(false)}
-                                        style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
                                     >
                                         切換至 LINE 登入
                                     </button>

@@ -1,49 +1,190 @@
-/* src/styles/design-tokens.css */
+/* src/styles/design-tokens.css
+ * Design system tokens. Use var(--token-name) in CSS/JSX instead of hex.
+ * Categories: palette (primitives), semantic (text/bg/border), component (buttons/tags).
+ * See src/components/ui/README.md for usage guide.
+ */
 
 :root {
-    /* -- Palette per Design Screenshots -- */
+    /* --- primitive palette (from figma audit) --- */
 
-    /* -- Palette from Figma Audit (Strict) -- */
+    /* neutrals & bases */
+    --palette-white: #ffffff;
+    --palette-cream: #ffefd6;
+    /* card background */
+    --palette-sand: #e9d6b9;
+    /* secondary/inset background */
+    --palette-taupe: #8f7d67;
+    /* borders/accents */
 
-    /* Backgrounds */
-    --color-primary-cream: #FFF8F0;
-    /* Soft beige/cream */
-    --color-bg-overlay: rgba(0, 0, 0, 0.4);
+    /* scene colors */
+    --palette-sky-blue: #e3f7fe;
+    --palette-mint-green: #c2e7cb;
+    --palette-pale-blue: #c2dbfa;
+    /* mountains/distance */
 
-    /* Text */
-    --color-text-brown: #5D4037;
-    --color-text-secondary: #8D6E63;
+    /* brands / actions */
+    --palette-blue-action: #54afcb;
+    --palette-blue-action-hover: #4a9ab5;
 
-    /* Actions & Accents */
-    --color-action-blue: #54afcb;
-    /* Figma Blue (Claim/Add) */
-    --color-action-pink: #f39fac;
-    /* Figma Pink (Pray) */
-    --color-badge-orange: #fcb751;
-    /* Figma Orange (Status/Badges) */
+    --palette-orange-action: #fcb751;
+    --palette-orange-action-hover: #f0ab3f;
 
-    --color-action-blue-hover: #4aa3be;
-    --color-primary-pink-hover: #e596a2;
+    --palette-pink-action: #f39fac;
+    --palette-pink-action-hover: #f28a9a;
 
-    --color-status-green: #9CCC65;
-    --color-status-orange: #FFA726;
-    /* Warning/Alert */
+    --palette-purple: #7f5b9b;
+    --palette-lavender: #e5d6f1;
+    --palette-deep-green: #4ba762;
+    --palette-pale-green: #c2e7cb;
+    /* same as mint */
+    --palette-blue-text: #5385db;
+    --palette-pale-blue-bg: #d2dbea;
 
-    /* Shapes - Figma Pill Design */
+    /* text colors */
+    --palette-text-header: #3c669a;
+    --palette-text-section: #6a78e3;
+    --palette-text-status: #b65a5a;
+    --palette-text-dark: #333333;
+    --palette-gray-muted: #6b7280;
+
+    /* sheep colors */
+    --palette-sheep-brown: #7b5b33;
+    --palette-sheep-grey: #ccbea8;
+
+    /* destructive / reset actions (harmonious with pastel palette) */
+    --palette-danger: #b65a5a;
+    --palette-danger-hover: #a04d4d;
+    --palette-reset-soft: #9a7b5a;
+    --palette-reset-soft-hover: #8a6b4a;
+    --palette-primary-strong: #0369a1;
+    --palette-primary-strong-hover: #0284c7;
+    --palette-disabled: #6b635b;
+
+    /* --- semantic tokens --- */
+
+    /* backgrounds */
+    --bg-app: var(--palette-sky-blue);
+    --bg-canvas: var(--palette-sky-blue);
+    --bg-field: var(--palette-mint-green);
+    --bg-card: var(--palette-cream);
+    --bg-card-secondary: var(--palette-sand);
+    --bg-modal-overlay: rgba(0, 0, 0, 0.4);
+
+    /* borders */
+    --border-main: var(--palette-taupe);
+    --border-subtle: rgba(143, 125, 103, 0.3);
+
+    /* --- component specific tokens --- */
+
+    /* cards (inner items / sheep cards) */
+    --card-inner-bg: var(--palette-cream);
+    /* #FFEFD6 */
+    --card-inner-shadow: inset 0px -7px 0px 0px #CCBEA8;
+    --card-inner-radius: 20px;
+    --card-inner-text: #252525;
+
+    /* card containers (main panels) */
+    --card-container-bg: var(--palette-sand);
+    /* #E9D6B9 */
+    --card-container-radius: 40px;
+
+    /* text */
+    --text-primary: var(--palette-text-header);
+    --text-secondary: var(--palette-text-section);
+    --text-accent: var(--palette-text-status);
+    --text-body: var(--palette-text-dark);
+    --text-label: var(--palette-sheep-brown);
+    --text-inverse: var(--palette-white);
+    --text-link: var(--palette-blue-text);
+    --text-muted: #666666;
+    --text-muted-light: #999999;
+
+    /* actions (buttons) */
+    --btn-primary-bg: var(--palette-blue-action);
+    --btn-primary-text: var(--palette-white);
+    --btn-primary-hover: var(--palette-blue-action-hover);
+
+    --btn-secondary-bg: var(--palette-orange-action);
+    --btn-secondary-text: var(--palette-white);
+    --btn-secondary-hover: var(--palette-orange-action-hover);
+
+    --btn-care-bg: var(--palette-pink-action);
+    --btn-care-text: var(--palette-white);
+    --btn-care-hover: var(--palette-pink-action-hover);
+
+    /* danger (delete) and reset – use with .btn-destructive for destructive actions */
+    --btn-danger-bg: var(--palette-danger);
+    --btn-danger-text: var(--palette-white);
+    --btn-danger-hover: var(--palette-danger-hover);
+    --btn-reset-soft-bg: var(--palette-reset-soft);
+    --btn-reset-soft-hover: var(--palette-reset-soft-hover);
+    --btn-reset-bg: var(--palette-primary-strong);
+    --btn-reset-text: var(--palette-white);
+    --btn-reset-hover: var(--palette-primary-strong-hover);
+    --btn-disabled-bg: var(--palette-disabled);
+    --btn-disabled-text: var(--palette-white);
+
+    /* member status tags */
+    --tag-new-bg: var(--palette-pale-blue-bg);
+    --tag-new-text: var(--palette-blue-text);
+
+    --tag-seeker-bg: var(--palette-pale-green);
+    --tag-seeker-text: var(--palette-deep-green);
+
+    --tag-christian-bg: var(--palette-lavender);
+    --tag-christian-text: var(--palette-purple);
+
+    --tag-dead-bg: #f5d6d6;
+    --tag-dead-text: var(--palette-danger);
+
+    --tag-sick-bg: #fde8ec;
+    --tag-sick-text: var(--palette-pink-action);
+    --tag-healthy-bg: #e8f5e9;
+    --tag-healthy-text: #2e7d32;
+    --tag-custom-default: var(--palette-gray-muted);
+
+    --text-icon: #4f4640;
+    --text-icon-hover: #2f2a26;
+
+    /* sheep assets */
+    --sheep-skin-white: var(--palette-white);
+    --sheep-skin-brown: var(--palette-sheep-brown);
+    --sheep-skin-grey: var(--palette-sheep-grey);
+    --sheep-skin-pink: var(--palette-pink-action);
+
+    --sheep-face: #FFDAB9;
+    --sheep-eyes: var(--palette-text-dark);
+    --sheep-legs: var(--palette-text-dark);
+    --sheep-halo: #FFD700;
+
+    /* modal / UI aliases (used by modals) */
+    --color-primary-cream: var(--palette-cream);
+    --color-action-blue: var(--palette-blue-action);
+    --color-action-pink: var(--palette-pink-action);
+
+    /* backgrounds (semantic) */
+    --bg-light-gray: #f5f5f5;
+    --bg-info: #e3f2fd;
+    --bg-snow: #f0faff;
+    --taupe-hover: #8f7d7d;
+
+    /* borders (semantic) */
+    --border-info: #90caf9;
+    --border-admin: #00bcd4;
+
+    /* admin / local message */
+    --bg-admin: #e0f7fa;
+    --text-admin: #006064;
+    --text-local-msg: #e65100;
+    --bg-local-msg: #fff3e0;
+
+    /* visuals */
+    --shadow-card: 0 4px 12px rgba(143, 125, 103, 0.15);
+    --btn-shadow: 0 4px 0 rgba(143, 125, 103, 0.4);
+    --btn-shadow-active: 0 2px 0 rgba(143, 125, 103, 0.4);
     --radius-card: 24px;
     --radius-btn: 30px;
-    /* Pill */
     --radius-tag: 12px;
-
-    /* Spacing */
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-
-    /* Shadows - Soft & Airy */
-    --shadow-soft: 0 4px 15px rgba(93, 64, 55, 0.1);
-    --shadow-card: 0 8px 24px rgba(93, 64, 55, 0.15);
 
     /* Scene Colors - Default (Day) */
     --color-sky: #E1F5FE;

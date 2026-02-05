@@ -1,5 +1,6 @@
 import React from 'react';
 import { AssetSheep } from './AssetSheep';
+import { isSleeping } from '../utils/gameLogic';
 import { SHEEP_TYPES } from '../data/sheepData';
 
 export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
@@ -46,7 +47,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
                 width: '100px', // Explicit width for centering
                 height: '100px',
                 marginLeft: '-50px', // Center the wrapper on the x-coordinate
-                transition: sheep.status === 'dead' ? 'none' : 'left 0.5s linear, bottom 0.5s linear',
+                transition: isSleeping(sheep) ? 'none' : 'left 0.5s linear, bottom 0.5s linear',
                 zIndex: zIdx,
                 transform: `scale(${depthScale})`,
                 transformOrigin: 'bottom center'
@@ -92,6 +93,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
                     health={sheep.health}
                     direction={sheep.direction}
                     centered={true}
+                    animated={true}
                 />
             </div>
 

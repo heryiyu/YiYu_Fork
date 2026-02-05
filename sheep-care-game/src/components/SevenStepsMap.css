@@ -1,0 +1,504 @@
+/* SevenStepsMap.css */
+
+/* Aligned with design system: flat colors, no gradients, scene-like aesthetic */
+
+@import '../styles/design-tokens.css';
+
+/* Full-viewport overlay when expanded */
+.map-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    background: var(--bg-modal-overlay);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 481px) {
+    .map-overlay {
+        padding: 16px;
+    }
+}
+
+.map-container--expanded {
+    width: min(95vw, 900px);
+    min-height: 95vh;
+    flex-shrink: 0;
+    align-items: stretch;
+}
+
+/* At 480px and below: expanded uses collapsed viewBox/step sizes, but container stays 90vh */
+.map-container.map-container--expanded.map-container--expanded-compact {
+    width: 100%;
+    max-width: 100%;
+    min-height: 90vh;
+    height: 90vh;
+}
+
+.map-container--expanded .map-svg-layer {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Expand / Unexpand button */
+.map-expand-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 60;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 2px solid var(--border-main);
+    border-radius: var(--radius-tag);
+    color: var(--text-body);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: var(--shadow-card);
+}
+
+.map-expand-btn svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.map-expand-btn:hover {
+    background: var(--bg-card-secondary);
+    color: var(--text-primary);
+}
+
+.map-expand-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blue-action);
+}
+
+/* Header: title + video btn, 2px gap, right-aligned */
+.map-header {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 60;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+}
+
+.map-container--expanded-compact .map-header {
+    flex-direction: column;
+    align-items: flex-end;
+    top: 12px;
+}
+
+/* Video button - always show full "教學影片" label */
+.map-video-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: 2px solid var(--border-main);
+    border-radius: var(--radius-tag);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    box-shadow: var(--shadow-card);
+    white-space: nowrap;
+}
+
+.map-video-btn span {
+    flex-shrink: 0;
+}
+
+.map-video-btn:hover {
+    background: var(--btn-primary-hover);
+}
+
+.map-video-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--palette-blue-action);
+}
+
+
+.map-container--expanded-compact .map-expand-btn {
+    top: 12px;
+    left: 12px;
+}
+
+/* Hint: tap step for details */
+.map-step-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-label);
+    pointer-events: none;
+    z-index: 40;
+}
+
+[data-theme='night'] .map-step-hint {
+    color: var(--palette-cream);
+}
+
+/* Video modal overlay */
+.map-video-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 55;
+    background: var(--bg-modal-overlay);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--radius-card);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.map-video-modal {
+    position: relative;
+    width: 95%;
+    max-width: 560px;
+    background: var(--bg-card);
+    border: var(--glass-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 12px;
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 480px) {
+    .map-video-modal {
+        width: 98%;
+        padding: 8px;
+    }
+}
+
+.map-video-modal .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 2px solid var(--border-main);
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-body);
+    box-sizing: border-box;
+}
+
+.map-video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    border-radius: var(--radius-tag);
+}
+
+.map-video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.map-video-hint {
+    margin: 8px 0 0;
+    font-size: 0.75rem;
+    color: var(--text-label);
+    text-align: center;
+}
+
+.map-container {
+    position: relative;
+    width: 100%;
+    /* Collapsed: height to fit all steps without cropping */
+    height: clamp(320px, 55vh, 480px);
+
+    /* Scene-like: sky top, grass bottom (flat solid blocks, no gradients) */
+    background: var(--color-grass-base);
+    border: var(--glass-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: inherit;
+    margin-top: 10px;
+}
+
+/* Sky block (top half) - matches scene design */
+.map-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: var(--color-sky);
+    z-index: 0;
+}
+
+/* Grass block (bottom half) */
+.map-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: var(--color-grass-base);
+    z-index: 0;
+}
+
+.map-container--collapsed {
+    cursor: pointer;
+}
+
+/* SVG Layer - above sky/grass blocks */
+.map-svg-layer {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+/* Path Styles - taupe, scene-aligned */
+.map-path-line {
+    stroke: var(--border-subtle);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 6;
+    stroke-linecap: round;
+    animation: dashMove 180s ease-in-out infinite;
+}
+
+@keyframes dashMove {
+    to {
+        stroke-dashoffset: -1000;
+    }
+}
+
+/* Label tag background - cream + taupe border */
+.island-label-bg {
+    fill: var(--bg-card);
+    stroke: var(--border-main);
+    stroke-width: 0.4;
+}
+
+/* --- SVG Text Styles --- */
+.island-svg-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 3.5px;
+    font-weight: 700;
+    fill: var(--text-body);
+    pointer-events: none;
+    letter-spacing: 0.2px;
+}
+
+/* --- Group Interactions --- */
+.island-group-container {
+    transform-box: fill-box;
+    /* No visual changes on container */
+}
+
+.island-visual-group {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Soft bouncy spring */
+    transform-origin: center;
+    transform-box: fill-box;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.island-visual-group:hover {
+    transform: scale(1.15);
+    filter: drop-shadow(0 2px 6px rgba(143, 125, 103, 0.35));
+}
+
+.island-visual-group:active {
+    transform: scale(0.95);
+}
+
+
+/* --- Overlay Title (design-system badge) --- */
+.map-title-overlay {
+    margin: 0;
+
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+
+    background: var(--bg-card);
+    border: 2px solid var(--border-main);
+    padding: 6px 14px;
+    border-radius: var(--radius-tag);
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+}
+
+/* --- Detail Overlay --- */
+.step-detail-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    background: var(--bg-modal-overlay);
+    backdrop-filter: blur(3px);
+    z-index: 50;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: var(--radius-card);
+    /* Match container radius */
+    animation: fadeIn 0.2s ease-out;
+}
+
+.step-detail-card {
+    /* Using System Card Tokens */
+    background: var(--bg-card);
+    border: var(--glass-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-card);
+    color: var(--text-body);
+
+    width: 85%;
+    max-width: 280px;
+    padding: 24px 20px;
+
+    position: relative;
+    text-align: center;
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 480px) {
+    .step-detail-card {
+        width: 92%;
+        max-width: none;
+        padding: 20px 16px;
+    }
+}
+
+.step-detail-card .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-accent);
+    /* Muted color */
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.detail-header {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Number Badge - solid fill, no gradient */
+.detail-number {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+
+    background: var(--palette-orange-action);
+    border: 2px solid var(--palette-white);
+    box-shadow: var(--shadow-card);
+
+    color: var(--palette-white);
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.detail-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-header);
+    font-weight: 700;
+}
+
+.detail-content {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.detail-content p {
+    margin: 5px 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-body);
+}
+
+.detail-hint {
+    font-size: 0.75rem !important;
+    color: var(--text-label) !important;
+    margin-top: 12px !important;
+    font-style: italic;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalPop {
+    from {
+        transform: scale(0.9) translateY(10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}

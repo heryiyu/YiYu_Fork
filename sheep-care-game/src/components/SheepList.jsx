@@ -1,147 +1,416 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useGame } from '../context/GameContext';
+import { useConfirm } from '../context/ConfirmContext';
+import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
-import { getStableSheepMessage } from '../utils/gameLogic';
 import { AddSheepModal } from './AddSheepModal';
+import { TagManagerModal } from './TagManagerModal';
+import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search } from 'lucide-react';
+import { CloseButton } from './ui/CloseButton';
+import { Checkbox } from './ui/Checkbox';
 import '../styles/design-tokens.css';
+import './SheepList.css';
 
-// --- Card Component ---
-// --- Card Component ---
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isDead, isSick }) => {
-    return (
+const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, onClose, anchorRef }) => {
+    const menuRef = useRef(null);
+    const scrollRef = useRef(null);
+    const [position, setPosition] = useState({ bottom: 0, right: 0 });
+    const [showFadeOverlay, setShowFadeOverlay] = useState(false);
+
+    const checkScrollState = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const { scrollHeight, clientHeight, scrollTop } = el;
+        const hasOverflow = scrollHeight > clientHeight;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 2;
+        setShowFadeOverlay(hasOverflow && !isAtBottom);
+    }, []);
+
+    useEffect(() => {
+        const id = requestAnimationFrame(() => checkScrollState());
+        return () => cancelAnimationFrame(id);
+    }, [checkScrollState, filters]);
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const ro = new ResizeObserver(() => requestAnimationFrame(checkScrollState));
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [checkScrollState]);
+
+    useEffect(() => {
+        const updatePosition = () => {
+            if (anchorRef?.current) {
+                const rect = anchorRef.current.getBoundingClientRect();
+                setPosition({
+                    bottom: window.innerHeight - rect.top + 8,
+                    right: window.innerWidth - rect.right
+                });
+            }
+        };
+        updatePosition();
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+        return () => {
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
+        };
+    }, [anchorRef]);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target) && anchorRef?.current && !anchorRef.current.contains(e.target)) {
+                onClose();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [onClose, anchorRef]);
+
+    return ReactDOM.createPortal(
         <div
-            className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''}`}
-            onClick={() => {
-                if (isSelectionMode) onToggleSelect(s.id);
-                else onSelect(s);
-            }}
+            ref={menuRef}
+            className="filter-settings-menu"
             style={{
-                position: 'relative',
-                background: 'var(--color-primary-cream)',
-                borderRadius: 'var(--radius-card)',
-                padding: '5px', // Reduced padding
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                boxShadow: isSelectionMode && isSelected
-                    ? '0 0 0 4px var(--color-action-blue)'
-                    : 'var(--shadow-card)',
-                cursor: 'pointer',
-                transition: 'transform 0.1s, box-shadow 0.2s',
-                height: '100%', // Strict height from dock
-                boxSizing: 'border-box',
-                border: '2px solid rgba(255,255,255,0.6)',
-                overflow: 'hidden', // Strict clipping
-                transform: isSelectionMode ? 'scale(0.95)' : 'scale(1)' // Slight shrink in select mode
+                position: 'fixed',
+                bottom: position.bottom,
+                right: position.right,
+                minWidth: '200px',
+                maxHeight: '280px',
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'var(--card-inner-bg, #fff)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
+                zIndex: 2500
             }}
         >
-            {/* Selection Indicator Overlay */}
+            <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <div className="filter-settings-header">
+                    <span>顯示篩選</span>
+                    <CloseButton ariaLabel="關閉篩選設定" onClick={onClose} />
+                </div>
+                <div
+                    ref={scrollRef}
+                    onScroll={checkScrollState}
+                    style={{ padding: '0 12px 0', flex: 1, minHeight: 0, overflowY: 'auto' }}
+                >
+                {filters.map((f) => {
+                    const isHidden = hiddenFilterIds.has(f.id);
+                    return (
+                        <label
+                            key={f.id}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '6px 0',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem'
+                            }}
+                        >
+                            <Checkbox
+                                checked={!isHidden}
+                                onChange={() => onToggle(f.id)}
+                                ariaLabel={f.label}
+                            />
+                            {f.color ? (
+                                <span
+                                    style={{
+                                        width: 10,
+                                        height: 10,
+                                        borderRadius: 4,
+                                        background: f.color
+                                    }}
+                                />
+                            ) : null}
+                            <span>{f.label}</span>
+                        </label>
+                    );
+                })}
+                </div>
+                {showFadeOverlay && (
+                    <div
+                        aria-hidden
+                        style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: 45,
+                            background: 'linear-gradient(to top, var(--card-inner-bg, #fff) 0%, transparent 100%)',
+                            pointerEvents: 'none',
+                            transition: 'opacity 0.2s ease'
+                        }}
+                    />
+                )}
+            </div>
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.1)', padding: '12px', flexShrink: 0 }}>
+                <button
+                    type="button"
+                    className="modal-btn-secondary"
+                    onClick={onManageTags}
+                    style={{ width: '100%', fontSize: '0.85rem', padding: '8px 12px' }}
+                >
+                    管理標籤
+                </button>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
+// --- Card Component (tag design aligned with SheepListModal.tsx) ---
+const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay = 500 } = {}) => {
+    const [longPressTriggered, setLongPressTriggered] = useState(false);
+    const timeout = React.useRef();
+    const target = React.useRef();
+    const isMoved = React.useRef(false); // Track if movement occurred
+    const isTouch = React.useRef(false); // Track if interaction is touch-based
+
+    const start = React.useCallback(
+        (event) => {
+            // Prevent default context menu on touch devices immediately if needed
+            // But we might want some default behavior, usually touch-action: manipulation handles it.
+            if (shouldPreventDefault && event.target) {
+                target.current = event.target;
+            }
+            isMoved.current = false; // Reset movement flag
+            setLongPressTriggered(false);
+            timeout.current = setTimeout(() => {
+                onLongPress(event);
+                setLongPressTriggered(true);
+            }, delay);
+        },
+        [onLongPress, delay, shouldPreventDefault]
+    );
+
+    const clear = React.useCallback(
+        (event, shouldTriggerClick = true) => {
+            timeout.current && clearTimeout(timeout.current);
+            // Click should ONLY trigger if NO long press happened AND NO movement occurred
+            if (shouldTriggerClick && !longPressTriggered && !isMoved.current && onClick) {
+                onClick(event);
+            }
+            setLongPressTriggered(false);
+            target.current = undefined;
+        },
+        [longPressTriggered, onClick]
+    );
+
+    return {
+        onMouseDown: (e) => {
+            if (isTouch.current) return;
+            start(e);
+        },
+        onTouchStart: (e) => {
+            isTouch.current = true;
+            start(e);
+        },
+        onMouseUp: (e) => {
+            if (isTouch.current) return;
+            clear(e);
+        },
+        onMouseLeave: (e) => {
+            if (isTouch.current) return;
+            clear(e, false);
+        },
+        onTouchMove: (e) => {
+            isMoved.current = true; // Mark as moved
+            clear(e, false);
+        },
+        onTouchEnd: (e) => clear(e) // Trigger click if isMoved is false
+    };
+};
+
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onLongPress, tags = [], tagAssignmentsBySheep = {} }) => {
+    const assigned = (tagAssignmentsBySheep[s.id] || []);
+    const firstTagId = assigned.length > 0 ? assigned[0].tagId : null;
+    const firstTag = firstTagId ? tags.find(t => t.id === firstTagId) : null;
+    const tagVariant = firstTag ? 'custom' : (isSleepingState ? 'dead' : (isSick ? 'sick' : 'healthy'));
+    const tagLabel = firstTag ? firstTag.name : (isSleepingState ? '已沉睡' : (isSick ? '生病' : '健康'));
+    const healthFull = Math.ceil(s.health || 0) >= 100;
+
+    // Interaction Logic
+    const handleCardClick = () => {
+        if (isSelectionMode) onToggleSelect(s.id);
+        else onSelect(s);
+    };
+
+    const handleCardLongPress = () => {
+        if (onLongPress) onLongPress(s.id);
+    };
+
+    // Use the hook
+    const longPressEventHandlers = useLongPress(handleCardLongPress, handleCardClick, { delay: 500 });
+
+    return (
+        <div
+            className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''} ${isSelectionMode ? 'sheep-card--select-mode' : ''}`}
+            {...longPressEventHandlers}
+            style={{ touchAction: 'manipulation', userSelect: 'none' }} // 'manipulation' allows scroll but blocks double-tap zoom
+        >
             {isSelectionMode && (
-                <div style={{
-                    position: 'absolute', top: '8px', right: '8px', zIndex: 10,
-                    width: '24px', height: '24px', borderRadius: '50%',
-                    background: isSelected ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
-                    border: '2px solid var(--color-action-blue)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}>
-                    {isSelected && <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+                <div className={`sheep-card-selection-dot ${isSelected ? 'sheep-card-selection-dot--selected' : ''}`}>
+                    {isSelected && <span className="sheep-card-selection-check">✓</span>}
                 </div>
             )}
 
-            {/* 1. Header (Fixed Height) */}
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
-                {/* Health Text: Dynamic size */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: 'clamp(0.9rem, 4vw, 1.1rem)', color: 'var(--color-action-pink)', fontWeight: 'bold' }}>
-                    <span style={{ fontSize: '1.2em' }}>♥</span> <span>{Math.ceil(s.health || 0)}%</span>
+            <div className="sheep-card-header">
+                <div className={`sheep-card-health ${healthFull ? 'sheep-card-health--full' : ''}`}>
+                    <span className="sheep-card-health-icon">♥</span>
+                    <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
-                {/* Status Badge: No wrap, dynamic size */}
-                <div style={{
-                    background: isDead ? '#9E9E9E' : (isSick ? '#FF5252' : 'var(--color-badge-orange)'),
-                    color: 'white', padding: '2px 4px', borderRadius: 'var(--radius-tag)', // Reduced padding
-                    fontSize: 'clamp(0.55rem, 2.5vw, 0.65rem)', fontWeight: 'bold',
-                    whiteSpace: 'nowrap', // Prevent wrapping
-                    flexShrink: 0,
-                    marginLeft: '4px' // Little spacer
-                }}>
-                    {isDead ? '已離世' : (isSick ? '生病' : s.name.length > 3 ? '夥伴' : '新朋友')}
+                <div
+                    className={`sheep-card-tag sheep-card-tag--${tagVariant}`}
+                    style={firstTag ? { background: firstTag.color || '#6b7280', color: '#fff' } : undefined}
+                >
+                    {tagLabel}
+                </div>
+                <div className="sheep-card-header-actions">
+                    {!isSelectionMode && onTogglePin && (
+                        <button
+                            type="button"
+                            className="pin-btn"
+                            onClick={(e) => {
+                                e.stopPropagation(); // Standard click stop propagation is enough here
+                                onTogglePin(s.id);
+                            }}
+                            // MouseDown/TouchStart here should NOT trigger the card's long press
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            style={{
+                                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                                opacity: isPinned ? 1 : 0.2,
+                                fontSize: '1rem',
+                                transition: 'transform 0.2s, opacity 0.2s'
+                            }}
+                        >
+                            📌
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* 2. Avatar (Fills "Remaining Height" with Min-Height Constraint) */}
-            <div className="sheep-card-avatar" style={{
-                flex: 1, // Grow to fill space
-                minHeight: '40px', // Reduced min-height
-                width: '100%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', // Changed to CENTER alignment
-                overflow: 'hidden', // Clip overflow
-                padding: '2px 0' // Safety buffer
-            }}>
-                <AssetSheep
-                    status={s.status}
-                    visual={s.visual}
-                    health={s.health}
-                    type={s.type}
-                    scale={0.55} // Reduced scale to 0.55
-                    direction={1}
-                    centered={true}
-                />
+            <div className="sheep-card-avatar">
+                <div className="sheep-card-avatar-inner">
+                    <AssetSheep
+                        status={s.status}
+                        visual={s.visual}
+                        health={s.health}
+                        type={s.type}
+                        scale={0.55}
+                        direction={1}
+                        centered={true}
+                        showStatusIcon={false}
+                    />
+                </div>
             </div>
 
-            {/* 3. Footer (Fixed Height) */}
-            <div className="card-footer" style={{ width: '100%', textAlign: 'center', marginTop: 'auto', flexShrink: 0 }}>
-                <div style={{
-                    fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--color-text-brown)',
-                    marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                }}>
-                    {s.name}
-                </div>
+            <div className="sheep-card-footer">
+                <div className="sheep-card-name">{s.name}</div>
                 {!isSelectionMode && (
-                    <div style={{
-                        fontSize: '0.7rem', color: isDead ? '#9E9E9E' : 'var(--color-text-brown)',
-                        marginTop: '2px', fontWeight: 'bold'
-                    }}>
-                        {isDead ? `🕯️ 迫切禱告 ${s.resurrectionProgress || 0}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
+                    <div className={`sheep-card-pray ${isSleepingState ? 'sheep-card-pray--dead' : ''}`}>
+                        {isSleepingState ? `🕯️ 喚醒禱告 ${getAwakeningProgress(s)}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {
-    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep } = useGame();
-    // Re-instating the full list component code to be safe, but focusing on the style injection.
-    const sortedSheep = [...(sheep || [])].sort((a, b) => a.id - b.id);
+    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, tags, tagAssignmentsBySheep, updateSetting } = useGame();
+    const confirm = useConfirm();
+    const pinnedSet = useMemo(() => new Set(settings?.pinnedSheepIds || []), [settings?.pinnedSheepIds]);
+    const sortedSheep = useMemo(() => {
+        return [...(sheep || [])].sort((a, b) => {
+            const aPinned = pinnedSet.has(a.id);
+            const bPinned = pinnedSet.has(b.id);
+            if (aPinned !== bPinned) return aPinned ? -1 : 1;
+            return a.id - b.id;
+        });
+    }, [sheep, pinnedSet]);
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [editingSheep, setEditingSheep] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
     const [filterStatus, setFilterStatus] = useState('ALL');
-    const [showAddModal, setShowAddModal] = useState(false); // New explicit state for Add Modal
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showFilterMenu, setShowFilterMenu] = useState(false);
+    const [showTagManagerModal, setShowTagManagerModal] = useState(false);
+    const hiddenFilterIds = useMemo(() => new Set(settings?.hiddenFilters || []), [settings?.hiddenFilters]);
+    const filterMenuAnchorRef = useRef(null);
+    const searchWrapRef = useRef(null);
+    const searchInputRef = useRef(null);
 
     // Collapsible State (Default Open)
     const [isCollapsed, setIsCollapsed] = useState(false);
 
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!searchWrapRef.current) return;
+            if (!searchWrapRef.current.contains(e.target)) {
+                setIsSearchExpanded(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const toggleFilterVisibility = (filterId) => {
+        const next = new Set(hiddenFilterIds);
+        if (next.has(filterId)) next.delete(filterId);
+        else next.add(filterId);
+        updateSetting('hiddenFilters', Array.from(next));
+    };
+
+    const effectiveFilterStatus = hiddenFilterIds.has(filterStatus) ? 'ALL' : filterStatus;
+
+    const TAG_FILTER_PREFIX = 'TAG:';
+
     const filteredSheep = useMemo(() => sortedSheep.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const isDead = s.status === 'dead';
+        const isSleepingState = isSleeping(s);
         const isSick = s.status === 'sick';
-        if (!matchesSearch) return false;
-        if (filterStatus === 'DEAD') return isDead;
-        if (filterStatus === 'SICK') return isSick;
-        if (filterStatus === 'HEALTHY') return !isDead && !isSick;
-        return true;
-    }), [sortedSheep, searchTerm, filterStatus]);
+        const isPinned = settings?.pinnedSheepIds?.includes(s.id);
 
-    const counts = useMemo(() => sortedSheep.reduce((acc, s) => {
-        const isDead = s.status === 'dead';
-        const isSick = s.status === 'sick';
-        if (isDead) acc.DEAD++;
-        else if (isSick) acc.SICK++;
-        else acc.HEALTHY++;
+        if (!matchesSearch) return false;
+        if (effectiveFilterStatus === 'SLEEPING') return isSleepingState;
+        if (effectiveFilterStatus === 'SICK') return isSick;
+        if (effectiveFilterStatus === 'HEALTHY') return !isSleepingState && !isSick;
+        if (effectiveFilterStatus === 'PINNED') return isPinned;
+        if (effectiveFilterStatus.startsWith(TAG_FILTER_PREFIX)) {
+            const tagId = effectiveFilterStatus.slice(TAG_FILTER_PREFIX.length);
+            const assigned = tagAssignmentsBySheep[s.id] || [];
+            return assigned.some(a => a.tagId === tagId);
+        }
+        return true;
+    }), [sortedSheep, searchTerm, effectiveFilterStatus, settings?.pinnedSheepIds, tagAssignmentsBySheep]);
+
+    const counts = useMemo(() => {
+        const acc = { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, SLEEPING: 0, PINNED: 0 };
+        (tags || []).forEach(t => { acc[`${TAG_FILTER_PREFIX}${t.id}`] = 0; });
+        sortedSheep.forEach(s => {
+            const isSleepingState = isSleeping(s);
+            const isSick = s.status === 'sick';
+            const isPinned = settings?.pinnedSheepIds?.includes(s.id);
+            if (isSleepingState) acc.SLEEPING++;
+            else if (isSick) acc.SICK++;
+            else acc.HEALTHY++;
+            if (isPinned) acc.PINNED++;
+            (tagAssignmentsBySheep[s.id] || []).forEach(a => {
+                const key = `${TAG_FILTER_PREFIX}${a.tagId}`;
+                if (acc[key] !== undefined) acc[key]++;
+            });
+        });
         return acc;
-    }, { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, DEAD: 0 }), [sortedSheep]);
+    }, [sortedSheep, settings?.pinnedSheepIds, tags, tagAssignmentsBySheep]);
 
     const toggleSelection = (id) => {
         const newSet = new Set(selectedIds);
@@ -150,32 +419,55 @@ export const SheepList = ({ onSelect }) => {
         setSelectedIds(newSet);
     };
 
-    const handleDeleteSelected = () => {
-        if (selectedIds.size === 0) return;
-        if (window.confirm(`確定要刪除這 ${selectedIds.size} 隻小羊嗎？`)) {
-            deleteMultipleSheep(Array.from(selectedIds));
-            setIsSelectionMode(false);
-            setSelectedIds(new Set());
+    const handleLongPress = (id) => {
+        if (!isSelectionMode) {
+            setIsSelectionMode(true);
+            setSelectedIds(new Set([id]));
+            // Trigger haptic feedback if available (optional)
+            if (navigator.vibrate) navigator.vibrate(50);
+        } else {
+            // If already in selection mode, long press behaves like a toggle (or ignore)
+            // Let's make it toggle for consistency
+            toggleSelection(id);
         }
     };
 
-    const handleResetSelected = () => {
+    const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (window.confirm(`確定要將這 ${selectedIds.size} 隻小羊的狀態重置為「健康 (100%)」嗎？`)) {
-            // Reset logic: Restore health, status, clear logs
-            updateMultipleSheep(Array.from(selectedIds), {
-                health: 100,
-                status: 'healthy',
-                careLevel: 0,
-                resurrectionProgress: 0,
-                // keep lastPrayedDate? Maybe clear it so they can be prayed for again?
-                // Request says "Reset data", usually implies fresh start.
-                lastPrayedDate: null,
-                prayedCount: 0
-            });
-            setIsSelectionMode(false);
-            setSelectedIds(new Set());
-        }
+        const n = selectedIds.size;
+        const ok = await confirm({
+            title: '刪除小羊',
+            message: `確定要刪除這 ${n} 隻小羊嗎？`,
+            warning: '此操作無法復原。',
+            variant: 'danger',
+            confirmLabel: '刪除'
+        });
+        if (!ok) return;
+        deleteMultipleSheep(Array.from(selectedIds));
+        setIsSelectionMode(false);
+        setSelectedIds(new Set());
+    };
+
+    const handleResetSelected = async () => {
+        if (selectedIds.size === 0) return;
+        const n = selectedIds.size;
+        const ok = await confirm({
+            title: '重置狀態',
+            message: `確定要將這 ${n} 隻小羊重置為「健康 (100%)」嗎？`,
+            variant: 'default'
+        });
+        if (!ok) return;
+        updateMultipleSheep(Array.from(selectedIds), {
+            health: 100,
+            status: 'healthy',
+            careLevel: 0,
+            resurrectionProgress: 0,
+            awakeningProgress: 0,
+            lastPrayedDate: null,
+            prayedCount: 0
+        });
+        setIsSelectionMode(false);
+        setSelectedIds(new Set());
     };
 
     const handleConfirmAdd = (data) => {
@@ -191,7 +483,7 @@ export const SheepList = ({ onSelect }) => {
     // --- Interaction Handlers ---
 
     // Toggle via Toolbar Background
-    const handleToolbarClick = (e) => {
+    const handleToolbarClick = () => {
         // If collapsed, any click on the toolbar (including disabled buttons) should open it.
         // If open, we only toggle if clicking the background.
         if (isCollapsed) {
@@ -247,20 +539,8 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Toolbar: Add | Search | Filters | Select */}
                 <div
-                    className="dock-child"
+                    className={`dock-child dock-toolbar ${isSearchExpanded ? 'dock-toolbar--search-expanded' : ''}`}
                     onClick={handleToolbarClick}
-                    style={{
-                        padding: '10px 20px',
-                        display: 'flex', gap: '8px', alignItems: 'center',
-                        overflowX: 'auto', scrollbarWidth: 'none',
-                        maxWidth: '100%',
-                        background: 'transparent',
-                        pointerEvents: 'auto',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        position: 'relative', zIndex: 2,
-                        minHeight: '56px' // Ensure height stability
-                    }}
                 >
                     {/* Inner wrapper: functional when Open, pass-through when Collapsed */}
                     <div style={{
@@ -269,131 +549,207 @@ export const SheepList = ({ onSelect }) => {
                     }} onClick={(e) => !isCollapsed && e.stopPropagation()}>
 
                         {isSelectionMode ? (
-                            // --- SELECTION TOOLBAR ---
+                            // --- SELECTION TOOLBAR (same chip style as standard) ---
                             <>
-                                {/* Selected Count */}
-                                <div style={{
-                                    color: 'white', fontWeight: 'bold', fontSize: '1rem',
-                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                                    marginRight: '8px',
-                                    whiteSpace: 'nowrap'
-                                }}>
-                                    已選取 {selectedIds.size}
+                                <span className="dock-toolbar-label">已選取 {selectedIds.size}</span>
+
+                                <div
+                                    ref={searchWrapRef}
+                                    className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
+                                >
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        className="dock-toolbar-search-input"
+                                        placeholder="搜尋..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onFocus={() => setIsSearchExpanded(true)}
+                                    />
+                                    {isSearchExpanded && (
+                                        <CloseButton
+                                            className="dock-toolbar-search-clear"
+                                            ariaLabel="收起搜尋"
+                                            variant="sm"
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setIsSearchExpanded(false);
+                                                searchInputRef.current?.blur();
+                                            }}
+                                        />
+                                    )}
+                                    <span className="dock-toolbar-search-icon" aria-hidden="true">
+                                        <Search size={16} strokeWidth={2.5} />
+                                    </span>
                                 </div>
 
-                                {/* Action Buttons */}
-                                <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn"
+                                    onClick={() => {
+                                        if (selectedIds.size === sortedSheep.length) {
+                                            setSelectedIds(new Set());
+                                        } else {
+                                            setSelectedIds(new Set(sortedSheep.map(s => s.id)));
+                                        }
+                                    }}
                                     style={{
-                                        padding: '6px 12px', borderRadius: '18px',
-                                        background: selectedIds.size > 0 ? '#FF5252' : '#ccc',
-                                        color: 'white', border: 'none', fontWeight: 'bold', cursor: selectedIds.size > 0 ? 'pointer' : 'default',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', flexShrink: 0,
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        transition: 'all 0.2s',
-                                        fontSize: '0.8rem'
-                                    }}>
-                                    🗑️ 刪除
+                                        background: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'var(--palette-blue-action)' : 'rgba(255, 255, 255, 0.9)',
+                                        color: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'white' : 'var(--palette-sheep-brown)',
+                                        borderColor: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'transparent' : 'var(--palette-sheep-brown)'
+                                    }}
+                                >
+                                    <CheckSquare size={14} strokeWidth={2.5} />
+                                    {selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'}
                                 </button>
 
-                                <button onClick={handleResetSelected} disabled={selectedIds.size === 0}
-                                    style={{
-                                        padding: '6px 12px', borderRadius: '18px',
-                                        background: selectedIds.size > 0 ? '#29B6F6' : '#ccc',
-                                        color: 'white', border: 'none', fontWeight: 'bold', cursor: selectedIds.size > 0 ? 'pointer' : 'default',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', flexShrink: 0,
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        transition: 'all 0.2s',
-                                        fontSize: '0.8rem'
-                                    }}>
-                                    🔄 重置
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--delete btn-destructive"
+                                    onClick={handleDeleteSelected}
+                                    disabled={selectedIds.size === 0}
+                                >
+                                    <Trash2 size={14} strokeWidth={2.5} />
+                                    刪除
                                 </button>
 
-                                {/* Cancel Button (Right Aligned) */}
-                                <button onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
-                                    style={{
-                                        marginLeft: 'auto',
-                                        background: 'rgba(255,255,255,0.9)',
-                                        border: '1px solid #DDD', borderRadius: '15px',
-                                        padding: '6px 16px', fontSize: '0.8rem',
-                                        color: '#5d4037', cursor: 'pointer',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                        fontWeight: 'bold', flexShrink: 0
-                                    }}>
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--reset"
+                                    onClick={handleResetSelected}
+                                    disabled={selectedIds.size === 0}
+                                >
+                                    <RotateCcw size={14} strokeWidth={2.5} />
+                                    重置
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--cancel"
+                                    onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
+                                >
                                     取消
                                 </button>
                             </>
                         ) : (
                             // --- STANDARD TOOLBAR ---
                             <>
-                                {/* 1. Add Button (Gold) */}
-                                <button onClick={() => setShowAddModal(true)} style={{
-                                    width: '36px', height: '36px', borderRadius: '50%',
-                                    background: '#ffd700', border: 'none',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '1.2rem', color: '#5d4037', fontWeight: 'bold',
-                                    flexShrink: 0, boxShadow: '0 2px 4px rgba(0,0,0,0.2)', cursor: 'pointer',
-                                    opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s'
-                                }}>
-                                    ➕
+                                {/* 1. Add Button (rounded chip style like SheepListModal) */}
+                                <button
+                                    type="button"
+                                    className="dock-toolbar-add-btn"
+                                    onClick={() => setShowAddModal(true)}
+                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                >
+                                    <Plus size={18} strokeWidth={2.5} />
                                 </button>
 
-                                {/* 2. Search Bar (White Pill) */}
-                                <div style={{ position: 'relative', height: '36px', flexShrink: 0, opacity: isCollapsed ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+                                {/* 2. Search Bar */}
+                                <div
+                                    ref={searchWrapRef}
+                                    className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
+                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                >
                                     <input
+                                        ref={searchInputRef}
                                         type="text"
+                                        className="dock-toolbar-search-input"
                                         placeholder="搜尋..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            height: '100%', padding: '0 12px 0 30px',
-                                            borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                            background: 'rgba(255,255,255,0.9)',
-                                            width: searchTerm ? '120px' : '80px',
-                                            transition: 'width 0.2s', fontSize: '0.9rem',
-                                            color: '#5d4037', outline: 'none'
-                                        }}
+                                        onFocus={() => setIsSearchExpanded(true)}
                                     />
-                                    <span style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                                    {isSearchExpanded && (
+                                        <CloseButton
+                                            className="dock-toolbar-search-clear"
+                                            ariaLabel="收起搜尋"
+                                            variant="sm"
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setIsSearchExpanded(false);
+                                                searchInputRef.current?.blur();
+                                            }}
+                                        />
+                                    )}
+                                    <span className="dock-toolbar-search-icon" aria-hidden="true">
+                                        <Search size={16} strokeWidth={2.5} />
+                                    </span>
                                 </div>
 
                                 {/* Divider */}
-                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)', margin: '0 4px' }}></div>
+                                <div className="dock-toolbar-divider" />
 
-                                {/* 3. Filters */}
+                                {/* 3. Filters (chip style) */}
                                 {[
                                     { id: 'ALL', label: '全部' },
+                                    { id: 'PINNED', label: '📌釘選' },
                                     { id: 'HEALTHY', label: '健康' },
                                     { id: 'SICK', label: '生病' },
-                                    { id: 'DEAD', label: '離世' }
-                                ].map(f => (
-                                    <button key={f.id} onClick={() => setFilterStatus(f.id)}
+                                    { id: 'SLEEPING', label: '沉睡' },
+                                    ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
+                                ]
+                                    .filter(f => !hiddenFilterIds.has(f.id))
+                                    .map(f => (
+                                    <button
+                                        type="button"
+                                        key={f.id}
+                                        className={`dock-toolbar-chip ${effectiveFilterStatus === f.id ? 'dock-toolbar-chip--selected' : ''}`}
+                                        onClick={() => setFilterStatus(f.id)}
                                         style={{
-                                            padding: '6px 12px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.5)',
-                                            background: filterStatus === f.id ? 'var(--color-text-brown)' : 'rgba(255, 255, 255, 0.8)',
-                                            color: filterStatus === f.id ? 'white' : 'var(--color-text-brown)',
-                                            fontWeight: 'bold', fontSize: '0.8rem', whiteSpace: 'nowrap',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s',
-                                            cursor: 'pointer', flexShrink: 0,
-                                            opacity: isCollapsed ? 0.6 : 1
-                                        }}>
-                                        {f.label} {counts[f.id]}
+                                            opacity: isCollapsed ? 0.6 : 1,
+                                            ...(f.color && effectiveFilterStatus === f.id && { borderColor: f.color, color: '#fff', background: f.color })
+                                        }}
+                                    >
+                                        {f.label} {counts[f.id] ?? 0}
                                     </button>
                                 ))}
 
-                                {/* 4. Select Button */}
-                                <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
-                                    style={{
-                                        marginLeft: 'auto',
-                                        background: isSelectionMode ? 'var(--color-action-blue)' : 'rgba(255,255,255,0.8)',
-                                        border: '1px solid #DDD', borderRadius: '15px',
-                                        padding: '6px 16px', fontSize: '0.8rem',
-                                        color: isSelectionMode ? 'white' : '#666',
-                                        cursor: 'pointer',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                        fontWeight: 'bold', flexShrink: 0,
-                                        opacity: isCollapsed ? 0.6 : 1
-                                    }}>
+                                {/* 4. Filter Settings */}
+                                <div style={{ position: 'relative', display: 'inline-flex' }} ref={filterMenuAnchorRef}>
+                                    <button
+                                        type="button"
+                                        className={`dock-toolbar-chip dock-toolbar-chip--settings ${showFilterMenu ? 'dock-toolbar-chip--selected' : ''}`}
+                                        onClick={() => setShowFilterMenu(prev => !prev)}
+                                        style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                        title="篩選設定"
+                                        aria-label="篩選設定"
+                                    >
+                                        <SlidersHorizontal size={14} strokeWidth={2.5} />
+                                        <span>篩選設定</span>
+                                    </button>
+                                    {showFilterMenu && (
+                                        <FilterSettingsMenu
+                                            filters={[
+                                                { id: 'ALL', label: '全部' },
+                                                { id: 'PINNED', label: '📌釘選' },
+                                                { id: 'HEALTHY', label: '健康' },
+                                                { id: 'SICK', label: '生病' },
+                                                { id: 'SLEEPING', label: '沉睡' },
+                                                ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
+                                            ]}
+                                            hiddenFilterIds={hiddenFilterIds}
+                                            onToggle={toggleFilterVisibility}
+                                            onManageTags={() => {
+                                                setShowFilterMenu(false);
+                                                setShowTagManagerModal(true);
+                                            }}
+                                            onClose={() => setShowFilterMenu(false)}
+                                            anchorRef={filterMenuAnchorRef}
+                                        />
+                                    )}
+                                </div>
+
+                                {/* 5. Select Button */}
+                                <button
+                                    type="button"
+                                    className={`dock-toolbar-select-btn ${isSelectionMode ? 'dock-toolbar-select-btn--active' : ''}`}
+                                    onClick={() => {
+                                        setIsSelectionMode(!isSelectionMode);
+                                        setSelectedIds(new Set());
+                                        setFilterStatus('ALL');
+                                    }}
+                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                >
                                     {isSelectionMode ? '取消' : '選取'}
                                 </button>
                             </>
@@ -420,7 +776,7 @@ export const SheepList = ({ onSelect }) => {
                         flexDirection: 'row',
                         alignItems: 'flex-end',
                         gap: '12px', // Slightly reduced gap
-                        padding: '10px 16px 20px 16px', // Adjusted padding
+                        padding: '10px 16px 12px 16px', // Adjusted padding
                         overflowX: 'auto',
                         overflowY: 'hidden',
                         scrollBehavior: 'smooth',
@@ -429,9 +785,8 @@ export const SheepList = ({ onSelect }) => {
                     }}>
                         {filteredSheep.map(s => (
                             <div key={s.id} style={{
-                                // Adjusted Width: Narrower for mobile as requested
-                                // 100px min is safe for content, 130px max prevents looking "stretched"
-                                minWidth: 'clamp(90px, 24vw, 130px)',
+                                width: 'max-content',
+                                minWidth: 'max-content',
                                 height: '100%',
                                 paddingBottom: '5px',
                                 pointerEvents: 'auto'
@@ -440,12 +795,15 @@ export const SheepList = ({ onSelect }) => {
                                     s={s}
                                     isSelectionMode={isSelectionMode}
                                     isSelected={selectedIds.has(s.id)}
-                                    onSelect={(sheep) => {
-                                        if (onSelect) onSelect(sheep);
-                                    }}
+                                    isPinned={settings?.pinnedSheepIds?.includes(s.id)}
+                                    onTogglePin={() => togglePin && togglePin(s.id)}
+                                    onSelect={(sheep) => { if (onSelect) onSelect(sheep); }}
                                     onToggleSelect={toggleSelection}
-                                    isDead={s.status === 'dead'}
+                                    onLongPress={handleLongPress}
+                                    isSleepingState={isSleeping(s)}
                                     isSick={s.status === 'sick'}
+                                    tags={tags}
+                                    tagAssignmentsBySheep={tagAssignmentsBySheep}
                                 />
                             </div>
                         ))}
@@ -461,7 +819,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Add Modal Overlay (Now managed here) */}
                 {showAddModal && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000 }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
                         <AddSheepModal
                             onConfirm={handleConfirmAdd}
                             onCancel={() => setShowAddModal(false)}
@@ -471,7 +829,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Edit Modal Overlay */}
                 {editingSheep && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000 }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
                         <AddSheepModal
                             editingSheep={editingSheep}
                             onConfirm={(updatedData) => {
@@ -480,6 +838,13 @@ export const SheepList = ({ onSelect }) => {
                             }}
                             onCancel={() => setEditingSheep(null)}
                         />
+                    </div>
+                )}
+
+                {/* Tag Manager Modal (from filter settings) */}
+                {showTagManagerModal && (
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                        <TagManagerModal onClose={() => setShowTagManagerModal(false)} />
                     </div>
                 )}
             </div>

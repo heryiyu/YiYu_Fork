@@ -1,19 +1,22 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ASSETS } from '../utils/AssetRegistry';
+import { isSleeping } from '../utils/gameLogic';
 import '../styles/design-tokens.css';
 
 export const AssetSheep = ({
     x, y,
     state, // 'walking', 'idle', 'sleep'
     direction, // 1 or -1
-    status, // 'healthy', 'sick', 'dead'
+    status, // 'healthy', 'sick', 'sleeping' (legacy 'dead' accepted)
     visual = {},
     onClick,
     scale = 1,
-    centered = false
+    centered = false,
+    animated = undefined,
+    showStatusIcon = true
 }) => {
-    const isDead = status === 'dead';
+    const isSleepingState = isSleeping({ status });
     const isWalking = state === 'walking';
 
     // --- 1. Determine Image Source ---
@@ -21,23 +24,16 @@ export const AssetSheep = ({
     // If Dead, use Ghost Asset.
     // Else default to Classic White.
     const imgSrc = useMemo(() => {
-        // Priority 1: GHOST (Dead)
-        if (isDead) return ASSETS.SHEEP_VARIANTS.GHOST;
+        // 1. Ghost (Sleeping/Dead)
+        if (isSleepingState) return ASSETS.SHEEP_VARIANTS.GHOST;
 
-        // Determine Variant Key
-        let variantKey = 'CLASSIC_WHITE';
-        if (visual.skinUrl && ASSETS.SKIN_MAP && ASSETS.SKIN_MAP[visual.skinUrl]) {
-            variantKey = ASSETS.SKIN_MAP[visual.skinUrl];
-        }
-
-        // Get Variant Object
+        // 2. Resolve Variant
+        const variantKey = visual?.variant || 'CLASSIC_WHITE';
         const variant = ASSETS.SHEEP_VARIANTS[variantKey] || ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE;
 
-        // Priority 2: SICK vs HEALTHY
-        if (status === 'sick') return variant.SICK;
-        return variant.HEALTHY;
-
-    }, [isDead, status, visual.skinUrl]);
+        // 3. Return Healthy/Sick state
+        return status === 'sick' ? variant.SICK : variant.HEALTHY;
+    }, [isSleepingState, status, visual?.variant]);
 
     // --- 2. Animations ---
     // Object Animation: We animate the CONTAINER or the IMG itself.
@@ -74,11 +70,15 @@ export const AssetSheep = ({
         }
     };
 
-    // Select Animation
+    // Select Animation (disabled in card/centered mode unless overridden)
+    const shouldAnimate = animated !== undefined ? animated : !centered;
+
     let activeAnim = {};
-    if (isDead) activeAnim = ghostAnim;
-    else if (isWalking) activeAnim = walkAnim;
-    else if (state === 'sleep') activeAnim = sleepAnim;
+    if (shouldAnimate) {
+        if (isSleepingState) activeAnim = ghostAnim;
+        else if (isWalking) activeAnim = walkAnim;
+        else if (state === 'sleep') activeAnim = sleepAnim;
+    }
 
     const containerStyle = centered ? {
         position: 'relative',
@@ -125,21 +125,22 @@ export const AssetSheep = ({
 
                         // Direction Flip
                         transform: `scaleX(${direction})`,
-                        filter: isDead ? 'grayscale(100%) drop-shadow(0 0 5px rgba(255,255,255,0.5))' : 'none'
+                        filter: isSleepingState ? 'grayscale(100%) drop-shadow(0 0 5px rgba(255,255,255,0.5))' : 'none'
                     }}
                     onError={(e) => {
                         // Fallback to text if image fails
                         e.target.style.display = 'none';
-                        e.target.parentElement.innerText = isDead ? '👻' : '🐑';
+                        e.target.parentElement.innerText = isSleepingState ? '👻' : '🐑';
                     }}
                 />
             </motion.div>
 
             {/* Health/Status Indicators can be overlaid here or handled by Parent UI */}
-            {status === 'sick' && (
+            {showStatusIcon && status === 'sick' && (
                 <div style={{
-                    position: 'absolute', top: -10, right: 0,
-                    fontSize: '20px', animation: 'pulse 1s infinite'
+                    position: 'absolute', top: -14, right: 0,
+                    fontSize: '20px', animation: 'pulse 1s infinite',
+                    marginBottom: '2px'
                 }}>
                     🤒
                 </div>

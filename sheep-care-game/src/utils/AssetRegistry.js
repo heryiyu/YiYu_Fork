@@ -71,19 +71,17 @@ export const ASSETS = {
       HEALTHY: '/assets/sheep/brown.png',
       SICK: '/assets/sheep/brown_sick.png',
     },
-    GHOST: '/assets/sheep/ghost.png', // Singular state
+    GHOST: '/assets/sheep/ghost.png',
   },
-  // Legacy Flat Map kept for simpler reference if needed, but variants preferred now.
-  // We will map the 'skinKey' -> 'Variant Object'
-  SKIN_MAP: {
-    'classic_white': 'CLASSIC_WHITE',
-    'black': 'BLACK',
-    'fluffy_white': 'FLUFFY_WHITE',
-    'pink': 'PINK',
-    'brown': 'BROWN',
-    'ghost_default': 'GHOST',
-  }
 
+  // Helper for UI Dropdowns
+  VARIANT_OPTIONS: [
+    { id: 'CLASSIC_WHITE', label: '經典白羊' },
+    { id: 'FLUFFY_WHITE', label: '蓬鬆白羊' },
+    { id: 'BLACK', label: '黑羊' },
+    { id: 'BROWN', label: '棕羊' },
+    { id: 'PINK', label: '粉紅羊' },
+  ]
 };
 
 // Helper to get random asset from a list

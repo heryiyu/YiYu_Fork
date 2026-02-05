@@ -1,6 +1,7 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
+import { Eye } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { isSleeping } from '../utils/gameLogic';
 import { Sheep } from './Sheep';
 import { AssetBackground } from './AssetBackground';
 import { AssetPreloader } from './AssetPreloader';
@@ -10,45 +11,66 @@ export const Field = ({ onSelectSheep }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     // --- 1. Separate Sheep ---
-    const livingSheep = useMemo(() => sheep.filter(s => s.status !== 'dead'), [sheep]);
-    const deadSheep = useMemo(() => sheep.filter(s => s.status === 'dead'), [sheep]);
+    const livingSheep = useMemo(() => sheep.filter(s => !isSleeping(s)), [sheep]);
+    const sleepingSheep = useMemo(() => sheep.filter(s => isSleeping(s)), [sheep]);
 
     // --- 2. Living Sheep Rotation (Existing Logic) ---
-    const [visibleLivingIds, setVisibleLivingIds] = useState(new Set());
+    // --- 2. Visibility Logic (Pinned > Random) ---
+    // Consolidated Living + Dead limit enforcement
+    const [visibleIds, setVisibleIds] = useState(new Set());
 
     useEffect(() => {
         const updateVisible = () => {
-            if (!livingSheep || livingSheep.length === 0) return;
+            if (!sheep || sheep.length === 0) return;
             const max = settings?.maxVisibleSheep || 15;
+            const pinnedIds = settings?.pinnedSheepIds || [];
 
-            if (livingSheep.length <= max) {
-                setVisibleLivingIds(new Set(livingSheep.map(s => s.id)));
-                return;
+            // 1. Separate Favorites and Others (Living + Dead mixed)
+            // We want to verify ID existence in current sheep list
+            const currentSheepIds = new Set(sheep.map(s => s.id));
+            const activePinnedIds = pinnedIds.filter(id => currentSheepIds.has(id));
+
+            let finalIds = [];
+
+            // 2. Add Favorites (Up to Max)
+            // If user favorites more than max, we slice to max (Performance Safety)
+            // They should increase Max setting if they want to see more.
+            const pinnedToTake = activePinnedIds.slice(0, max);
+            finalIds = [...pinnedToTake];
+
+            // 3. Fill Remaining Slots
+            const slotsRemaining = max - finalIds.length;
+            if (slotsRemaining > 0) {
+                // Get all unpinned sheep
+                const unpinnedSheep = sheep.filter(s => !finalIds.includes(s.id));
+
+                if (unpinnedSheep.length > 0) {
+                    // Shuffle and Pick
+                    const shuffled = [...unpinnedSheep].sort(() => 0.5 - Math.random());
+                    const selected = shuffled.slice(0, slotsRemaining);
+                    finalIds = [...finalIds, ...selected.map(s => s.id)];
+                }
             }
 
-            // Fisher-Yates Shuffle
-            const allIds = livingSheep.map(s => s.id);
-            for (let i = allIds.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [allIds[i], allIds[j]] = [allIds[j], allIds[i]];
-            }
-            setVisibleLivingIds(new Set(allIds.slice(0, max)));
+            setVisibleIds(new Set(finalIds));
         };
 
         updateVisible();
         const interval = setInterval(updateVisible, 60000); // 60s Rotation
         return () => clearInterval(interval);
-    }, [settings?.maxVisibleSheep, livingSheep.length]);
+    }, [settings?.maxVisibleSheep, settings?.pinnedSheepIds, sheep.length]); // Re-run if count changes
 
-    // Combined Visible Living Sheep
+    // Derived Lists for Rendering
     const visibleLiving = useMemo(() => {
-        if (!settings) return livingSheep;
-        if (livingSheep.length <= (settings.maxVisibleSheep || 15)) return livingSheep;
-        return livingSheep.filter(s => visibleLivingIds.has(s.id));
-    }, [livingSheep, visibleLivingIds, settings]);
+        return sheep.filter(s => !isSleeping(s) && visibleIds.has(s.id));
+    }, [sheep, visibleIds]);
+
+    const visibleSleeping = useMemo(() => {
+        return sheep.filter(s => isSleeping(s) && visibleIds.has(s.id));
+    }, [sheep, visibleIds]);
 
     // --- 3. Ghost Sheep Positioning (Random Roam Simulation) ---
-    // Since dead sheep are no longer graveyard bound, we give them random positions
+    // Since sleeping sheep are no longer graveyard bound, we give them random positions
     // In a real physics system, they would trigger 'move' updates.
     // Here we just map them to static random float positions if they lack coordinates.
     // Or we rely on the fact that they MIGHT have last known coordinates? 
@@ -57,7 +79,7 @@ export const Field = ({ onSelectSheep }) => {
 
     // Seeded random for Ghosts
     const ghostSheep = useMemo(() => {
-        return deadSheep.map(s => {
+        return visibleSleeping.map(s => {
             // If sheep has coordinates, use them (maybe they died there).
             // But we want them to float around.
             // Let's override X/Y with a "Ghost Position".
@@ -76,7 +98,7 @@ export const Field = ({ onSelectSheep }) => {
                 zIndex: 200 // Above ground items, below UI
             };
         });
-    }, [deadSheep]);
+    }, [visibleSleeping]);
 
 
     if (!isLoaded) {
@@ -116,16 +138,18 @@ export const Field = ({ onSelectSheep }) => {
 
             {/* Message / HUD Overlay usually goes here via App.jsx, but if Field owns some: */}
 
-            {/* Count Overlay */}
-            {sheep.length > (visibleLiving.length + ghostSheep.length) && (
+            {/* Count Overlay: Show if Total Sheep > Currently Shown */}
+            {sheep.length > visibleIds.size && (
                 <div style={{
-                    position: 'absolute', top: '10px', right: '10px',
+                    position: 'absolute', top: '80px', right: '10px',
                     background: 'var(--color-primary-cream)', color: 'var(--color-text-brown)',
                     padding: '8px 16px', borderRadius: 'var(--radius-btn)',
                     fontSize: '0.85rem', pointerEvents: 'none', zIndex: 500,
-                    boxShadow: 'var(--shadow-soft)', fontWeight: 'bold'
+                    boxShadow: 'var(--shadow-soft)', fontWeight: 'bold',
+                    display: 'flex', alignItems: 'center', gap: '6px'
                 }}>
-                    👁️ {visibleLiving.length + ghostSheep.length} / {sheep.length}
+                    <Eye size={14} strokeWidth={2} style={{ opacity: 0.8 }} />
+                    {visibleIds.size} / {sheep.length}
                 </div>
             )}
 

@@ -1,13 +1,43 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SHEEP_TYPES } from '../data/sheepData';
-import { calculateTick, generateVisuals, getSheepMessage, calculateSheepState, calculateOfflineDecay } from '../utils/gameLogic';
+import { calculateTick, generateVisuals, getSheepMessage, calculateSheepState, calculateOfflineDecay, isSleeping, getAwakeningProgress, SLEEPING_STATUS } from '../utils/gameLogic';
 import { gameState } from '../services/gameState';
+import { tagService } from '../services/tagService';
 import { supabase } from '../services/supabaseClient';
 
-const GameContext = createContext();
+const defaultGameContext = {
+    currentUser: null,
+    nickname: null,
+    userAvatarUrl: null,
+    lineId: null,
+    isLoading: true,
+    sheep: [],
+    inventory: [],
+    message: null,
+    weather: { type: 'sunny', isDay: true, temp: 25 },
+    settings: { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] },
+    notificationEnabled: false,
+    toggleNotification: () => { },
+    isAdmin: false,
+    introWatched: false,
+    showIntroVideo: false,
+    markIntroWatched: () => { },
+    tags: [],
+    tagAssignmentsBySheep: {},
+    loadTags: () => { },
+    createTag: () => null,
+    updateTag: () => null,
+    deleteTag: () => false,
+    setSheepTags: () => false,
+};
 
-export const useGame = () => useContext(GameContext);
+const GameContext = createContext(defaultGameContext);
+
+export const useGame = () => {
+    const ctx = useContext(GameContext);
+    return ctx ?? defaultGameContext;
+};
 
 // Supabase client is managed in services/supabaseClient
 
@@ -18,6 +48,7 @@ export const GameProvider = ({ children }) => {
     // --- Session Init (SessionStorage for Auto-Logout on Close) ---
     const [currentUser, setCurrentUser] = useState(null); // Line Name
     const [nickname, setNickname] = useState(null); // User Nickname
+    const [userAvatarUrl, setUserAvatarUrl] = useState(null); // LINE profile picture (login-time)
     const [lineId, setLineId] = useState(null); // Line User ID
     const [isLoading, setIsLoading] = useState(true);
     const [isInClient, setIsInClient] = useState(false); // New state to track if in LINE Client
@@ -42,17 +73,24 @@ export const GameProvider = ({ children }) => {
     const [message, setMessage] = useState(null);
 
     const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
+    const [introWatched, setIntroWatched] = useState(true); // Default true to avoid flash on init, set to false if confirmed new
+    const [showIntroVideo, setShowIntroVideo] = useState(false);
 
-    const [skins, setSkins] = useState([]); // New Skins State
+    const [tags, setTags] = useState([]);
+    const [tagAssignmentsBySheep, setTagAssignmentsBySheep] = useState({});
+
+
+
 
     // --- SETTINGS (Device Specific) ---
     const [settings, setSettings] = useState(() => {
         try {
             const saved = localStorage.getItem('sheep_game_settings');
-            // Default: maxVisibleSheep 15, notify false
-            return saved ? { maxVisibleSheep: 15, notify: false, ...JSON.parse(saved) } : { maxVisibleSheep: 15, notify: false };
+            // Default: maxVisibleSheep 15, notify false, pinnedSheepIds []
+            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] };
+            return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
         } catch {
-            return { maxVisibleSheep: 15, notify: false };
+            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] };
         }
     });
 
@@ -77,92 +115,9 @@ export const GameProvider = ({ children }) => {
 
     // ... (Existing useEffects)
 
-    // --- SKINS LOGIC ---
-    const loadSkins = async (userId) => {
-        try {
-            let query = supabase.from('sheep_skins').select('*');
 
-            // If Admin, load ALL skins. If normal user, load public OR own.
-            if (userId !== 'admin') {
-                query = query.or(`is_public.eq.true,created_by.eq.${userId}`);
-            }
 
-            const { data, error } = await query;
 
-            if (error) {
-                // If table doesn't exist yet, just ignore
-                console.warn("Could not load skins (Table might not exist yet)", error);
-                return;
-            }
-            if (data) setSkins(data);
-        } catch (e) { console.error("Load Skins Error", e); }
-    };
-
-    const toggleSkinPublic = async (skinId, isPublic) => {
-        if (!lineId || !isAdmin) return;
-        try {
-            const { error } = await supabase
-                .from('sheep_skins')
-                .update({ is_public: isPublic })
-                .eq('id', skinId);
-
-            if (error) throw error;
-
-            // Update Local State
-            setSkins(prev => prev.map(s => s.id === skinId ? { ...s, is_public: isPublic } : s));
-            showMessage(isPublic ? "已設為公開 ✅" : "已設為私有 🔒");
-        } catch (e) {
-            console.error("Toggle Public Error", e);
-            showMessage("設定失敗 ❌");
-        }
-    };
-
-    const createSkin = async (name, fileOrUrl) => {
-        if (!lineId) return null;
-        try {
-            let finalUrl = fileOrUrl;
-
-            // 1. Upload if it's a File
-            if (fileOrUrl instanceof File) {
-                const fileExt = fileOrUrl.name.split('.').pop();
-                // Path: userId/timestamp.ext
-                const fileName = `${lineId}/${Date.now()}.${fileExt}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from('skins')
-                    .upload(fileName, fileOrUrl);
-
-                if (uploadError) throw uploadError;
-
-                const { data } = supabase.storage
-                    .from('skins')
-                    .getPublicUrl(fileName);
-
-                finalUrl = data.publicUrl;
-            }
-
-            // 2. Insert DB Record
-            const newSkin = {
-                name,
-                type: 'image',
-                data: { url: finalUrl },
-                is_public: lineId === 'admin', // Admin uploads are public by default
-                created_by: lineId
-            };
-            const { data, error } = await supabase
-                .from('sheep_skins')
-                .insert([newSkin])
-                .select()
-                .single();
-
-            if (error) throw error;
-            setSkins(prev => [...prev, data]);
-            return data;
-        } catch (e) {
-            alert("創建失敗: " + e.message);
-            return null;
-        }
-    };
 
     // --- LIFF & Login Logic ---
     // ...
@@ -171,33 +126,60 @@ export const GameProvider = ({ children }) => {
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
         setCurrentUser(displayName);
+        setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
         showMessage(`設定羊群中... (Hi, ${displayName})`);
 
         try {
-            // New GameState Logic
-            await loadSkins(userId);
-            const data = await gameState.loadGame(userId);
+            // New GameState Logic - pass LINE profile for persistence
+            const data = await gameState.loadGame(userId, { displayName, pictureUrl });
 
             if (data && data.user) {
                 // Apply loaded data
                 const { user, sheep: loadedSheep } = data;
 
                 setSheep(loadedSheep);
-                setNickname(user.nickname); // or display_name? DB column 'nickname' exists? V2 migration said yes.
+                // Use nickname from DB; fallback to name or LINE displayName
+                const effectiveNickname = user.nickname?.trim() || user.name?.trim() || displayName;
+                setNickname(effectiveNickname);
 
-                // Load Game Data (Inventory, Settings)
+                // Restore avatar from DB if available (persists across sessions)
+                setUserAvatarUrl(user.avatar?.trim() || (pictureUrl && String(pictureUrl).trim() ? pictureUrl : null));
+
                 // Load Game Data (Inventory, Settings)
                 const gameData = user.game_data || {};
                 setInventory(gameData.inventory || []);
+                // Update Settings from Cloud (Merge with local default structure)
                 // Update Settings from Cloud (Merge with local default structure)
                 if (gameData.settings) {
                     setSettings(prev => ({ ...prev, ...gameData.settings }));
                 }
 
+                // Intro Video Logic
+                // Only show for BRAND NEW users (Registration session)
+                // Existing users rely on Manual to see it if they want.
+                if (data.isNewUser) {
+                    setShowIntroVideo(true);
+                } else {
+                    // Start introWatched as true for existing users so they don't see it
+                    setIntroWatched(true);
+                }
+
                 setIsDataLoaded(true);
-                showMessage(`歡迎回來，${user.nickname || displayName}! 👋`);
+                const [loadedTags, loadedAssignments] = await Promise.all([
+                    tagService.loadTags(userId),
+                    tagService.loadTagAssignments(userId)
+                ]);
+                setTags(loadedTags);
+                setTagAssignmentsBySheep(loadedAssignments);
+                showMessage(`歡迎回來，${effectiveNickname}! 👋`);
             } else {
-                // Should not happen as loadGame creates user
+                // Fallback for edge cases
+                const [loadedTags, loadedAssignments] = await Promise.all([
+                    tagService.loadTags(userId),
+                    tagService.loadTagAssignments(userId)
+                ]);
+                setTags(loadedTags);
+                setTagAssignmentsBySheep(loadedAssignments);
                 showMessage("設定完成！");
                 setIsDataLoaded(true);
             }
@@ -218,6 +200,7 @@ export const GameProvider = ({ children }) => {
             const currentInventory = overrides.inventory || inventory;
             // notificationEnabled is removed. We rely on settings object now.
             const currentNickname = overrides.nickname !== undefined ? overrides.nickname : nickname;
+            const currentIntroWatched = overrides.introWatched !== undefined ? overrides.introWatched : introWatched;
 
             // Construct gameData object
             // If overrides.settings exists, use it as the authoritative source.
@@ -229,20 +212,18 @@ export const GameProvider = ({ children }) => {
             const currentSettings = {
                 maxVisibleSheep: 20, // Default Safety Net
                 notify: false,
+                hiddenFilters: [],
                 ...rawSettings
             };
 
             const gameData = {
                 inventory: currentInventory,
                 settings: currentSettings,
+                introWatched: currentIntroWatched,
                 lastSave: Date.now()
             };
 
             // Parallel execute for faster close handling
-            // Show simple toast if window is visible (not closing)
-            if (document.visibilityState === 'visible') {
-                setMessage("☁️ 儲存中...");
-            }
 
             // Debug: Log the exact data being sent
             console.log("Saving to Cloud:", { userId: lineId, gameData, currentSheep });
@@ -268,14 +249,13 @@ export const GameProvider = ({ children }) => {
                 gameState.saveUserProfile(lineId, {
                     game_data: gameData,
                     nickname: currentNickname,
-                    last_login: getLocalISOString()
+                    last_login: getLocalISOString(),
+                    name: currentUser && String(currentUser).trim() ? currentUser : undefined,
+                    avatar: userAvatarUrl && String(userAvatarUrl).trim() ? userAvatarUrl : undefined
                 })
             ]);
 
             lastSaveTimeRef.current = Date.now();
-            if (document.visibilityState === 'visible') {
-                setTimeout(() => setMessage(null), 1000);
-            }
         } catch (e) { console.error("Auto-save failed", e); }
     };
 
@@ -285,17 +265,10 @@ export const GameProvider = ({ children }) => {
     const adoptSheep = async (data = {}) => {
         const { name = '小羊', spiritualMaturity = '', visual, skinId } = data; // visual from modal
 
-        // Optimistic UI
-        let skinData = null;
-        if (skinId && skins.length > 0) {
-            skinData = skins.find(s => s.id === skinId);
-        }
-
         const safeVisual = {
             ...generateVisuals(), // Fallback randoms
             ...(visual || {})     // Overrides from modal
         };
-        if (skinData) safeVisual.skinData = skinData;
 
         // Use Helper to determine initial state from raw health (60)
         const { health: initHealth, status: initStatus, type: initType } = calculateSheepState(60, 'healthy');
@@ -306,7 +279,7 @@ export const GameProvider = ({ children }) => {
             spiritualMaturity,
             careLevel: 0, health: initHealth, status: initStatus,
             state: 'idle', note: '', prayedCount: 0, lastPrayedDate: null,
-            resurrectionProgress: 0,
+            resurrectionProgress: 0, awakeningProgress: 0,
             visual: safeVisual,
             skinId: skinId || null,
             x: Math.random() * 60 + 20, y: Math.random() * 60 + 20,
@@ -396,21 +369,42 @@ export const GameProvider = ({ children }) => {
     // If we restore here, we might get stale data that conflicts or duplicates with Cloud data later.
     useEffect(() => {
         // Just clear any lingering session if we want "Fresh on Refresh"
-        // But Line Login might redirect. 
+        // But Line Login might redirect.
         // If we want "Persistence across Refresh", we keep localStorage but rely entirely on Cloud for "Truth".
         // The problem of "Duplication" comes from MERGING. We must NOT merge in handleLoginSuccess.
     }, []);
 
-    const toggleNotification = async () => {
+
+
+    const toggleNotification = () => {
         const newState = !settings.notify;
         updateSetting('notify', newState);
         showMessage(newState ? "🔔 牧羊提醒已開啟" : "🔕 牧羊提醒已關閉");
+    };
 
-        // Immediate Save will be handled by settings update propagation? 
-        // No, updateSetting is local. We should trigger a save.
-        // We can pass the NEW settings explicitly to saveToCloud to be sure.
-        const newSettings = { ...settings, notify: newState };
-        saveToCloud({ settings: newSettings }); // saveToCloud needs to support 'settings' override key if we use it
+    const togglePin = (sheepId) => {
+        setSettings(prev => {
+            const currentPinned = prev.pinnedSheepIds || [];
+            let nextPinned;
+            if (currentPinned.includes(sheepId)) {
+                nextPinned = currentPinned.filter(id => id !== sheepId);
+            } else {
+                nextPinned = [...currentPinned, sheepId];
+            }
+            const newSettings = { ...prev, pinnedSheepIds: nextPinned };
+
+            // Trigger save
+            localStorage.setItem('sheep_game_settings', JSON.stringify(newSettings));
+            // Trigger Cloud Save (Debounced is fine)
+            // Ideally we should use saveToCloud here too for consistency if possible,
+            // but for now local invalidation + next sync is okay, or just force it.
+            // Let's use saveToCloud({ settings: newSettings }) pattern if supported?
+            // Actually saveToCloud args usage is a bit mixed, let's Stick to setSettings + explicit logic or just trust next save.
+            // But user wants persistence.
+            // Let's just do:
+            saveToCloud({ settings: newSettings });
+            return newSettings;
+        });
     };
 
     // --- LIFF & Login Logic ---
@@ -441,8 +435,8 @@ export const GameProvider = ({ children }) => {
     }, []);
 
     const loginWithLine = () => {
-        // Localhost Bypass
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Localhost Bypass (Dev Only)
+        if (import.meta.env.DEV && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             const mockProfile = {
                 userId: 'admin', // Fixed ID for Admin
                 displayName: 'Admin',
@@ -470,9 +464,11 @@ export const GameProvider = ({ children }) => {
         }
         setCurrentUser(null);
         setNickname(null);
+        setUserAvatarUrl(null);
         if (lineId) await clearData(lineId); // Clear IDB
         setLineId(null);
         setSheep([]); setInventory([]);
+        setTags([]); setTagAssignmentsBySheep({});
         setIsDataLoaded(false);
         window.location.reload();
     };
@@ -507,6 +503,10 @@ export const GameProvider = ({ children }) => {
 
         if (loadedData.settings) {
             setSettings(prev => ({ ...prev, ...loadedData.settings }));
+        }
+
+        if (loadedData.introWatched) {
+            setIntroWatched(true);
         }
 
         lastSaveTimeRef.current = lastSave; // Update Ref with loaded time
@@ -553,11 +553,11 @@ export const GameProvider = ({ children }) => {
     // Helper Effect to keep Refs updated for AutoSave (Prevents Stale Closure in Interval)
     const stateRef = React.useRef({ sheep, inventory, settings });
 
-    // Ref Sync: Keep Ref up to date for saveToCloud (async access)
+    // Ref Sync: Keep Ref up to date for saveToCloud and handleUnload (async access)
     useEffect(() => {
-        stateRef.current = { sheep, inventory, settings };
+        stateRef.current = { sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched };
         lastSaveTimeRef.current = Date.now(); // Optional: track local changes? No, unsafe.
-    }, [sheep, inventory, settings]);
+    }, [sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched]);
 
     useEffect(() => {
         // Setup only
@@ -570,13 +570,18 @@ export const GameProvider = ({ children }) => {
         const handleUnload = () => {
             // Reliable Save on Close using KeepAlive Fetch
             const currentSheep = stateRef.current.sheep;
+            const profileRef = stateRef.current;
             const currentProfile = {
                 game_data: {
-                    inventory: stateRef.current.inventory,
-                    settings: stateRef.current.settings,
+                    inventory: profileRef.inventory,
+                    settings: profileRef.settings,
+                    introWatched: profileRef.introWatched,
                     lastSave: Date.now()
                 },
-                last_login: new Date().toISOString()
+                last_login: new Date().toISOString(),
+                nickname: profileRef.nickname,
+                name: profileRef.currentUser && String(profileRef.currentUser).trim() ? profileRef.currentUser : undefined,
+                avatar: profileRef.userAvatarUrl && String(profileRef.userAvatarUrl).trim() ? profileRef.userAvatarUrl : undefined
             };
 
             // Using KeepAlive fetch for reliable save
@@ -588,7 +593,8 @@ export const GameProvider = ({ children }) => {
             saveToCloud({
                 sheep: stateRef.current.sheep,
                 inventory: stateRef.current.inventory,
-                settings: stateRef.current.settings
+                settings: stateRef.current.settings,
+                introWatched: stateRef.current.introWatched
             });
         };
 
@@ -668,8 +674,8 @@ export const GameProvider = ({ children }) => {
         const tick = setInterval(() => {
             setSheep(prev => prev.filter(s => s).map(s => {
                 const updated = calculateTick(s, prev); // Pass 'prev' (all sheep) for flocking
-                if (updated.status === 'dead' && s.status !== 'dead') {
-                    showMessage(`🕊️ ${s.name} 不幸離世了...`);
+                if (isSleeping(updated) && !isSleeping(s)) {
+                    showMessage(`🕊️ ${s.name} 進入沉睡了...`);
                 }
                 return updated;
             }));
@@ -705,7 +711,7 @@ export const GameProvider = ({ children }) => {
         setSheep(prev => {
             const nextState = prev.map(s => {
                 if (s.id !== id) return s;
-                if (s.status === 'dead') {
+                if (isSleeping(s)) {
                     const todayDate = new Date(today);
                     const lastDate = s.lastPrayedDate ? new Date(s.lastPrayedDate) : null;
                     let diffDays = -1;
@@ -714,32 +720,31 @@ export const GameProvider = ({ children }) => {
                     }
                     const isContinuous = diffDays === 1 || diffDays === -1;
 
-                    // Admin Bypass: Allow unlimited resurrection progress per day if needed? 
-                    // User requirement said "Unlimited Prayers", usually implies the daily limit.
-                    // Let's allow Admin to spam resurrection too if they want
+                    // Admin Bypass: Allow unlimited awakening progress per day if needed
                     if (!isAdmin && diffDays === 0) {
                         showMessage("今天已經為這隻小羊禱告過了，請明天再來！🙏");
                         return s;
                     }
 
-                    let newProgress = (isContinuous || isAdmin) ? (s.resurrectionProgress || 0) + 1 : 1;
+                    const currentProgress = getAwakeningProgress(s);
+                    let newProgress = (isContinuous || isAdmin) ? currentProgress + 1 : 1;
 
                     if (newProgress >= 5) {
-                        showMessage(`✨ 奇蹟發生了！${s.name} 復活了！`);
+                        showMessage(`✨ 奇蹟發生了！${s.name} 甦醒了！`);
                         return {
                             ...s, status: 'healthy', health: 100, type: 'LAMB', careLevel: 0,
-                            resurrectionProgress: 0, lastPrayedDate: today, prayedCount: 0
+                            resurrectionProgress: 0, awakeningProgress: 0, lastPrayedDate: today, prayedCount: 0
                         };
                     } else {
-                        const statusMsg = (!isAdmin && diffDays > 1) ? "禱告中斷了，重新開始..." : "迫切認領禱告進行中...";
+                        const statusMsg = (!isAdmin && diffDays > 1) ? "禱告中斷了，重新開始..." : "喚醒禱告進行中...";
                         showMessage(`🙏 ${statusMsg} (${newProgress}/5)`);
-                        return { ...s, resurrectionProgress: newProgress, lastPrayedDate: today };
+                        return { ...s, resurrectionProgress: newProgress, awakeningProgress: newProgress, lastPrayedDate: today };
                     }
                 }
 
                 let count = (s.lastPrayedDate === today) ? s.prayedCount : 0;
                 if (!isAdmin && count >= 3) {
-                    showMessage("這隻小羊今天已經接受過 3 次禱告了，讓牠休息一下吧！🙏");
+                    showMessage("這隻小羊今天已經接受過 3 次禱告了，讓他休息一下吧！🙏");
                     return s;
                 }
                 const rawNewHealth = Math.min(100, s.health + 6);
@@ -791,20 +796,70 @@ export const GameProvider = ({ children }) => {
         });
     };
 
+    const loadTags = async () => {
+        if (!lineId) return;
+        const [loadedTags, loadedAssignments] = await Promise.all([
+            tagService.loadTags(lineId),
+            tagService.loadTagAssignments(lineId)
+        ]);
+        setTags(loadedTags);
+        setTagAssignmentsBySheep(loadedAssignments);
+    };
+
+    const createTag = async (opts) => {
+        if (!lineId) return null;
+        const created = await tagService.createTag(lineId, opts);
+        if (created) await loadTags();
+        return created;
+    };
+
+    const updateTag = async (tagId, opts) => {
+        const updated = await tagService.updateTag(tagId, opts);
+        if (updated) await loadTags();
+        return updated;
+    };
+
+    const deleteTag = async (tagId) => {
+        const ok = await tagService.deleteTag(tagId);
+        if (ok) await loadTags();
+        return ok;
+    };
+
+    const setSheepTags = async (sheepId, tagIds) => {
+        if (!lineId) return false;
+        const ok = await tagService.setSheepTags(sheepId, lineId, tagIds);
+        if (ok) await loadTags();
+        return ok;
+    };
+
     return (
         <GameContext.Provider value={{
-            currentUser, nickname, setNickname, lineId, isAdmin,
+            currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
             isLoading, // Exposed for App.jsx loading screen
-            sheep, skins, inventory, message, weather, // skins exposed
+            sheep, inventory, message, weather,
             location, updateUserLocation, isInClient, // Exposed
-            adoptSheep, updateSheep, updateMultipleSheep, createSkin, toggleSkinPublic, // createSkin exposed
+            adoptSheep, updateSheep, updateMultipleSheep, togglePin,
             loginWithLine, loginAsAdmin, logout, // Exposed
             prayForSheep, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed
             notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
             updateNickname, // Exposed
-            settings, updateSetting, // Exposed Settings
-            setWeather // Exposed for Admin Control
+            showIntroVideo,
+            markIntroWatched: () => {
+                setIntroWatched(true);
+                setShowIntroVideo(false);
+                saveToCloud({ introWatched: true });
+            },
+            settings, // expose settings
+            updateSetting, // expose updateSetting
+            setWeather, // Exposed for Admin Control
+            tags,
+            tagAssignmentsBySheep,
+            loadTags,
+            createTag,
+            updateTag,
+            deleteTag,
+            setSheepTags
         }}>
             {children}
         </GameContext.Provider>

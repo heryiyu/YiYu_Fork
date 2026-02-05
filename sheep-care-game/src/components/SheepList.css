@@ -1,0 +1,492 @@
+/* SheepList & SheepCard - aligned with SheepListModal reference */
+
+.sheep-card {
+  position: relative;
+  background: var(--card-inner-bg);
+  border-radius: var(--card-inner-radius);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  box-sizing: border-box;
+  width: max-content;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  border: none;
+}
+
+.sheep-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--card-inner-radius);
+  pointer-events: none;
+}
+
+.sheep-card.selected {
+  box-shadow: 0 0 0 4px var(--palette-blue-action);
+}
+
+.sheep-card:not(.selected) {
+  box-shadow: var(--card-inner-shadow);
+}
+
+.sheep-card.sheep-card--select-mode {
+  transform: scale(0.95);
+}
+
+/* Selection indicator */
+.sheep-card-selection-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--palette-blue-action);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sheep-card-selection-dot.sheep-card-selection-dot--selected {
+  background: var(--palette-blue-action);
+}
+
+.sheep-card-selection-dot:not(.sheep-card-selection-dot--selected) {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sheep-card-selection-dot .sheep-card-selection-check {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Header row: health + tag + actions (pin) */
+.sheep-card-header {
+  width: max-content;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+  margin-right: 18px;
+}
+
+.sheep-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.pin-btn:focus,
+.pin-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.pin-btn {
+  position: absolute;
+  top: 8px;
+  right: 11px;
+}
+
+.sheep-card-health {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--palette-pink-action);
+  font-weight: bold;
+  font-size: clamp(0.9rem, 4vw, 1.1rem);
+}
+
+.sheep-card-health.sheep-card-health--full {
+  font-size: clamp(0.8rem, 3.5vw, 1rem);
+}
+
+.sheep-card-health .sheep-card-health-icon {
+  font-size: 1.2em;
+}
+
+/* Tag pill – aligned with SheepListModal, compact size */
+.sheep-card-tag {
+  padding: 2px 4px;
+  border-radius: 6px;
+  font-size: clamp(0.5rem, 2vw, 0.65rem);
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 1;
+  line-height: 1.2;
+}
+
+/* 已沉睡 – same as 失喪的靈魂 */
+.sheep-card-tag--dead {
+  background: var(--tag-dead-bg);
+  color: var(--tag-dead-text);
+}
+
+/* 生病 – same as 虛弱 */
+.sheep-card-tag--sick {
+  background: var(--tag-sick-bg);
+  color: var(--tag-sick-text);
+}
+
+/* 新朋友 – same as reference: bg #d2dbea, text #5385db */
+.sheep-card-tag--new {
+  background: var(--tag-new-bg);
+  color: var(--tag-new-text);
+}
+
+/* 夥伴 – same as 基督徒: bg #e5d6f1, text #7f5b9b */
+.sheep-card-tag--companion {
+  background: var(--tag-christian-bg);
+  color: var(--tag-christian-text);
+}
+
+/* 健康 – fallback when no tag assigned */
+.sheep-card-tag--healthy {
+  background: var(--tag-healthy-bg);
+  color: var(--tag-healthy-text);
+}
+
+/* 自訂標籤 – overridden by inline style */
+.sheep-card-tag--custom {
+  background: var(--tag-custom-default);
+  color: var(--text-inverse);
+}
+
+/* Avatar area */
+.sheep-card-avatar {
+  flex: 1;
+  min-height: 24px;
+  width: max-content;
+  max-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  margin: 15% 0% 15% 0%;
+}
+
+@media (max-width: 480px) {
+  .sheep-card-avatar {
+    max-width: 96px;
+  }
+}
+
+.sheep-card-avatar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0% 15% 0% 15%;
+}
+
+/* Footer */
+.sheep-card-footer {
+  width: max-content;
+  text-align: center;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.sheep-card-name {
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: var(--palette-sheep-brown);
+  white-space: nowrap;
+}
+
+.sheep-card-pray {
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 25%;
+}
+
+.sheep-card-pray.sheep-card-pray--dead {
+  color: var(--text-muted-light);
+}
+
+.sheep-card-pray:not(.sheep-card-pray--dead) {
+  color: var(--palette-sheep-brown);
+}
+
+/* --- Dock toolbar (aligned with SheepListModal chips) --- */
+.dock-toolbar {
+  padding: 10px 20px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 100%;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+  min-height: 56px;
+}
+
+.dock-toolbar--search-expanded {
+  overflow-x: visible;
+}
+
+.dock-toolbar-label {
+  color: var(--palette-sheep-brown);
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.dock-toolbar-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--palette-orange-action);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--palette-sheep-brown);
+  font-weight: bold;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  transition: opacity 0.2s;
+}
+
+.dock-toolbar-add-btn:hover {
+  opacity: 0.9;
+}
+
+.dock-toolbar-search-wrap {
+  position: relative;
+  height: 36px;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.dock-toolbar-search-input {
+  height: 100%;
+  padding: 0 12px 0 30px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  color: var(--palette-sheep-brown);
+  outline: none;
+  width: 120px;
+  line-height: 36px;
+  box-sizing: border-box;
+  transition: width 0.2s ease;
+}
+
+.dock-toolbar-search-wrap--expanded {
+  flex: 1 1 100%;
+  min-width: 200px;
+  width: 40%;;
+  max-width: 320px;
+}
+
+.dock-toolbar-search-wrap--expanded .dock-toolbar-search-input {
+  width: 100%;
+  padding-right: 34px;
+}
+
+.dock-toolbar-search-input::placeholder {
+  color: var(--palette-taupe);
+}
+
+.dock-toolbar-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Positioning for CloseButton in search bar */
+.dock-toolbar-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+@media (max-width: 520px) {
+  .dock-toolbar-search-input {
+    width: 90px;
+    font-size: 16px;
+  }
+  .dock-toolbar-search-wrap--expanded {
+    min-width: 85%;
+  }
+}
+
+/* iOS Safari zoom prevention: ensure >=16px font size */
+@supports (-webkit-touch-callout: none) {
+  .dock-toolbar-search-input {
+    font-size: 16px;
+  }
+}
+
+.dock-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.dock-toolbar-chip {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--palette-sheep-brown);
+  background: transparent;
+  color: var(--palette-sheep-brown);
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.dock-toolbar-chip.dock-toolbar-chip--selected {
+  background: var(--palette-sheep-brown);
+  color: white;
+  border-color: var(--palette-sheep-brown);
+}
+
+.dock-toolbar-chip--settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-style: solid;
+  border-color: var(--palette-sheep-brown);
+  color: var(--palette-sheep-brown);
+  background: rgba(143, 125, 103, 0.18);
+}
+
+.dock-toolbar-chip--settings.dock-toolbar-chip--selected {
+  background: var(--palette-sheep-brown);
+  color: white;
+  border-color: var(--palette-sheep-brown);
+}
+
+.dock-toolbar-select-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--palette-sheep-brown);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--text-muted);
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+.dock-toolbar-select-btn.dock-toolbar-select-btn--active {
+  background: var(--palette-blue-action);
+  color: white;
+  border-color: var(--palette-blue-action);
+}
+
+/* Selection toolbar buttons (same chip style as filter chips) */
+.dock-toolbar-action-btn {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-weight: bold;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 32px;
+}
+
+.dock-toolbar-action-btn:disabled {
+  background: var(--btn-disabled-bg) !important;
+  border-color: var(--btn-disabled-bg) !important;
+  color: var(--btn-disabled-text);
+  cursor: default;
+  opacity: 1;
+}
+
+/* Color handled by .btn-destructive (App.css) */
+
+.dock-toolbar-action-btn--reset {
+  background: var(--btn-reset-bg);
+  color: var(--btn-reset-text);
+  border-color: var(--btn-reset-bg);
+}
+
+.dock-toolbar-action-btn--reset:not(:disabled):hover {
+  background: var(--btn-reset-hover);
+  border-color: var(--btn-reset-hover);
+}
+
+.dock-toolbar-action-btn--cancel {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--palette-sheep-brown);
+  color: var(--palette-sheep-brown);
+}
+
+.filter-settings-menu {
+  font-family: inherit;
+}
+
+.filter-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.filter-settings-menu label:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+}
+
+.dock-toolbar-action-btn--cancel:hover {
+  background: white;
+}
