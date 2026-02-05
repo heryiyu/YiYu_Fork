@@ -203,7 +203,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                             <textarea
                                 value={batchInput}
                                 onChange={(e) => setBatchInput(e.target.value)}
-                                placeholder="例：王大明 新朋友 學習中 (換行輸入下一位)"
+                                placeholder="例：王大明 新朋友 (換行輸入下一位)"
                                 style={{ flex: 1, width: '100%', padding: '8px', border: '1px solid #ccc', resize: 'none' }}
                                 required
                             />
