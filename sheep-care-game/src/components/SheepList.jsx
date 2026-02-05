@@ -12,6 +12,7 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     const [longPressTriggered, setLongPressTriggered] = useState(false);
     const timeout = React.useRef();
     const target = React.useRef();
+    const isMoved = React.useRef(false); // Track if movement occurred
 
     const start = React.useCallback(
         (event) => {
@@ -20,6 +21,7 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
             if (shouldPreventDefault && event.target) {
                 target.current = event.target;
             }
+            isMoved.current = false; // Reset movement flag
             setLongPressTriggered(false);
             timeout.current = setTimeout(() => {
                 onLongPress(event);
@@ -32,7 +34,8 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     const clear = React.useCallback(
         (event, shouldTriggerClick = true) => {
             timeout.current && clearTimeout(timeout.current);
-            if (shouldTriggerClick && !longPressTriggered && onClick) {
+            // Click should ONLY trigger if NO long press happened AND NO movement occurred
+            if (shouldTriggerClick && !longPressTriggered && !isMoved.current && onClick) {
                 onClick(event);
             }
             setLongPressTriggered(false);
@@ -46,8 +49,11 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
         onTouchStart: (e) => start(e),
         onMouseUp: (e) => clear(e),
         onMouseLeave: (e) => clear(e, false),
-        onTouchMove: (e) => clear(e, false), // Cancel long press on move (scroll)
-        onTouchEnd: (e) => clear(e)
+        onTouchMove: (e) => {
+            isMoved.current = true; // Mark as moved
+            clear(e, false);
+        },
+        onTouchEnd: (e) => clear(e) // Trigger click if isMoved is false
     };
 };
 
