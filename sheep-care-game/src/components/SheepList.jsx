@@ -8,18 +8,71 @@ import '../styles/design-tokens.css';
 import './SheepList.css';
 
 // --- Card Component (tag design aligned with SheepListModal.tsx) ---
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin }) => {
+const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay = 500 } = {}) => {
+    const [longPressTriggered, setLongPressTriggered] = useState(false);
+    const timeout = React.useRef();
+    const target = React.useRef();
+
+    const start = React.useCallback(
+        (event) => {
+            // Prevent default context menu on touch devices immediately if needed
+            // But we might want some default behavior, usually touch-action: manipulation handles it.
+            if (shouldPreventDefault && event.target) {
+                target.current = event.target;
+            }
+            setLongPressTriggered(false);
+            timeout.current = setTimeout(() => {
+                onLongPress(event);
+                setLongPressTriggered(true);
+            }, delay);
+        },
+        [onLongPress, delay, shouldPreventDefault]
+    );
+
+    const clear = React.useCallback(
+        (event, shouldTriggerClick = true) => {
+            timeout.current && clearTimeout(timeout.current);
+            if (shouldTriggerClick && !longPressTriggered && onClick) {
+                onClick(event);
+            }
+            setLongPressTriggered(false);
+            target.current = undefined;
+        },
+        [longPressTriggered, onClick]
+    );
+
+    return {
+        onMouseDown: (e) => start(e),
+        onTouchStart: (e) => start(e),
+        onMouseUp: (e) => clear(e),
+        onMouseLeave: (e) => clear(e, false),
+        onTouchEnd: (e) => clear(e)
+    };
+};
+
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onLongPress }) => {
     const tagVariant = isSleepingState ? 'dead' : (isSick ? 'sick' : (s.name.length > 3 ? 'companion' : 'new'));
     const tagLabel = isSleepingState ? '已沉睡' : (isSick ? '生病' : (s.name.length > 3 ? '夥伴' : '新朋友'));
     const healthFull = Math.ceil(s.health || 0) >= 100;
 
+    // Interaction Logic
+    const handleCardClick = () => {
+        if (isSelectionMode) onToggleSelect(s.id);
+        else onSelect(s);
+    };
+
+    const handleCardLongPress = () => {
+        if (onLongPress) onLongPress(s.id);
+    };
+
+    // Use the hook
+    const longPressEventHandlers = useLongPress(handleCardLongPress, handleCardClick, { delay: 500 });
+
     return (
         <div
             className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''} ${isSelectionMode ? 'sheep-card--select-mode' : ''}`}
-            onClick={() => {
-                if (isSelectionMode) onToggleSelect(s.id);
-                else onSelect(s);
-            }}
+            {...longPressEventHandlers}
+            style={{ touchAction: 'none', userSelect: 'none' }} // Prevent browser zoom/menu during long press
         >
             {isSelectionMode && (
                 <div className={`sheep-card-selection-dot ${isSelected ? 'sheep-card-selection-dot--selected' : ''}`}>
@@ -41,9 +94,12 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                             type="button"
                             className="pin-btn"
                             onClick={(e) => {
-                                e.stopPropagation();
+                                e.stopPropagation(); // Standard click stop propagation is enough here
                                 onTogglePin(s.id);
                             }}
+                            // MouseDown/TouchStart here should NOT trigger the card's long press
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
                             style={{
                                 background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
                                 opacity: isPinned ? 1 : 0.2,
@@ -139,6 +195,19 @@ export const SheepList = ({ onSelect }) => {
         if (newSet.has(id)) newSet.delete(id);
         else newSet.add(id);
         setSelectedIds(newSet);
+    };
+
+    const handleLongPress = (id) => {
+        if (!isSelectionMode) {
+            setIsSelectionMode(true);
+            setSelectedIds(new Set([id]));
+            // Trigger haptic feedback if available (optional)
+            if (navigator.vibrate) navigator.vibrate(50);
+        } else {
+            // If already in selection mode, long press behaves like a toggle (or ignore)
+            // Let's make it toggle for consistency
+            toggleSelection(id);
+        }
     };
 
     const handleDeleteSelected = () => {
@@ -422,6 +491,7 @@ export const SheepList = ({ onSelect }) => {
                                         if (onSelect) onSelect(sheep);
                                     }}
                                     onToggleSelect={toggleSelection}
+                                    onLongPress={handleLongPress}
                                     isSleepingState={isSleeping(s)}
                                     isSick={s.status === 'sick'}
                                 />
