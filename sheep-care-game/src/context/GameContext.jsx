@@ -894,6 +894,7 @@ export const GameProvider = ({ children }) => {
                 saveToCloud({ introWatched: true });
             },
             settings, // expose settings
+            updateSetting, // expose updateSetting
             setWeather // Exposed for Admin Control
         }}>
             {children}
