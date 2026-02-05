@@ -571,6 +571,7 @@ export const SheepList = ({ onSelect }) => {
                                             ariaLabel="收起搜尋"
                                             variant="sm"
                                             onClick={() => {
+                                                setSearchTerm('');
                                                 setIsSearchExpanded(false);
                                                 searchInputRef.current?.blur();
                                             }}
@@ -663,6 +664,7 @@ export const SheepList = ({ onSelect }) => {
                                             ariaLabel="收起搜尋"
                                             variant="sm"
                                             onClick={() => {
+                                                setSearchTerm('');
                                                 setIsSearchExpanded(false);
                                                 searchInputRef.current?.blur();
                                             }}
