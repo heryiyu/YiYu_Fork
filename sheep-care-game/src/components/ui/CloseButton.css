@@ -1,0 +1,37 @@
+.close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #4f4640;
+  cursor: pointer;
+  padding: 0;
+  line-height: 0;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.close-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.16);
+  color: #2f2a26;
+}
+
+.close-btn--sm {
+  width: 24px;
+  height: 24px;
+}
+
+.close-btn--sm svg {
+  width: 14px;
+  height: 14px;
+}
