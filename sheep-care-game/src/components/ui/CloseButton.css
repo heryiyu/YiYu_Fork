@@ -7,7 +7,7 @@
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
-  color: #4f4640;
+  color: var(--text-icon);
   cursor: pointer;
   padding: 0;
   line-height: 0;
@@ -23,7 +23,7 @@
 .close-btn:hover {
   background: rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.16);
-  color: #2f2a26;
+  color: var(--text-icon-hover);
 }
 
 .close-btn--sm {

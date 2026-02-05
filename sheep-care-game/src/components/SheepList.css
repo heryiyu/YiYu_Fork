@@ -134,10 +134,10 @@
   color: var(--tag-dead-text);
 }
 
-/* 生病 – same as 虛弱: bg #fde8ec, text #f39fac */
+/* 生病 – same as 虛弱 */
 .sheep-card-tag--sick {
-  background: #fde8ec;
-  color: #f39fac;
+  background: var(--tag-sick-bg);
+  color: var(--tag-sick-text);
 }
 
 /* 新朋友 – same as reference: bg #d2dbea, text #5385db */
@@ -154,14 +154,14 @@
 
 /* 健康 – fallback when no tag assigned */
 .sheep-card-tag--healthy {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: var(--tag-healthy-bg);
+  color: var(--tag-healthy-text);
 }
 
 /* 自訂標籤 – overridden by inline style */
 .sheep-card-tag--custom {
-  background: #6b7280;
-  color: #fff;
+  background: var(--tag-custom-default);
+  color: var(--text-inverse);
 }
 
 /* Avatar area */
@@ -212,7 +212,7 @@
 }
 
 .sheep-card-pray.sheep-card-pray--dead {
-  color: #9e9e9e;
+  color: var(--text-muted-light);
 }
 
 .sheep-card-pray:not(.sheep-card-pray--dead) {
@@ -406,7 +406,7 @@
   border-radius: 8px;
   border: 1px solid var(--palette-sheep-brown);
   background: rgba(255, 255, 255, 0.8);
-  color: #666;
+  color: var(--text-muted);
   font-weight: bold;
   font-size: 12px;
   cursor: pointer;
@@ -479,7 +479,7 @@
   padding: 12px 12px 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .filter-settings-menu label:hover {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { ModalHint } from './ModalHint';
+import { CloseButton } from './ui/CloseButton';
 
 export const SettingsModal = ({ onClose }) => {
     const { settings, updateSetting, tags } = useGame();
@@ -29,7 +30,7 @@ export const SettingsModal = ({ onClose }) => {
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h3 id="settings-modal-title">⚙️ 系統設定</h3>
-                    <button ref={closeBtnRef} className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
+                    <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                 </div>
 
                 <div className="modal-form">

@@ -11,6 +11,7 @@ import {
     BookOpen,
     Mic
 } from 'lucide-react';
+import { CloseButton } from './ui/CloseButton';
 import './SevenStepsMap.css';
 
 // Lucide icon per step (semantic mapping)
@@ -270,7 +271,7 @@ export function SevenStepsMap() {
             {isExpanded && videoModalOpen && (
                 <div className="map-video-overlay" onClick={() => setVideoModalOpen(false)}>
                     <div className="map-video-modal" onClick={e => e.stopPropagation()}>
-                        <button className="close-btn" onClick={() => setVideoModalOpen(false)}>✖</button>
+                        <CloseButton className="close-btn" onClick={() => setVideoModalOpen(false)} ariaLabel="關閉" />
                         <div className="map-video-wrapper">
                             <iframe
                                 src={`https://www.youtube.com/embed/${VIDEO_EMBED_ID}?autoplay=1`}
@@ -288,7 +289,7 @@ export function SevenStepsMap() {
             {isExpanded && selectedStep && (
                 <div className="step-detail-overlay" onClick={() => setSelectedStep(null)}>
                     <div className="step-detail-card" onClick={e => e.stopPropagation()}>
-                        <button className="close-btn" onClick={() => setSelectedStep(null)}>✖</button>
+                        <CloseButton className="close-btn" onClick={() => setSelectedStep(null)} ariaLabel="關閉" />
                         <div className="detail-header">
                             <span className="detail-number">{selectedStep.id}</span>
                             <h3>{selectedStep.title}</h3>

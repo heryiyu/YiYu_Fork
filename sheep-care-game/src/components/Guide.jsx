@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SevenStepsMap } from './SevenStepsMap';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { CloseButton } from './ui/CloseButton';
 import { motion } from 'framer-motion';
 
 const ManualSection = () => {
@@ -400,7 +401,7 @@ export const Guide = ({ onClose }) => {
             <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '430px' }}> {/* Slightly wider for map comfort */}
                 <div className="modal-header">
                     <h3 id="guide-modal-title">📖 牧羊人手冊</h3>
-                    <button ref={closeBtnRef} className="close-btn" onClick={onClose} aria-label="關閉">✖</button>
+                    <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                 </div>
 
                 <div className="modal-form guide-modal-form">

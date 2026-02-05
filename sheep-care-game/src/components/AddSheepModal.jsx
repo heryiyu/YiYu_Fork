@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { AssetSheep } from './AssetSheep';
+import { CloseButton } from './ui/CloseButton';
 import { generateVisuals, parseMaturity } from '../utils/gameLogic';
 import { ASSETS } from '../utils/AssetRegistry';
 // AuthContext import removed
@@ -126,7 +127,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
                 <div className="editor-header" style={{ marginBottom: '0px' }}>
                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{isEditing ? `🎨 編輯外觀` : (isBatchMode ? '批量新增' : '新增小羊')}</h3>
-                    <button className="close-btn" onClick={onCancel}>✖</button>
+                    <CloseButton onClick={onCancel} ariaLabel="關閉" />
                 </div>
 
                 {(!isBatchMode || isEditing) && (
@@ -213,16 +214,10 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                     <div style={{ marginTop: 'auto' }}>
                         <button
                             type="submit"
+                            className="modal-btn-primary"
                             disabled={isBatchMode ? !batchInput.trim() : !name.trim()}
                             style={{
-                                width: '100%',
-                                padding: '8px',
-                                background: (isBatchMode ? !batchInput.trim() : !name.trim()) ? '#ccc' : '#66bb6a',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                fontWeight: 'bold',
-                                cursor: (isBatchMode ? !batchInput.trim() : !name.trim()) ? 'not-allowed' : 'pointer'
+                                background: (isBatchMode ? !batchInput.trim() : !name.trim()) ? 'var(--btn-disabled-bg)' : 'var(--palette-deep-green)'
                             }}
                         >
                             {isEditing ? '儲存' : (isBatchMode ? '批量新增' : '新增')}
