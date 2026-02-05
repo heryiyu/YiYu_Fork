@@ -1,20 +1,133 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, ChevronRight, Calendar, Info } from 'lucide-react';
+import { Heart, Plus, ChevronRight, Calendar, Info, ChevronUp, ChevronDown, Settings } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { calculateSheepState, parseMaturity, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
+import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { supabase } from '../services/supabaseClient';
+import { TagManagerModal } from './TagManagerModal';
+
+const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
+    const [orderedIds, setOrderedIds] = useState(assignedIds);
+    useEffect(() => { setOrderedIds(assignedIds || []); }, [(assignedIds || []).join(',')]);
+
+    const addTag = (tagId) => {
+        if (orderedIds.includes(tagId)) return;
+        const next = [...orderedIds, tagId];
+        setOrderedIds(next);
+        onSave(next);
+    };
+
+    const removeTag = (tagId) => {
+        const next = orderedIds.filter(id => id !== tagId);
+        setOrderedIds(next);
+        onSave(next);
+    };
+
+    const moveUp = (idx) => {
+        if (idx <= 0) return;
+        const next = [...orderedIds];
+        [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+        setOrderedIds(next);
+        onSave(next);
+    };
+
+    const moveDown = (idx) => {
+        if (idx >= orderedIds.length - 1) return;
+        const next = [...orderedIds];
+        [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+        setOrderedIds(next);
+        onSave(next);
+    };
+
+    const availableTags = tags.filter(t => !orderedIds.includes(t.id));
+
+    return (
+        <div className="tag-select">
+            <select
+                value=""
+                onChange={(e) => {
+                    const id = e.target.value;
+                    if (id) { addTag(id); e.target.value = ''; }
+                }}
+                style={{ width: '100%', marginBottom: '8px' }}
+                aria-label="選擇標籤"
+            >
+                <option value="">選擇標籤加入...</option>
+                {availableTags.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+            </select>
+            <p style={{ color: '#666', fontSize: '0.8rem', margin: '0 0 8px 0', lineHeight: 1.4 }}>
+                {orderedIds.length > 0 ? '第一個標籤會顯示在卡片上，可用 ↑↓ 調整順序。' : '選擇標籤後，第一個會顯示在卡片上。'}
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} role="list">
+                {orderedIds.map((tagId, idx) => {
+                    const tag = tags.find(t => t.id === tagId);
+                    if (!tag) return null;
+                    return (
+                        <li
+                            key={tagId}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                marginBottom: '6px'
+                            }}
+                        >
+                            <span
+                                style={{
+                                    padding: '2px 8px',
+                                    borderRadius: 6,
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    background: tag.color || '#6b7280',
+                                    color: '#fff',
+                                    flex: 1
+                                }}
+                            >
+                                {tag.name}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => moveUp(idx)}
+                                disabled={idx === 0}
+                                style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', padding: 8, opacity: idx === 0 ? 0.4 : 1 }}
+                                aria-label="上移"
+                            >
+                                <ChevronUp size={16} strokeWidth={2.5} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => moveDown(idx)}
+                                disabled={idx === orderedIds.length - 1}
+                                style={{ background: 'none', border: 'none', cursor: idx === orderedIds.length - 1 ? 'not-allowed' : 'pointer', padding: 8, opacity: idx === orderedIds.length - 1 ? 0.4 : 1 }}
+                                aria-label="下移"
+                            >
+                                <ChevronDown size={16} strokeWidth={2.5} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => removeTag(tagId)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#999', fontSize: '1.2rem' }}
+                                aria-label="移除"
+                            >
+                                ×
+                            </button>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+};
 
 export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId } = useGame();
+    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags } = useGame();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
 
     const target = (sheep || []).find(s => s.id === selectedSheepId);
     const [name, setName] = useState('');
     const [note, setNote] = useState('');
-
-    // Spiritual Maturity State
-    const [sLevel, setSLevel] = useState('');
 
     // Spiritual Plan State
     const [plans, setPlans] = useState([]);
@@ -31,6 +144,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     // Tab State: 'BASIC' | 'PLAN'
     const [activeTab, setActiveTab] = useState('BASIC');
     const [localMsg, setLocalMsg] = useState('');
+    const [showTagManager, setShowTagManager] = useState(false);
 
     // Fetch Plans from DB
     const fetchPlans = async () => {
@@ -53,8 +167,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         if (target) {
             setName(target.name);
             setNote(target.note || '');
-            const { level } = parseMaturity(target.spiritualMaturity);
-            setSLevel(level);
             setLocalMsg('');
             // Fetch remote plans
             fetchPlans();
@@ -300,19 +412,34 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>靈程 (Spiritual Maturity)</label>
-                                    <select
-                                        value={sLevel}
-                                        onChange={(e) => {
-                                            setSLevel(e.target.value);
-                                            handleBasicAutoSave('sLevel', e.target.value);
+                                    <label>標籤</label>
+                                    <TagSelect
+                                        sheepId={target?.id}
+                                        tags={tags}
+                                        assignedIds={(tagAssignmentsBySheep[target?.id] || []).map(a => a.tagId)}
+                                        onSave={(tagIds) => target?.id && setSheepTags(target.id, tagIds)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="tag-manage-btn"
+                                        onClick={() => setShowTagManager(true)}
+                                        style={{
+                                            marginTop: '10px',
+                                            fontSize: '0.8rem',
+                                            padding: '4px 10px',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            background: 'rgba(0,0,0,0.04)',
+                                            border: '1px solid rgba(0,0,0,0.1)',
+                                            borderRadius: '6px',
+                                            color: '#666',
+                                            cursor: 'pointer'
                                         }}
                                     >
-                                        <option value="">-- 請選擇 --</option>
-                                        <option value="新朋友">新朋友</option>
-                                        <option value="慕道友">慕道友</option>
-                                        <option value="基督徒">基督徒</option>
-                                    </select>
+                                        <Settings size={12} strokeWidth={2} />
+                                        管理標籤
+                                    </button>
                                 </div>
 
                                 {isAdmin && !isSleepingState && (
@@ -533,6 +660,9 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                     </div>
                 </div>
             </div>
+            {showTagManager && (
+                <TagManagerModal onClose={() => setShowTagManager(false)} />
+            )}
         </div>
     );
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 
 export const SettingsModal = ({ onClose }) => {
-    const { settings, updateSetting } = useGame();
+    const { settings, updateSetting, tags } = useGame();
     const closeBtnRef = useRef(null);
 
     useEffect(() => {
@@ -97,26 +97,33 @@ export const SettingsModal = ({ onClose }) => {
                                     <li><strong>健康度 (Health):</strong> 代表小羊的生命狀態，越高越有活力。</li>
                                 </ul>
 
-                                <h4>2. 小羊狀態 (Sheep States)</h4>
-                                <p>根據照顧狀況，小羊會有不同的標籤：</p>
-                                <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-                                    <li style={{ marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '22px', padding: '0 8px', borderRadius: '6px', background: '#d2dbea', color: '#5385db', fontSize: '0.8rem', fontWeight: 'bold', marginRight: '8px', lineHeight: 1 }}>新朋友</span>
-                                        <span style={{ fontSize: '0.95rem' }}>剛加入的新夥伴。</span>
-                                    </li>
-                                    <li style={{ marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '22px', padding: '0 8px', borderRadius: '6px', background: '#e5d6f1', color: '#7f5b9b', fontSize: '0.8rem', fontWeight: 'bold', marginRight: '8px', lineHeight: 1 }}>夥伴</span>
-                                        <span style={{ fontSize: '0.95rem' }}>名字長度大於 3 字的小羊 (因著您的命名，關係更加親密)。</span>
-                                    </li>
-                                    <li style={{ marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '22px', padding: '0 8px', borderRadius: '6px', background: '#fde8ec', color: '#f39fac', fontSize: '0.8rem', fontWeight: 'bold', marginRight: '8px', lineHeight: 1 }}>生病</span>
-                                        <span style={{ fontSize: '0.95rem' }}>健康度低下 (&lt; 40%)，容易流失健康，需要加倍關心。</span>
-                                    </li>
-                                    <li style={{ marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '22px', padding: '0 8px', borderRadius: '6px', background: '#f5d6d6', color: '#b65a5a', fontSize: '0.8rem', fontWeight: 'bold', marginRight: '8px', lineHeight: 1 }}>已沉睡</span>
-                                        <span style={{ fontSize: '0.95rem' }}>健康度歸零，化為靈魂狀態，需要喚醒。</span>
-                                    </li>
-                                </ul>
+                                <h4>2. 小羊標籤 (Tags)</h4>
+                                <p>您可自訂標籤來分類小羊，在小羊詳情中選擇「標籤」並點「管理標籤」新增。卡片上會顯示您為該小羊設定的第一個標籤。</p>
+                                <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
+                                {tags && tags.length > 0 ? (
+                                    <div style={{ marginTop: '8px' }}>
+                                        <p style={{ marginBottom: '6px', fontWeight: 600 }}>您目前的標籤：</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {tags.map(t => (
+                                                <span
+                                                    key={t.id}
+                                                    style={{
+                                                        padding: '2px 8px',
+                                                        borderRadius: 6,
+                                                        fontSize: '0.85rem',
+                                                        fontWeight: 600,
+                                                        background: t.color || '#6b7280',
+                                                        color: '#fff'
+                                                    }}
+                                                >
+                                                    {t.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
+                                )}
 
                                 <h4>3. 離線與自然衰退</h4>
                                 <p>即使不在線上，時間仍在流動：</p>
@@ -133,9 +140,9 @@ export const SettingsModal = ({ onClose }) => {
                                     <li><strong>中斷歸零:</strong> 若中斷一天沒禱告，進度將歸零重來。</li>
                                 </ul>
 
-                                <h4>5. 靈程與資料管理</h4>
+                                <h4>5. 標籤與資料管理</h4>
                                 <ul>
-                                    <li><strong>靈程 (Maturity):</strong> 可設定小羊的屬靈階段 (新朋友/慕道友/基督徒...)。</li>
+                                    <li><strong>標籤 (Tags):</strong> 可自訂標籤來分類小羊，在小羊詳情中管理。</li>
                                     <li><strong>使用說明:</strong> 請使用 LINE 帳號登入，系統會自動備份您的羊群資料。</li>
                                 </ul>
 

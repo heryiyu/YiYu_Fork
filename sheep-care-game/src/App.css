@@ -614,6 +614,66 @@
   font-size: 0.85rem;
 }
 
+/* Sheep state list (Settings modal) */
+.sheep-state-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.sheep-state-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sheep-state-chip-wrap {
+  flex: 0 0 64px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sheep-state-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.sheep-state-text {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sheep-state-chip--new {
+  background: var(--tag-new-bg);
+  color: var(--tag-new-text);
+}
+
+.sheep-state-chip--partner {
+  background: var(--tag-christian-bg);
+  color: var(--tag-christian-text);
+}
+
+.sheep-state-chip--sick {
+  background: var(--btn-care-bg);
+  color: var(--btn-care-text);
+}
+
+.sheep-state-chip--sleeping {
+  background: var(--tag-dead-bg);
+  color: var(--tag-dead-text);
+}
+
 /* Plan list header + add button */
 .plan-list-header {
   position: sticky;

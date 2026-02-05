@@ -152,6 +152,18 @@
   color: var(--tag-christian-text);
 }
 
+/* 健康 – fallback when no tag assigned */
+.sheep-card-tag--healthy {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* 自訂標籤 – overridden by inline style */
+.sheep-card-tag--custom {
+  background: #6b7280;
+  color: #fff;
+}
+
 /* Avatar area */
 .sheep-card-avatar {
   flex: 1;

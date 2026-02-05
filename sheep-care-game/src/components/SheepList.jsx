@@ -70,9 +70,12 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     };
 };
 
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onLongPress }) => {
-    const tagVariant = isSleepingState ? 'dead' : (isSick ? 'sick' : (s.name.length > 3 ? 'companion' : 'new'));
-    const tagLabel = isSleepingState ? '已沉睡' : (isSick ? '生病' : (s.name.length > 3 ? '夥伴' : '新朋友'));
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onLongPress, tags = [], tagAssignmentsBySheep = {} }) => {
+    const assigned = (tagAssignmentsBySheep[s.id] || []);
+    const firstTagId = assigned.length > 0 ? assigned[0].tagId : null;
+    const firstTag = firstTagId ? tags.find(t => t.id === firstTagId) : null;
+    const tagVariant = firstTag ? 'custom' : (isSleepingState ? 'dead' : (isSick ? 'sick' : 'healthy'));
+    const tagLabel = firstTag ? firstTag.name : (isSleepingState ? '已沉睡' : (isSick ? '生病' : '健康'));
     const healthFull = Math.ceil(s.health || 0) >= 100;
 
     // Interaction Logic
@@ -105,7 +108,10 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                     <span className="sheep-card-health-icon">♥</span>
                     <span>{Math.ceil(s.health || 0)}%</span>
                 </div>
-                <div className={`sheep-card-tag sheep-card-tag--${tagVariant}`}>
+                <div
+                    className={`sheep-card-tag sheep-card-tag--${tagVariant}`}
+                    style={firstTag ? { background: firstTag.color || '#6b7280', color: '#fff' } : undefined}
+                >
                     {tagLabel}
                 </div>
                 <div className="sheep-card-header-actions">
@@ -162,7 +168,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {
-    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin } = useGame();
+    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, tags, tagAssignmentsBySheep } = useGame();
     const pinnedSet = useMemo(() => new Set(settings?.pinnedSheepIds || []), [settings?.pinnedSheepIds]);
     const sortedSheep = useMemo(() => {
         return [...(sheep || [])].sort((a, b) => {
@@ -504,16 +510,15 @@ export const SheepList = ({ onSelect }) => {
                                     s={s}
                                     isSelectionMode={isSelectionMode}
                                     isSelected={selectedIds.has(s.id)}
-                                    // Pass Favorite Props
                                     isPinned={settings?.pinnedSheepIds?.includes(s.id)}
                                     onTogglePin={() => togglePin && togglePin(s.id)}
-                                    onSelect={(sheep) => {
-                                        if (onSelect) onSelect(sheep);
-                                    }}
+                                    onSelect={(sheep) => { if (onSelect) onSelect(sheep); }}
                                     onToggleSelect={toggleSelection}
                                     onLongPress={handleLongPress}
                                     isSleepingState={isSleeping(s)}
                                     isSick={s.status === 'sick'}
+                                    tags={tags}
+                                    tagAssignmentsBySheep={tagAssignmentsBySheep}
                                 />
                             </div>
                         ))}

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SHEEP_TYPES } from '../data/sheepData';
 import { calculateTick, generateVisuals, getSheepMessage, calculateSheepState, calculateOfflineDecay, isSleeping, getAwakeningProgress, SLEEPING_STATUS } from '../utils/gameLogic';
 import { gameState } from '../services/gameState';
+import { tagService } from '../services/tagService';
 import { supabase } from '../services/supabaseClient';
 
 const defaultGameContext = {
@@ -22,6 +23,13 @@ const defaultGameContext = {
     introWatched: false,
     showIntroVideo: false,
     markIntroWatched: () => { },
+    tags: [],
+    tagAssignmentsBySheep: {},
+    loadTags: () => { },
+    createTag: () => null,
+    updateTag: () => null,
+    deleteTag: () => false,
+    setSheepTags: () => false,
 };
 
 const GameContext = createContext(defaultGameContext);
@@ -67,6 +75,9 @@ export const GameProvider = ({ children }) => {
     const [weather, setWeather] = useState({ type: 'sunny', isDay: true, temp: 25 });
     const [introWatched, setIntroWatched] = useState(true); // Default true to avoid flash on init, set to false if confirmed new
     const [showIntroVideo, setShowIntroVideo] = useState(false);
+
+    const [tags, setTags] = useState([]);
+    const [tagAssignmentsBySheep, setTagAssignmentsBySheep] = useState({});
 
 
 
@@ -154,9 +165,21 @@ export const GameProvider = ({ children }) => {
                 }
 
                 setIsDataLoaded(true);
+                const [loadedTags, loadedAssignments] = await Promise.all([
+                    tagService.loadTags(userId),
+                    tagService.loadTagAssignments(userId)
+                ]);
+                setTags(loadedTags);
+                setTagAssignmentsBySheep(loadedAssignments);
                 showMessage(`歡迎回來，${effectiveNickname}! 👋`);
             } else {
                 // Fallback for edge cases
+                const [loadedTags, loadedAssignments] = await Promise.all([
+                    tagService.loadTags(userId),
+                    tagService.loadTagAssignments(userId)
+                ]);
+                setTags(loadedTags);
+                setTagAssignmentsBySheep(loadedAssignments);
                 showMessage("設定完成！");
                 setIsDataLoaded(true);
             }
@@ -444,6 +467,7 @@ export const GameProvider = ({ children }) => {
         if (lineId) await clearData(lineId); // Clear IDB
         setLineId(null);
         setSheep([]); setInventory([]);
+        setTags([]); setTagAssignmentsBySheep({});
         setIsDataLoaded(false);
         window.location.reload();
     };
@@ -771,6 +795,42 @@ export const GameProvider = ({ children }) => {
         });
     };
 
+    const loadTags = async () => {
+        if (!lineId) return;
+        const [loadedTags, loadedAssignments] = await Promise.all([
+            tagService.loadTags(lineId),
+            tagService.loadTagAssignments(lineId)
+        ]);
+        setTags(loadedTags);
+        setTagAssignmentsBySheep(loadedAssignments);
+    };
+
+    const createTag = async (opts) => {
+        if (!lineId) return null;
+        const created = await tagService.createTag(lineId, opts);
+        if (created) await loadTags();
+        return created;
+    };
+
+    const updateTag = async (tagId, opts) => {
+        const updated = await tagService.updateTag(tagId, opts);
+        if (updated) await loadTags();
+        return updated;
+    };
+
+    const deleteTag = async (tagId) => {
+        const ok = await tagService.deleteTag(tagId);
+        if (ok) await loadTags();
+        return ok;
+    };
+
+    const setSheepTags = async (sheepId, tagIds) => {
+        if (!lineId) return false;
+        const ok = await tagService.setSheepTags(sheepId, lineId, tagIds);
+        if (ok) await loadTags();
+        return ok;
+    };
+
     return (
         <GameContext.Provider value={{
             currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
@@ -783,7 +843,6 @@ export const GameProvider = ({ children }) => {
             saveToCloud, forceLoadFromCloud, // Exposed
             notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
             updateNickname, // Exposed
-            isAdmin,
             showIntroVideo,
             markIntroWatched: () => {
                 setIntroWatched(true);
@@ -792,7 +851,14 @@ export const GameProvider = ({ children }) => {
             },
             settings, // expose settings
             updateSetting, // expose updateSetting
-            setWeather // Exposed for Admin Control
+            setWeather, // Exposed for Admin Control
+            tags,
+            tagAssignmentsBySheep,
+            loadTags,
+            createTag,
+            updateTag,
+            deleteTag,
+            setSheepTags
         }}>
             {children}
         </GameContext.Provider>
