@@ -26,7 +26,6 @@ export const ConfirmDialogProvider = ({ children }) => {
 
     const confirm = useCallback((options = {}) => {
         return new Promise((resolve) => {
-            console.log('[Confirm] open', options);
             resolveRef.current = resolve;
             setState({
                 open: true,
@@ -41,14 +40,12 @@ export const ConfirmDialogProvider = ({ children }) => {
     }, []);
 
     const handleConfirm = useCallback(() => {
-        console.log('[Confirm] confirm click');
         resolveRef.current?.(true);
         resolveRef.current = null;
         setState(prev => ({ ...prev, open: false }));
     }, []);
 
     const handleCancel = useCallback(() => {
-        console.log('[Confirm] cancel click');
         resolveRef.current?.(false);
         resolveRef.current = null;
         setState(prev => ({ ...prev, open: false }));

@@ -10,25 +10,6 @@ import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal } from 'lucide-
 import '../styles/design-tokens.css';
 import './SheepList.css';
 
-const FILTER_VISIBILITY_KEY = 'sheep_filter_visibility';
-
-const loadHiddenFilters = () => {
-    try {
-        const raw = localStorage.getItem(FILTER_VISIBILITY_KEY);
-        return raw ? new Set(JSON.parse(raw)) : new Set();
-    } catch {
-        return new Set();
-    }
-};
-
-const saveHiddenFilters = (hidden) => {
-    try {
-        localStorage.setItem(FILTER_VISIBILITY_KEY, JSON.stringify([...hidden]));
-    } catch (e) {
-        console.warn('Failed to save filter visibility', e);
-    }
-};
-
 const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, onClose, anchorRef }) => {
     const menuRef = useRef(null);
     const scrollRef = useRef(null);
@@ -338,7 +319,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {
-    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, tags, tagAssignmentsBySheep } = useGame();
+    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, tags, tagAssignmentsBySheep, updateSetting } = useGame();
     const confirm = useConfirm();
     const pinnedSet = useMemo(() => new Set(settings?.pinnedSheepIds || []), [settings?.pinnedSheepIds]);
     const sortedSheep = useMemo(() => {
@@ -357,20 +338,17 @@ export const SheepList = ({ onSelect }) => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [showTagManagerModal, setShowTagManagerModal] = useState(false);
-    const [hiddenFilterIds, setHiddenFilterIds] = useState(loadHiddenFilters);
+    const hiddenFilterIds = useMemo(() => new Set(settings?.hiddenFilters || []), [settings?.hiddenFilters]);
     const filterMenuAnchorRef = useRef(null);
 
     // Collapsible State (Default Open)
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const toggleFilterVisibility = (filterId) => {
-        setHiddenFilterIds(prev => {
-            const next = new Set(prev);
-            if (next.has(filterId)) next.delete(filterId);
-            else next.add(filterId);
-            saveHiddenFilters(next);
-            return next;
-        });
+        const next = new Set(hiddenFilterIds);
+        if (next.has(filterId)) next.delete(filterId);
+        else next.add(filterId);
+        updateSetting('hiddenFilters', Array.from(next));
     };
 
     const effectiveFilterStatus = hiddenFilterIds.has(filterStatus) ? 'ALL' : filterStatus;
@@ -438,7 +416,6 @@ export const SheepList = ({ onSelect }) => {
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
         const n = selectedIds.size;
-        console.log('[SheepList] delete selected clicked', { count: n });
         const ok = await confirm({
             title: '刪除小羊',
             message: `確定要刪除這 ${n} 隻小羊嗎？`,
@@ -446,7 +423,6 @@ export const SheepList = ({ onSelect }) => {
             variant: 'danger',
             confirmLabel: '刪除'
         });
-        console.log('[SheepList] confirm result', ok);
         if (!ok) return;
         deleteMultipleSheep(Array.from(selectedIds));
         setIsSelectionMode(false);
@@ -456,13 +432,11 @@ export const SheepList = ({ onSelect }) => {
     const handleResetSelected = async () => {
         if (selectedIds.size === 0) return;
         const n = selectedIds.size;
-        console.log('[SheepList] reset selected clicked', { count: n });
         const ok = await confirm({
             title: '重置狀態',
             message: `確定要將這 ${n} 隻小羊重置為「健康 (100%)」嗎？`,
             variant: 'default'
         });
-        console.log('[SheepList] confirm result', ok);
         if (!ok) return;
         updateMultipleSheep(Array.from(selectedIds), {
             health: 100,

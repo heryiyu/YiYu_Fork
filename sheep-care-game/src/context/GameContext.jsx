@@ -16,7 +16,7 @@ const defaultGameContext = {
     inventory: [],
     message: null,
     weather: { type: 'sunny', isDay: true, temp: 25 },
-    settings: { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [] },
+    settings: { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] },
     notificationEnabled: false,
     toggleNotification: () => { },
     isAdmin: false,
@@ -87,10 +87,10 @@ export const GameProvider = ({ children }) => {
         try {
             const saved = localStorage.getItem('sheep_game_settings');
             // Default: maxVisibleSheep 15, notify false, pinnedSheepIds []
-            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [] };
+            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] };
             return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
         } catch {
-            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [] };
+            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] };
         }
     });
 
@@ -212,6 +212,7 @@ export const GameProvider = ({ children }) => {
             const currentSettings = {
                 maxVisibleSheep: 20, // Default Safety Net
                 notify: false,
+                hiddenFilters: [],
                 ...rawSettings
             };
 

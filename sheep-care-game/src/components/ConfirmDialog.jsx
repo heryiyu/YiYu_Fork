@@ -30,8 +30,6 @@ export const ConfirmDialog = ({
 
     if (!open) return null;
 
-    console.log('[ConfirmDialog] render', { title, message, variant, warning: Boolean(warning) });
-
     const isDanger = variant === 'danger';
 
     return (

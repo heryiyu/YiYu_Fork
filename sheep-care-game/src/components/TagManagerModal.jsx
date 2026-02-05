@@ -37,7 +37,6 @@ export const TagManagerModal = ({ onClose }) => {
     };
 
     const handleDelete = async (tag) => {
-        console.log('[TagManagerModal] delete clicked', { tagId: tag.id, tagName: tag.name });
         const affectedCount = Object.values(tagAssignmentsBySheep || {}).filter(
             assignments => assignments.some(a => a.tagId === tag.id)
         ).length;
@@ -51,7 +50,6 @@ export const TagManagerModal = ({ onClose }) => {
             variant: 'danger',
             confirmLabel: '刪除'
         });
-        console.log('[TagManagerModal] confirm result', ok);
         if (!ok) return;
         setLoading(true);
         try {

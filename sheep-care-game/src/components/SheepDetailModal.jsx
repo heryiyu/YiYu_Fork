@@ -295,14 +295,12 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     };
 
     const handleDeletePlan = async (id) => {
-        console.log('[SheepDetailModal] delete plan clicked', { planId: id });
         const ok = await confirm({
             title: '刪除規劃',
             message: '確定要刪除此靈程規劃嗎？',
             variant: 'danger',
             confirmLabel: '刪除'
         });
-        console.log('[SheepDetailModal] confirm result', ok);
         if (!ok) return;
 
         setPlanActionLoading(true);
