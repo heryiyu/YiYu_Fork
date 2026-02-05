@@ -601,12 +601,30 @@
   gap: 5px;
 }
 
+.modal-hint-box,
 .modal-info-box {
-  padding: 8px;
-  background: #eee;
-  border-radius: 8px;
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  background: var(--bg-card-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
   font-size: 0.9rem;
-  color: #555;
+  color: var(--text-label);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.modal-hint-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+  margin-top: 1px;
+}
+
+.modal-hint-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .modal-info-box-blue {

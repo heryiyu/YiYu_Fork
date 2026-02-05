@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
+import { ModalHint } from './ModalHint';
 
 export const SettingsModal = ({ onClose }) => {
     const { settings, updateSetting, tags } = useGame();
@@ -71,9 +72,9 @@ export const SettingsModal = ({ onClose }) => {
                                         <span>50 (豐富)</span>
                                     </div>
 
-                                    <p className="modal-info-box" style={{ marginTop: '10px' }}>
-                                        💡 當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
-                                    </p>
+                                    <ModalHint className="modal-info-box" style={{ marginTop: '10px' }}>
+                                        當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
+                                    </ModalHint>
                                 </div>
 
                                 <button className="modal-btn-primary" onClick={onClose} style={{ marginTop: '20px' }}>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, ChevronRight, Calendar, Info, ChevronUp, ChevronDown, Settings } from 'lucide-react';
+import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { supabase } from '../services/supabaseClient';
 import { TagManagerModal } from './TagManagerModal';
+import { ModalHint } from './ModalHint';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     const [orderedIds, setOrderedIds] = useState(assignedIds);
@@ -539,10 +540,9 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                 <span>新增規劃</span>
                                             </button>
                                         </div>
-                                        <div className="plan-retention-hint" role="note" aria-live="polite">
-                                            <Info size={14} strokeWidth={2} />
-                                            <span>系統會自動清理超過一個月的過期行程</span>
-                                        </div>
+                                        <ModalHint className="plan-retention-hint">
+                                            系統會自動清理超過一個月的過期行程
+                                        </ModalHint>
 
                                         <div className="plan-list">
                                             {plans.length === 0 ? (
