@@ -1,23 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SevenStepsMap } from './SevenStepsMap';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { useGame } from '../context/GameContext';
 import { CloseButton } from './ui/CloseButton';
 import { motion, useReducedMotion } from 'framer-motion';
 import './Guide.css';
 
 const ManualSection = () => {
     const shouldReduceMotion = useReducedMotion();
+    const { isAdmin } = useGame();
     const [view, setView] = useState('MENU'); // MENU | SEVEN_STEPS | BIND_RELEASE | SCRIPTURES | CARDS | PRAYERS
     const [selectedId, setSelectedId] = useState(null);
     const [activeScripture, setActiveScripture] = useState(null); // New state for Scriptures
 
-    const menuItems = [
+    const allMenuItems = [
         { id: 'SEVEN_STEPS', label: '領人歸主七招', icon: '🗺️' },
         { id: 'BIND_RELEASE', label: '五綑綁五釋放', icon: '🤲' },
-        { id: 'SCRIPTURES', label: '七經文', icon: '📖' },
-        { id: 'CARDS', label: '天父小卡', icon: '💌' },
+        { id: 'SCRIPTURES', label: '七經文', icon: '📖', wip: true },
+        { id: 'CARDS', label: '天父小卡', icon: '💌', wip: true },
         { id: 'PRAYERS', label: '認領禱告詞範例', icon: '🙏' },
     ];
+
+    const menuItems = isAdmin ? allMenuItems : allMenuItems.filter(item => !item.wip);
 
     const handleItemClick = (id) => {
         setSelectedId(id);
@@ -68,8 +72,9 @@ const ManualSection = () => {
                                     transition: { duration: 0.5 }
                                 } : {}}
                             />
-                            <span className="guide-menu-label">
+                            <span className="guide-menu-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 {item.label}
+                                {item.wip && <span style={{ fontSize: '0.6rem', background: 'var(--palette-orange-action)', color: '#fff', padding: '2px 4px', borderRadius: '4px' }}>WIP</span>}
                             </span>
                         </motion.button>
                     ))}
