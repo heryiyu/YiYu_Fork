@@ -276,12 +276,17 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                             type="button"
                             className="pin-btn"
                             onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation(); // Standard click stop propagation is enough here
                                 onTogglePin(s.id);
                             }}
                             // MouseDown/TouchStart here should NOT trigger the card's long press
                             onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
                             onTouchStart={(e) => e.stopPropagation()}
+                            onTouchEnd={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onPointerUp={(e) => e.stopPropagation()}
                             style={{
                                 background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
                                 opacity: isPinned ? 1 : 0.2,

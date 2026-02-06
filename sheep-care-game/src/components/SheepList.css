@@ -98,6 +98,8 @@
   position: absolute;
   top: 8px;
   right: 11px;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .sheep-card-health {
