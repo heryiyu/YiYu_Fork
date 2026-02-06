@@ -911,7 +911,8 @@ export const SheepList = ({ onSelect }) => {
                             flexDirection: 'row',
                             alignItems: 'flex-end',
                             gap: '12px',
-                            padding: '10px 16px 12px 16px',
+                            // Reduce bottom padding so the scroll area sits closer to the bottom edge
+                            padding: '10px 16px 6px 16px',
                             overflowX: 'auto',
                             overflowY: 'hidden',
                             scrollBehavior: 'smooth',
