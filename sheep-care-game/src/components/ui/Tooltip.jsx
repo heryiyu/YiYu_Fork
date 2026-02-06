@@ -101,7 +101,10 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
             className="tooltip-root"
             onMouseEnter={handleOpen}
             onMouseLeave={handleClose}
-            onPointerDown={handleClose}
+            onPointerDown={() => {
+                handleClose();
+                triggerRef.current?.blur();
+            }}
             onFocus={handleOpen}
             onBlur={handleClose}
         >
