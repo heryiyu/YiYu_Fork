@@ -10,32 +10,59 @@ export const Field = ({ onSelectSheep }) => {
     const { sheep, prayForSheep, weather, settings, focusedSheepId, clearFocus, lineId } = useGame();
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // --- Manual Panning Logic ---
-    const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-    const [isPanning, setIsPanning] = useState(false);
-    const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+    // --- Manual Panning Logic (Ref-based for Performance) ---
+    // We separate the "Zoom/Center" transform (React state) from "Pan" transform (Direct DOM)
+    // to avoid re-rendering the whole tree during drag.
+
+    // Refs for state without re-render
+    const panStateRef = React.useRef({ x: 0, y: 0, startX: 0, startY: 0, isPanning: false });
+    const panLayerRef = React.useRef(null);
+    const rafRef = React.useRef(null);
 
     // Reset pan when focus changes
     useEffect(() => {
-        setPanOffset({ x: 0, y: 0 });
+        panStateRef.current = { x: 0, y: 0, startX: 0, startY: 0, isPanning: false };
+        if (panLayerRef.current) {
+            panLayerRef.current.style.transform = `translate(0px, 0px)`;
+        }
     }, [focusedSheepId]);
 
     const handlePointerDown = (e) => {
         if (!focusedSheepId) return;
-        setIsPanning(true);
-        setStartPan({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+        panStateRef.current.isPanning = true;
+        panStateRef.current.startX = e.clientX - panStateRef.current.x;
+        panStateRef.current.startY = e.clientY - panStateRef.current.y;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        e.currentTarget.style.cursor = 'grabbing';
     };
 
     const handlePointerMove = (e) => {
-        if (!isPanning || !focusedSheepId) return;
-        setPanOffset({
-            x: e.clientX - startPan.x,
-            y: e.clientY - startPan.y
+        if (!panStateRef.current.isPanning || !focusedSheepId) return;
+
+        const newX = e.clientX - panStateRef.current.startX;
+        const newY = e.clientY - panStateRef.current.startY;
+
+        panStateRef.current.x = newX;
+        panStateRef.current.y = newY;
+
+        // Apply directly to DOM via RAF
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+            if (panLayerRef.current) {
+                // Adjust scale for 1:1 tracking feeling? 
+                // The PanLayer is inside the Scaled ZoomLayer.
+                // A 1px translate on PanLayer = 2.5px screen movement.
+                // To have 1:1 screen movement, we divide by scale.
+                const scale = 2.5;
+                panLayerRef.current.style.transform = `translate(${newX / scale}px, ${newY / scale}px)`;
+            }
         });
     };
 
-    const handlePointerUp = () => {
-        setIsPanning(false);
+    const handlePointerUp = (e) => {
+        panStateRef.current.isPanning = false;
+        e.currentTarget.style.cursor = focusedSheepId ? 'grab' : 'default';
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
 
     // --- 1. Separate Sheep ---
@@ -165,16 +192,11 @@ export const Field = ({ onSelectSheep }) => {
 
                 const scale = 2.5;
 
-                // Translate % is relative to 250% canvas; divide by CANVAS_SCALE for correct pan
-                // Add manual pan offset (divide by scale for 1:1 feel)
-                const adjustedPanX = panOffset.x / scale;
-                const adjustedPanY = panOffset.y / scale;
-
                 return {
-                    transform: `scale(${scale}) translate(calc(${(50 - sx) / CANVAS_SCALE}% + ${adjustedPanX}px), calc(${(sy_center - 50) / CANVAS_SCALE}% + ${adjustedPanY}px))`,
+                    transform: `scale(${scale}) translate(${(50 - sx) / CANVAS_SCALE}%, ${(sy_center - 50) / CANVAS_SCALE}%)`,
                     transformOrigin: '50% 50%',
-                    transition: isPanning ? 'none' : 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    cursor: isPanning ? 'grabbing' : 'grab'
+                    transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    cursor: 'grab' // Static cursor, Dynamic handled in events
                 };
             }
         }
@@ -183,7 +205,7 @@ export const Field = ({ onSelectSheep }) => {
             transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             cursor: 'default'
         };
-    }, [focusedSheepId, sheep, panOffset, isPanning]);
+    }, [focusedSheepId, sheep]);
 
     if (!isLoaded) {
         return <AssetPreloader onLoaded={() => setIsLoaded(true)} />;
@@ -194,7 +216,8 @@ export const Field = ({ onSelectSheep }) => {
             style={{
                 position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
                 touchAction: 'none',
-                ...(!focusedSheepId ? {} : { cursor: isPanning ? 'grabbing' : 'grab' })
+                touchAction: 'none',
+                ...(!focusedSheepId ? {} : { cursor: 'grab' })
             }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
@@ -202,7 +225,9 @@ export const Field = ({ onSelectSheep }) => {
             onPointerLeave={handlePointerUp}
             onClick={(e) => {
                 // Prevent click if we dragged significantly
-                if (focusedSheepId && !isPanning && Math.abs(panOffset.x) < 5 && Math.abs(panOffset.y) < 5) {
+                const dx = Math.abs(panStateRef.current.x);
+                const dy = Math.abs(panStateRef.current.y);
+                if (focusedSheepId && !panStateRef.current.isPanning && dx < 5 && dy < 5) {
                     clearFocus();
                 }
             }}
@@ -214,31 +239,37 @@ export const Field = ({ onSelectSheep }) => {
                 transformOrigin: '50% 50%',
                 ...fieldStyle
             }}>
-                <AssetBackground userId={lineId || 'guest'} weather={weather} />
+                {/* Pan Layer: Inner wrapper for manual drag that DOES NOT trigger React renders */}
+                <div
+                    ref={panLayerRef}
+                    style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, willChange: 'transform' }}
+                >
+                    <AssetBackground userId={lineId || 'guest'} weather={weather} />
 
-                {/* Content area: 40% x 40% centered so sheep 0-100 coords map to viewport */}
-                <div style={{
-                    position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
-                    pointerEvents: 'none'
-                }}>
-                    {/* 1. Ghosts (Floaty) */}
-                    {ghostSheep.map(s => (
-                        <div key={s.id} style={{ pointerEvents: 'auto' }}>
-                            <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} />
-                        </div>
-                    ))}
+                    {/* Content area: 40% x 40% centered so sheep 0-100 coords map to viewport */}
+                    <div style={{
+                        position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
+                        pointerEvents: 'none'
+                    }}>
+                        {/* 1. Ghosts (Floaty) */}
+                        {ghostSheep.map(s => (
+                            <div key={s.id} style={{ pointerEvents: 'auto' }}>
+                                <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} />
+                            </div>
+                        ))}
 
-                    {/* 2. Living Sheep (Grounded) */}
-                    {finalVisibleLiving.map(s => (
-                        <div key={s.id} style={{ pointerEvents: 'auto' }}>
-                            <Sheep
-                                sheep={s}
-                                onPray={prayForSheep}
-                                onSelect={onSelectSheep}
-                                alwaysShowName={s.id === focusedSheepId}
-                            />
-                        </div>
-                    ))}
+                        {/* 2. Living Sheep (Grounded) */}
+                        {finalVisibleLiving.map(s => (
+                            <div key={s.id} style={{ pointerEvents: 'auto' }}>
+                                <Sheep
+                                    sheep={s}
+                                    onPray={prayForSheep}
+                                    onSelect={onSelectSheep}
+                                    alwaysShowName={s.id === focusedSheepId}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
