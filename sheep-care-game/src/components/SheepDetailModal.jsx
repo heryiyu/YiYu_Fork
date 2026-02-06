@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings } from 'lucide-react';
+import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
@@ -8,6 +8,9 @@ import { TagManagerModal } from './TagManagerModal';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from './ui/CloseButton';
 import { Slider } from './ui/Slider';
+import { Tag } from './ui/Tag';
+import { IconButton, IconButtonGroup } from './ui/IconButton';
+import { Tooltip } from './ui/Tooltip';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     const [orderedIds, setOrderedIds] = useState(assignedIds);
@@ -46,21 +49,24 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
 
     return (
         <div className="tag-select">
-            <select
-                value=""
-                onChange={(e) => {
-                    const id = e.target.value;
-                    if (id) { addTag(id); e.target.value = ''; }
-                }}
-                style={{ width: '100%', marginBottom: '8px' }}
-                aria-label="選擇標籤"
-            >
-                <option value="">選擇標籤加入...</option>
-                {availableTags.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-            </select>
-            <p style={{ color: '#666', fontSize: '0.8rem', margin: '0 0 8px 0', lineHeight: 1.4 }}>
+            <div className="form-group">
+                <label htmlFor="tag-select-dropdown">標籤</label>
+                <select
+                    id="tag-select-dropdown"
+                    value=""
+                    onChange={(e) => {
+                        const id = e.target.value;
+                        if (id) { addTag(id); e.target.value = ''; }
+                    }}
+                    aria-label="選擇標籤"
+                >
+                    <option value="">選擇標籤加入...</option>
+                    {availableTags.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                </select>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 8px 0', lineHeight: 1.4 }}>
                 {orderedIds.length > 0 ? '第一個標籤會顯示在卡片上，可用 ↑↓ 調整順序。' : '選擇標籤後，第一個會顯示在卡片上。'}
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} role="list">
@@ -77,45 +83,12 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
                                 marginBottom: '6px'
                             }}
                         >
-                            <span
-                                style={{
-                                    padding: '2px 8px',
-                                    borderRadius: 6,
-                                    fontSize: '0.85rem',
-                                    fontWeight: 600,
-                                    background: tag.color || '#6b7280',
-                                    color: '#fff',
-                                    flex: 1
-                                }}
-                            >
-                                {tag.name}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => moveUp(idx)}
-                                disabled={idx === 0}
-                                style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'not-allowed' : 'pointer', padding: 8, opacity: idx === 0 ? 0.4 : 1 }}
-                                aria-label="上移"
-                            >
-                                <ChevronUp size={16} strokeWidth={2.5} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => moveDown(idx)}
-                                disabled={idx === orderedIds.length - 1}
-                                style={{ background: 'none', border: 'none', cursor: idx === orderedIds.length - 1 ? 'not-allowed' : 'pointer', padding: 8, opacity: idx === orderedIds.length - 1 ? 0.4 : 1 }}
-                                aria-label="下移"
-                            >
-                                <ChevronDown size={16} strokeWidth={2.5} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => removeTag(tagId)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#999', fontSize: '1.2rem' }}
-                                aria-label="移除"
-                            >
-                                ×
-                            </button>
+                            <Tag name={tag.name} color={tag.color} className="tag-select-tag" style={{ flex: 1 }} />
+                            <IconButtonGroup>
+                                <IconButton icon={ChevronUp} onClick={() => moveUp(idx)} disabled={idx === 0} ariaLabel="上移" />
+                                <IconButton icon={ChevronDown} onClick={() => moveDown(idx)} disabled={idx === orderedIds.length - 1} ariaLabel="下移" />
+                                <IconButton icon={X} onClick={() => removeTag(tagId)} ariaLabel="移除" className="icon-btn--muted" />
+                            </IconButtonGroup>
                         </li>
                     );
                 })}
@@ -413,11 +386,11 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
                                 <div className="form-group">
                                     <label>狀態</label>
-                                    <div className="modal-status-box" style={{ color: isSleepingState ? '#666' : (target.health >= 80 ? '#2196f3' : (target.status === 'healthy' ? 'green' : 'var(--palette-danger)')) }}>
+                                    <div className="modal-status-box" style={{ color: isSleepingState ? 'var(--text-muted)' : (target.health >= 80 ? 'var(--palette-blue-action)' : (target.status === 'healthy' ? 'var(--palette-deep-green)' : 'var(--palette-danger)')) }}>
                                         <div>
                                             {getStatusText(target.status, target.health)}
                                             {!isSleepingState && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
-                                            {!isSleepingState && <span style={{ marginLeft: '10px', color: '#ff9800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
+                                            {!isSleepingState && <span style={{ marginLeft: '10px', color: 'var(--palette-orange-action)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -430,6 +403,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                         assignedIds={(tagAssignmentsBySheep[target?.id] || []).map(a => a.tagId)}
                                         onSave={(tagIds) => target?.id && setSheepTags(target.id, tagIds)}
                                     />
+                                    <Tooltip content="管理標籤" side="top">
                                     <button
                                         type="button"
                                         className="tag-manage-btn"
@@ -444,13 +418,14 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                             background: 'rgba(0,0,0,0.04)',
                                             border: '1px solid rgba(0,0,0,0.1)',
                                             borderRadius: '6px',
-                                            color: '#666',
+                                            color: 'var(--text-muted)',
                                             cursor: 'pointer'
                                         }}
                                     >
                                         <Settings size={12} strokeWidth={2} />
                                         管理標籤
                                     </button>
+                                    </Tooltip>
                                 </div>
 
                                 {isAdmin && !isSleepingState && (
@@ -469,14 +444,15 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                     }}
                                                     ariaLabel="管理員調整健康度"
                                                 />
+                                                <Tooltip content="直接歸零 (測試沉睡)" side="top">
                                                 <button
                                                     type="button"
                                                     className="admin-reset-btn btn-destructive"
                                                     onClick={() => updateSheep(target.id, { health: 0 })}
-                                                    title="直接歸零 (測試沉睡)"
                                                 >
                                                     💀 歸零
                                                 </button>
+                                                </Tooltip>
                                             </div>
                                         </div>
                                     </div>
@@ -493,6 +469,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                     />
                                 </div>
 
+                                <Tooltip content={isSleepingState ? '喚醒禱告' : '認領禱告'} side="top">
                                 <button
                                     className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
                                     onClick={handlePray}
@@ -513,6 +490,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                         </>
                                     )}
                                 </button>
+                                </Tooltip>
 
                                 {localMsg && (
                                     <div className="modal-local-msg">
@@ -531,16 +509,17 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                 {viewMode === 'LIST' ? (
                                     <>
                                         <div className="plan-list-header">
+                                            <Tooltip content="新增靈程規劃" side="bottom">
                                             <button
                                                 type="button"
                                                 className="plan-add-btn"
                                                 onClick={openAddPlan}
-                                                title="新增靈程規劃"
                                                 aria-label="新增靈程規劃"
                                             >
                                                 <Plus size={18} strokeWidth={2.5} />
                                                 <span>新增規劃</span>
                                             </button>
+                                            </Tooltip>
                                         </div>
                                         <ModalHint className="plan-retention-hint">
                                             系統會自動清理超過一個月的過期行程

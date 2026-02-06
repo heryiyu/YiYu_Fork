@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { Tooltip } from './Tooltip';
 import './CloseButton.css';
 
 /**
@@ -12,10 +13,12 @@ export const CloseButton = React.forwardRef(({
     onClick,
     size,
     className = '',
-    variant = 'default'
+    variant = 'default',
+    tooltip
 }, ref) => {
     const iconSize = size ?? (variant === 'sm' ? 14 : 16);
-    return (
+    const tooltipContent = tooltip ?? ariaLabel;
+    const btn = (
         <button
             ref={ref}
             type="button"
@@ -26,4 +29,9 @@ export const CloseButton = React.forwardRef(({
             <X size={iconSize} strokeWidth={2.5} />
         </button>
     );
+    return tooltipContent ? (
+        <Tooltip content={tooltipContent} side="top">
+            {btn}
+        </Tooltip>
+    ) : btn;
 });

@@ -12,7 +12,7 @@ import { CloseButton } from './ui/CloseButton';
 
 <CloseButton onClick={onClose} ariaLabel="關閉" />
 <CloseButton ref={focusRef} onClick={onClose} ariaLabel="關閉" />  // supports ref for focus
-<CloseButton className="dock-toolbar-search-clear" variant="sm" ariaLabel="收起搜尋" onClick={...} />
+<CloseButton className="dock-toolbar-search-clear" variant="sm" ariaLabel="清除並收起搜尋" onClick={...} />
 ```
 
 Props: `ariaLabel`, `onClick`, `size`, `className`, `variant` (default | sm), `ref`
@@ -56,6 +56,71 @@ import { Slider } from './ui/Slider';
 ```
 
 Props: `value`, `min`, `max`, `step`, `onChange`, `ariaLabel`, `className`, `disabled`
+
+---
+
+### Button
+Reusable button with design system variants.
+
+```jsx
+import { Button } from './ui/Button';
+
+<Button variant="primary" onClick={...}>確定</Button>
+<Button variant="success" type="submit">新增</Button>
+<Button variant="destructive" onClick={...}>刪除</Button>
+```
+
+Props: `variant` (primary | secondary | destructive | outline | ghost | success), `size` (default | sm), `disabled`, `type`, `className`, `children`
+
+---
+
+### Tag
+Colored pill for status labels and user-defined tags.
+
+```jsx
+import { Tag } from './ui/Tag';
+
+<Tag name="新朋友" color="#5385db" />
+<Tag name="健康" variant="healthy" />
+```
+
+Props: `name`, `color`, `variant` (new | seeker | christian | dead | sick | healthy | custom), `className`
+
+---
+
+### Tooltip
+Shadcn-style tooltip: dark background, white text, fade animation, hover delay.
+
+```jsx
+import { Tooltip } from './ui/Tooltip';
+
+<Tooltip content="在草原上尋找此小羊" side="top">
+  <button>...</button>
+</Tooltip>
+```
+
+Props: `content`, `side` (top|bottom|left|right), `delayDuration` (default 300ms).
+
+### IconButton
+Ghost icon button for reorder, remove, edit, delete actions.
+
+**Rule:** When 2+ IconButtons are placed together, wrap them in `IconButtonGroup` to narrow the gap and treat them as a component group.
+
+```jsx
+import { IconButton, IconButtonGroup } from './ui/IconButton';
+import { Pencil } from 'lucide-react';
+
+<IconButton icon={Pencil} onClick={...} ariaLabel="編輯" />
+<IconButton icon={Trash2} onClick={...} variant="danger" ariaLabel="刪除" />
+
+// Grouped (narrower gap):
+<IconButtonGroup>
+  <IconButton icon={Pencil} onClick={...} ariaLabel="編輯" />
+  <IconButton icon={Trash2} onClick={...} variant="danger" ariaLabel="刪除" />
+</IconButtonGroup>
+```
+
+Props: `icon`, `ariaLabel`, `onClick`, `disabled`, `variant` (default | danger), `className`, `size`
 
 ---
 

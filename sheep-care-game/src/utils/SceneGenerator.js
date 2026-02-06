@@ -51,8 +51,8 @@ export const generateScene = (userId = 'guest') => {
     };
 
     // --- 1. MOUNTAIN ZONE (Deep Background) ---
-    // y: Fixed at HORIZON_Y (Renderer handles offset)
-    const HORIZON_Y = 65;
+    // y: Horizon at 33% from top of viewport = 67% from bottom of content
+    const HORIZON_Y = 67;
     const numMountains = Math.floor(rng.range(2, 4));
     const mountainAssets = ASSETS.ENVIRONMENT.MOUNTAINS.BG;
     for (let i = 0; i < numMountains; i++) {
@@ -72,7 +72,7 @@ export const generateScene = (userId = 'guest') => {
 
     // --- 2. HORIZON ZONE (Trees) ---
     // A. Tree Groups (Sparse)
-    const numGroups = Math.floor(rng.range(1, 3)); // 1 or 2 groups max
+    const numGroups = Math.floor(rng.range(1, 2)); // 1 group max
     const trees = [];
 
     const placeTree = (type, assetList, count, scaleRange) => {
@@ -105,8 +105,8 @@ export const generateScene = (userId = 'guest') => {
 
     placeTree('tree-group', ASSETS.DECORATIONS.TREES_GROUP, numGroups, [0.8, 1.2]);
 
-    // B. Single Trees (Dense)
-    const numSingles = Math.floor(rng.range(8, 12));
+    // B. Single Trees (Slightly fewer)
+    const numSingles = Math.floor(rng.range(5, 8));
     placeTree('tree-single', ASSETS.DECORATIONS.TREES_SINGLE, numSingles, [0.6, 1.0]);
 
     elements.push(...trees);
@@ -124,8 +124,9 @@ export const generateScene = (userId = 'guest') => {
         return 2.0;
     };
 
-    let currentX = -1; // Start slightly off-screen (-1em)
+    const MIN_X = -125; // Extend left for pan/zoom; symmetric buffer
     const MAX_WIDTH = 250; // Cover ~2500px equivalent
+    let currentX = MIN_X;
 
     while (currentX < MAX_WIDTH) {
         const src = getRandomAsset(ASSETS.DECORATIONS.GRASS_EDGES);
@@ -188,7 +189,7 @@ export const generateScene = (userId = 'guest') => {
         return 10;
     };
 
-    let fgCurrentX = -5; // Start off-screen
+    let fgCurrentX = MIN_X; // Symmetric with horizon for pan/zoom
     const FG_Y = 33; // 1/3 height from bottom context
 
     while (fgCurrentX < MAX_WIDTH) {

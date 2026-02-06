@@ -31,7 +31,7 @@ const defaultGameContext = {
     deleteTag: () => false,
     setSheepTags: () => false,
     focusedSheepId: null,
-    callSheep: () => { },
+    findSheep: () => { },
     clearFocus: () => { },
 };
 
@@ -82,10 +82,10 @@ export const GameProvider = ({ children }) => {
     const [tags, setTags] = useState([]);
     const [tagAssignmentsBySheep, setTagAssignmentsBySheep] = useState({});
 
-    // Focusing / Calling Logic
+    // Focusing / Find Logic (locate sheep on canvas)
     const [focusedSheepId, setFocusedSheepId] = useState(null);
 
-    const callSheep = (id) => {
+    const findSheep = (id) => {
         setFocusedSheepId(id);
 
         // Visual Response
@@ -891,7 +891,7 @@ export const GameProvider = ({ children }) => {
             deleteTag,
             setSheepTags,
             focusedSheepId,
-            callSheep,
+            findSheep,
             clearFocus
         }}>
             {children}

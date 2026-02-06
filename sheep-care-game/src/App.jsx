@@ -10,6 +10,7 @@ import { SheepList } from './components/SheepList';
 import { SettingsModal } from './components/SettingsModal';
 import { UserProfile } from './components/UserProfile';
 import { Toast } from './components/ui/Toast';
+import { Tooltip } from './components/ui/Tooltip';
 import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
@@ -64,19 +65,21 @@ function App() {
 
       {/* --- HUD: Top Right System Buttons (Lucide icons) --- */}
       <div className="hud-right">
+        <Tooltip content="選單" side="bottom">
         <button
           className="hud-btn hud-menu-btn"
           onClick={() => setIsHudMenuOpen((prev) => !prev)}
-          title="選單"
           aria-expanded={isHudMenuOpen}
           aria-haspopup="true"
         >
           <Menu size={18} strokeWidth={2.5} />
         </button>
+        </Tooltip>
 
         <div className={`hud-right-actions ${isHudMenuOpen ? 'hud-right-actions--open' : ''}`}>
           {/* Bell */}
           <div className="hud-tooltip-container">
+            <Tooltip content={notificationEnabled ? "關閉提醒" : "開啟提醒"} side="bottom">
             <button
               className="hud-btn"
               style={{ background: notificationEnabled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)' }}
@@ -84,10 +87,10 @@ function App() {
                 toggleNotification();
                 setIsHudMenuOpen(false);
               }}
-              title={notificationEnabled ? "關閉提醒" : "開啟提醒"}
             >
               {notificationEnabled ? <Bell size={18} strokeWidth={2.5} /> : <BellOff size={18} strokeWidth={2.5} />}
             </button>
+            </Tooltip>
             <div className="hud-tooltip">
               將會在以下時段提醒要認領禱告：{'\n'}
               早上：8:00{'\n'}
@@ -97,28 +100,30 @@ function App() {
           </div>
 
           {/* Guide */}
+          <Tooltip content="使用說明" side="bottom">
           <button
             className="hud-btn"
             onClick={() => {
               setShowGuide(true);
               setIsHudMenuOpen(false);
             }}
-            title="使用說明"
           >
             <BookOpen size={18} strokeWidth={2.5} />
           </button>
+          </Tooltip>
 
           {/* Display Settings (Sheep Count) */}
+          <Tooltip content="設定" side="bottom">
           <button
             className="hud-btn"
             onClick={() => {
               setShowSettings(true);
               setIsHudMenuOpen(false);
             }}
-            title="設定"
           >
             <Settings size={18} strokeWidth={2.5} />
           </button>
+          </Tooltip>
 
           {/* Skin Manager button hidden – not in use anymore */}
 

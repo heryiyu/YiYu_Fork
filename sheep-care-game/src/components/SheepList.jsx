@@ -6,8 +6,9 @@ import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';
 import { TagManagerModal } from './TagManagerModal';
-import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search, Megaphone } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search, Footprints } from 'lucide-react';
 import { CloseButton } from './ui/CloseButton';
+import { Tooltip } from './ui/Tooltip';
 import { Checkbox } from './ui/Checkbox';
 import '../styles/design-tokens.css';
 import './SheepList.css';
@@ -83,7 +84,7 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
                 flexDirection: 'column',
                 background: 'var(--card-inner-bg, #fff)',
                 borderRadius: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                boxShadow: 'var(--shadow-card)',
                 border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
                 zIndex: 2500
             }}
@@ -226,7 +227,7 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     };
 };
 
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onCall, onLongPress, tags = [], tagAssignmentsBySheep = {}, pinFlashId }) => {
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onFind, onLongPress, tags = [], tagAssignmentsBySheep = {}, pinFlashId }) => {
     const assigned = (tagAssignmentsBySheep[s.id] || []);
     const firstTagId = assigned.length > 0 ? assigned[0].tagId : null;
     const firstTag = firstTagId ? tags.find(t => t.id === firstTagId) : null;
@@ -261,6 +262,37 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 </div>
             )}
 
+            {/* Pin button: MUST stay absolutely positioned at top-right of card. See .pin-btn in SheepList.css. */}
+            {!isSelectionMode && onTogglePin && (
+                <div className="pin-btn-wrapper">
+                <Tooltip content={isPinned ? '取消釘選' : '釘選'} side="top">
+                <button
+                    type="button"
+                    className="pin-btn"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onTogglePin(s.id);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseUp={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onPointerUp={(e) => e.stopPropagation()}
+                    style={{
+                        background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                        opacity: isPinned ? 1 : 0.2,
+                        fontSize: '1rem',
+                        transition: 'transform 0.2s, opacity 0.2s',
+                    }}
+                >
+                    📌
+                </button>
+                </Tooltip>
+                </div>
+            )}
+
             <div className="sheep-card-header">
                 <div className={`sheep-card-health ${healthFull ? 'sheep-card-health--full' : ''}`}>
                     <span className="sheep-card-health-icon">♥</span>
@@ -268,64 +300,9 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 </div>
                 <div
                     className={`sheep-card-tag sheep-card-tag--${tagVariant}`}
-                    style={firstTag ? { background: firstTag.color || '#6b7280', color: '#fff' } : undefined}
+                    style={firstTag ? { background: firstTag.color || 'var(--palette-gray-muted)', color: 'var(--text-inverse)' } : undefined}
                 >
                     {tagLabel}
-                </div>
-                <div className="sheep-card-header-actions" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    {!isSelectionMode && onCall && !isSleepingState && (
-                        <button
-                            type="button"
-                            className="pin-btn"
-                            title="呼叫"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onCall(s.id);
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onMouseUp={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchEnd={(e) => e.stopPropagation()}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onPointerUp={(e) => e.stopPropagation()}
-                            style={{
-                                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-                                fontSize: '1rem',
-                                opacity: 0.6,
-                                position: 'static'
-                            }}
-                        >
-                            <Megaphone size={16} strokeWidth={2.5} />
-                        </button>
-                    )}
-                    {!isSelectionMode && onTogglePin && (
-                        <button
-                            type="button"
-                            className="pin-btn"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation(); // Standard click stop propagation is enough here
-                                onTogglePin(s.id);
-                            }}
-                            // MouseDown/TouchStart here should NOT trigger the card's long press
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onMouseUp={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchEnd={(e) => e.stopPropagation()}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onPointerUp={(e) => e.stopPropagation()}
-                            style={{
-                                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-                                opacity: isPinned ? 1 : 0.2,
-                                fontSize: '1rem',
-                                transition: 'transform 0.2s, opacity 0.2s',
-                                position: 'static'
-                            }}
-                        >
-                            📌
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -345,7 +322,38 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             </div>
 
             <div className="sheep-card-footer">
-                <div className="sheep-card-name">{s.name}</div>
+                <div className="sheep-card-name-row">
+                    <div className="sheep-card-name">{s.name}</div>
+                    {!isSelectionMode && onFind && !isSleepingState && (
+                        <Tooltip content="在草原上尋找此小羊" side="top">
+                            <button
+                                type="button"
+                                className="find-btn"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onFind(s.id);
+                                }}
+                                aria-label="在草原上尋找此小羊"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onMouseUp={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchEnd={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onPointerUp={(e) => e.stopPropagation()}
+                                style={{
+                                    background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                                    fontSize: '1rem',
+                                    opacity: 0.6,
+                                }}
+                            >
+                                {/* SPECIAL CASE: Footprints icon uses solid fill (not stroke), 5% smaller, 20deg rotation.
+                                    Do NOT change - this is intentional for "follow and find" visual distinction. */}
+                                <Footprints size={15} strokeWidth={2.5} fill="currentColor" style={{ transform: 'rotate(20deg)' }} />
+                            </button>
+                        </Tooltip>
+                    )}
+                </div>
                 {!isSelectionMode && (
                     <div className={`sheep-card-pray ${isSleepingState ? 'sheep-card-pray--dead' : ''}`}>
                         {isSleepingState ? `🕯️ 喚醒禱告 ${getAwakeningProgress(s)}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
@@ -358,7 +366,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {
-    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, callSheep, tags, tagAssignmentsBySheep, updateSetting } = useGame();
+    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, findSheep, tags, tagAssignmentsBySheep, updateSetting } = useGame();
     const confirm = useConfirm();
     const pinnedSet = useMemo(() => new Set(settings?.pinnedSheepIds || []), [settings?.pinnedSheepIds]);
     const sortedSheep = useMemo(() => {
@@ -646,6 +654,8 @@ export const SheepList = ({ onSelect }) => {
                     }
                 `}</style>
 
+                {/* Grouped: Toolbar + Scroll Area, with bottom margin */}
+                <div className="sheep-dock-group">
                 {/* Toolbar: Add | Search | Filters | Select */}
                 <div
                     className={`dock-child dock-toolbar ${isSearchExpanded ? 'dock-toolbar--search-expanded' : ''}`}
@@ -678,7 +688,7 @@ export const SheepList = ({ onSelect }) => {
                                     {isSearchExpanded && (
                                         <CloseButton
                                             className="dock-toolbar-search-clear"
-                                            ariaLabel="收起搜尋"
+                                            ariaLabel="清除並收起搜尋"
                                             variant="sm"
                                             onClick={() => {
                                                 setSearchTerm('');
@@ -692,6 +702,7 @@ export const SheepList = ({ onSelect }) => {
                                     </span>
                                 </div>
 
+                                <Tooltip content={selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'} side="bottom">
                                 <button
                                     type="button"
                                     className="dock-toolbar-action-btn"
@@ -711,7 +722,9 @@ export const SheepList = ({ onSelect }) => {
                                     <CheckSquare size={14} strokeWidth={2.5} />
                                     {selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'}
                                 </button>
+                                </Tooltip>
 
+                                <Tooltip content="刪除所選小羊" side="bottom">
                                 <button
                                     type="button"
                                     className="dock-toolbar-action-btn dock-toolbar-action-btn--delete btn-destructive"
@@ -721,7 +734,9 @@ export const SheepList = ({ onSelect }) => {
                                     <Trash2 size={14} strokeWidth={2.5} />
                                     刪除
                                 </button>
+                                </Tooltip>
 
+                                <Tooltip content="重置所選小羊的禱告次數" side="bottom">
                                 <button
                                     type="button"
                                     className="dock-toolbar-action-btn dock-toolbar-action-btn--reset"
@@ -731,7 +746,9 @@ export const SheepList = ({ onSelect }) => {
                                     <RotateCcw size={14} strokeWidth={2.5} />
                                     重置
                                 </button>
+                                </Tooltip>
 
+                                <Tooltip content="取消選取" side="bottom">
                                 <button
                                     type="button"
                                     className="dock-toolbar-action-btn dock-toolbar-action-btn--cancel"
@@ -739,11 +756,13 @@ export const SheepList = ({ onSelect }) => {
                                 >
                                     取消
                                 </button>
+                                </Tooltip>
                             </>
                         ) : (
                             // --- STANDARD TOOLBAR ---
                             <>
                                 {/* 1. Add Button (rounded chip style like SheepListModal) */}
+                                <Tooltip content="新增小羊" side="bottom">
                                 <button
                                     type="button"
                                     className="dock-toolbar-add-btn"
@@ -752,6 +771,7 @@ export const SheepList = ({ onSelect }) => {
                                 >
                                     <Plus size={18} strokeWidth={2.5} />
                                 </button>
+                                </Tooltip>
 
                                 {/* 2. Search Bar */}
                                 <div
@@ -771,7 +791,7 @@ export const SheepList = ({ onSelect }) => {
                                     {isSearchExpanded && (
                                         <CloseButton
                                             className="dock-toolbar-search-clear"
-                                            ariaLabel="收起搜尋"
+                                            ariaLabel="清除並收起搜尋"
                                             variant="sm"
                                             onClick={() => {
                                                 setSearchTerm('');
@@ -806,7 +826,7 @@ export const SheepList = ({ onSelect }) => {
                                             onClick={() => setFilterStatus(f.id)}
                                             style={{
                                                 opacity: isCollapsed ? 0.6 : 1,
-                                                ...(f.color && effectiveFilterStatus === f.id && { borderColor: f.color, color: '#fff', background: f.color })
+                                                ...(f.color && effectiveFilterStatus === f.id && { borderColor: f.color, color: 'var(--text-inverse)', background: f.color })
                                             }}
                                         >
                                             {f.label} {counts[f.id] ?? 0}
@@ -815,17 +835,18 @@ export const SheepList = ({ onSelect }) => {
 
                                 {/* 4. Filter Settings */}
                                 <div style={{ position: 'relative', display: 'inline-flex' }} ref={filterMenuAnchorRef}>
+                                    <Tooltip content="篩選設定" side="bottom">
                                     <button
                                         type="button"
                                         className={`dock-toolbar-chip dock-toolbar-chip--settings ${showFilterMenu ? 'dock-toolbar-chip--selected' : ''}`}
                                         onClick={() => setShowFilterMenu(prev => !prev)}
                                         style={{ opacity: isCollapsed ? 0.6 : 1 }}
-                                        title="篩選設定"
                                         aria-label="篩選設定"
                                     >
                                         <SlidersHorizontal size={14} strokeWidth={2.5} />
                                         <span>篩選設定</span>
                                     </button>
+                                    </Tooltip>
                                     {showFilterMenu && (
                                         <FilterSettingsMenu
                                             filters={[
@@ -849,6 +870,7 @@ export const SheepList = ({ onSelect }) => {
                                 </div>
 
                                 {/* 5. Select Button */}
+                                <Tooltip content={isSelectionMode ? '取消選取模式' : '選取小羊'} side="bottom">
                                 <button
                                     type="button"
                                     className={`dock-toolbar-select-btn ${isSelectionMode ? 'dock-toolbar-select-btn--active' : ''}`}
@@ -861,6 +883,7 @@ export const SheepList = ({ onSelect }) => {
                                 >
                                     {isSelectionMode ? '取消' : '選取'}
                                 </button>
+                                </Tooltip>
                             </>
                         )}
                     </div>
@@ -936,7 +959,7 @@ export const SheepList = ({ onSelect }) => {
                                             isSick={s.status === 'sick'}
                                             tags={tags}
                                             tagAssignmentsBySheep={tagAssignmentsBySheep}
-                                            onCall={callSheep}
+                                            onFind={findSheep}
                                         />
                                     </div>
                                 );
@@ -957,6 +980,7 @@ export const SheepList = ({ onSelect }) => {
                             <div style={{ color: 'rgba(0,0,0,0.5)', padding: '20px', fontWeight: 'bold' }}>沒有小羊...</div>
                         )}
                     </div>
+                </div>
                 </div>
 
                 {/* Batch Action Bar REMOVED - Integrated into Toolbar */}

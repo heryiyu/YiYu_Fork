@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from './ui/CloseButton';
 import { Slider } from './ui/Slider';
+import { Tag } from './ui/Tag';
 
 export const SettingsModal = ({ onClose }) => {
     const { settings, updateSetting, tags } = useGame();
@@ -69,7 +70,7 @@ export const SettingsModal = ({ onClose }) => {
                                         ariaLabel="畫面顯示小羊數量"
                                     />
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted-light)', marginTop: '5px' }}>
                                         <span>10 (效能)</span>
                                         <span>50 (豐富)</span>
                                     </div>
@@ -85,11 +86,11 @@ export const SettingsModal = ({ onClose }) => {
                             </div>
                         ) : (
                             <div className="modal-content guide-modal-content" style={{
-                                color: '#000',
+                                color: 'var(--text-body)',
                                 padding: '16px',
-                                background: 'rgba(255, 255, 255, 0.15)',
+                                background: 'var(--bg-content-subtle)',
                                 borderRadius: '12px',
-                                border: '2px solid rgba(143, 125, 103, 0.15)',
+                                border: '2px solid var(--border-subtle)',
                                 fontSize: '0.95rem',
                                 lineHeight: '1.6'
                             }}>
@@ -102,30 +103,18 @@ export const SettingsModal = ({ onClose }) => {
 
                                 <h4>2. 小羊標籤 (Tags)</h4>
                                 <p>您可自訂標籤來分類小羊，在小羊詳情中選擇「標籤」並點「管理標籤」新增。卡片上會顯示您為該小羊設定的第一個標籤。</p>
-                                <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
                                 {tags && tags.length > 0 ? (
                                     <div style={{ marginTop: '8px' }}>
                                         <p style={{ marginBottom: '6px', fontWeight: 600 }}>您目前的標籤：</p>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                             {tags.map(t => (
-                                                <span
-                                                    key={t.id}
-                                                    style={{
-                                                        padding: '2px 8px',
-                                                        borderRadius: 6,
-                                                        fontSize: '0.85rem',
-                                                        fontWeight: 600,
-                                                        background: t.color || '#6b7280',
-                                                        color: '#fff'
-                                                    }}
-                                                >
-                                                    {t.name}
-                                                </span>
+                                                <Tag key={t.id} name={t.name} color={t.color} />
                                             ))}
                                         </div>
                                     </div>
                                 ) : (
-                                    <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
                                 )}
 
                                 <h4>3. 離線與自然衰退</h4>
@@ -155,7 +144,7 @@ export const SettingsModal = ({ onClose }) => {
                                     <li><strong>提醒時刻:</strong> 早上 8:00、中午 12:00、晚上 18:30。</li>
                                 </ul>
 
-                                <p style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
+                                <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>
                                     <em>"信心若沒有行為就是死的。"</em>
                                 </p>
                             </div>

@@ -34,21 +34,25 @@ export const Login = () => {
 
     return (
         <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
-            <div className="simple-editor" style={{ width: '320px', textAlign: 'center', padding: '30px', background: 'var(--bg-card)' }}>
-                <h2 style={{ margin: '0 0 20px 0', color: 'var(--text-header)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    {showAdminLogin ? (
-                        <>🔧 管理員後台</>
-                    ) : (
-                        <>
-                            <img
-                                src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY}
-                                alt=""
-                                style={{ width: '32px', height: '32px', objectFit: 'contain', display: 'block' }}
-                            />
-                            牧羊人登入
-                        </>
-                    )}
-                </h2>
+            <div className="modal-card modal-card--sm">
+                <div className="modal-header">
+                    <h3 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        {showAdminLogin ? (
+                            <>🔧 管理員後台</>
+                        ) : (
+                            <>
+                                <img
+                                    src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY}
+                                    alt=""
+                                    style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                                />
+                                牧羊人登入
+                            </>
+                        )}
+                    </h3>
+                    <div style={{ width: 32, height: 32, flexShrink: 0 }} aria-hidden="true" />
+                </div>
+                <div className="modal-form" style={{ textAlign: 'center', padding: '24px' }}>
 
                 {/* Status Message */}
                 {message && (
@@ -78,7 +82,7 @@ export const Login = () => {
                                 <button
                                     onClick={loginWithLine}
                                     className="line-login-btn"
-                                    style={isLocal ? { background: '#666' } : {}}
+                                    style={isLocal ? { background: 'var(--text-muted)' } : {}}
                                 >
                                     <span style={{ marginRight: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>{isLocal ? '🛠️' : 'LINE'}</span>
                                     {isLocal ? 'Test Login' : 'Login 登入'}
@@ -129,6 +133,7 @@ export const Login = () => {
                         )}
                     </div>
                 )}
+                </div>
             </div>
 
             <style>{`

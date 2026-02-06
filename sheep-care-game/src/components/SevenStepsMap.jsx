@@ -12,6 +12,7 @@ import {
     Mic
 } from 'lucide-react';
 import { CloseButton } from './ui/CloseButton';
+import { Tooltip } from './ui/Tooltip';
 import './SevenStepsMap.css';
 
 // Lucide icon per step (semantic mapping)
@@ -27,13 +28,13 @@ const STEP_ICONS = {
 
 // Solid fill per step (design-system: no gradients, flat palette)
 const STEP_COLORS = {
-    1: '#54afcb',   // palette-blue-action
-    2: '#4ba762',   // palette-deep-green
-    3: '#f39fac',   // palette-pink-action
-    4: '#7f5b9b',   // palette-purple
-    5: '#fcb751',   // palette-orange-action
-    6: '#5385db',   // palette-blue-text
-    7: '#fcb751'    // palette-orange-action (final step)
+    1: 'var(--palette-blue-action)',
+    2: 'var(--palette-deep-green)',
+    3: 'var(--palette-pink-action)',
+    4: 'var(--palette-purple)',
+    5: 'var(--palette-orange-action)',
+    6: 'var(--palette-blue-text)',
+    7: 'var(--palette-orange-action)'
 };
 
 // Mobile-First Vertical Zig-Zag Layout: Bottom-Left (1) -> Top (7)
@@ -231,6 +232,7 @@ export function SevenStepsMap() {
             {isExpanded && (
                 <div className="map-header">
                     <h2 className="map-title-overlay">領人歸主秘笈</h2>
+                    <Tooltip content="觀看教學影片" side="bottom">
                     <button
                     type="button"
                     className="map-video-btn"
@@ -238,12 +240,12 @@ export function SevenStepsMap() {
                         e.stopPropagation();
                         setVideoModalOpen(true);
                     }}
-                    title="觀看教學影片"
                     aria-label="觀看教學影片"
                 >
                         <Play size={18} strokeWidth={2} />
                         <span>教學影片</span>
                     </button>
+                    </Tooltip>
                 </div>
             )}
 
@@ -253,6 +255,7 @@ export function SevenStepsMap() {
             )}
 
             {/* Expand / Unexpand control */}
+            <Tooltip content={isExpanded ? '縮小' : '展開'} side="bottom">
             <button
                 type="button"
                 className="map-expand-btn"
@@ -261,11 +264,11 @@ export function SevenStepsMap() {
                     setIsExpanded((prev) => !prev);
                     if (isExpanded) setSelectedStep(null);
                 }}
-                title={isExpanded ? '縮小' : '展開'}
                 aria-label={isExpanded ? '縮小' : '展開'}
             >
                 {isExpanded ? <Minimize2 size={20} strokeWidth={2} /> : <Maximize2 size={20} strokeWidth={2} />}
             </button>
+            </Tooltip>
 
             {/* Video Modal - only when expanded */}
             {isExpanded && videoModalOpen && (

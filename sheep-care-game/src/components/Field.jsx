@@ -148,38 +148,30 @@ export const Field = ({ onSelectSheep }) => {
         return visibleLiving;
     }, [visibleLiving, focusedSheepId, sheep]);
 
+    // Canvas is 250% of viewport; translate % is relative to element, so scale by 1/CANVAS_SCALE
+    const CANVAS_SCALE = 2.5;
+
     // Calculate Zoom Transform
     const fieldStyle = useMemo(() => {
         if (focusedSheepId) {
             const target = sheep.find(s => s.id === focusedSheepId);
             if (target) {
-                // Zoom in on target (Scale 2x)
-                // Origin Calculation:
-                // We want the sheep to be in the CENTER of the screen.
-                // Default sheep position: left: x%, bottom: bottomPos%
-                // We need to translate the field so the sheep's point moves to center.
+                // Zoom in on target (Scale 2.5x)
+                // Sheep position in % (0-100 within content area)
+                const sx = target.x;
+                const sy = (target.y || 0) * 0.95; // bottomPos from Sheep.jsx - sheep's FEET
+                const SHEEP_CENTER_OFFSET_PCT = 6;
+                const sy_center = sy + SHEEP_CENTER_OFFSET_PCT;
 
-                // Current Sheep Center in %:
-                const sx = target.x; // 0-100
-                // bottomPos logic from Sheep.jsx:
-                const sy = (target.y || 0) * 0.95; // 0-100 (bottom relative)
-
-                // Zoom level
                 const scale = 2.5;
 
-                // Transform Origin: Center (50% 50%) is easiest if we use translate.
-                // T = (Center - SheepPos) * Scale? No.
-                // Let's use standard CSS transform.
-                // translate( (50 - sx)%, (sy - 50)% ) ? No, Y is bottom.
-                // Center Y is 50%. Sheep Y is sy%.
-                // We want to move (50 - sx)% horizontally.
-                // We want to move (50 - sy)% vertically (relative to bottom).
-                // Adjust pan speed (divide by scale for 1:1 feel)
+                // Translate % is relative to 250% canvas; divide by CANVAS_SCALE for correct pan
+                // Add manual pan offset (divide by scale for 1:1 feel)
                 const adjustedPanX = panOffset.x / scale;
                 const adjustedPanY = panOffset.y / scale;
 
                 return {
-                    transform: `scale(${scale}) translate(calc(${(50 - sx)}% + ${adjustedPanX}px), calc(${(50 - sy)}% + ${adjustedPanY}px))`,
+                    transform: `scale(${scale}) translate(calc(${(50 - sx) / CANVAS_SCALE}% + ${adjustedPanX}px), calc(${(sy_center - 50) / CANVAS_SCALE}% + ${adjustedPanY}px))`,
                     transformOrigin: '50% 50%',
                     transition: isPanning ? 'none' : 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                     cursor: isPanning ? 'grabbing' : 'grab'
@@ -215,19 +207,22 @@ export const Field = ({ onSelectSheep }) => {
                 }
             }}
         >
-            {/* New Asset Background (Handles Scene, Weather, Decor) */}
+            {/* Oversized canvas (250%) so pan/zoom never reveals blank; content in center 40% */}
             <div style={{
-                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                position: 'absolute', left: '-75%', top: '-75%',
+                width: '250%', height: '250%',
+                transformOrigin: '50% 50%',
                 ...fieldStyle
             }}>
                 <AssetBackground userId={lineId || 'guest'} weather={weather} />
 
-                {/* Render Sheep Layer (Living + Ghosts) */}
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-
+                {/* Content area: 40% x 40% centered so sheep 0-100 coords map to viewport */}
+                <div style={{
+                    position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
+                    pointerEvents: 'none'
+                }}>
                     {/* 1. Ghosts (Floaty) */}
                     {ghostSheep.map(s => (
-                        // Re-enable pointer events for sheep
                         <div key={s.id} style={{ pointerEvents: 'auto' }}>
                             <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} />
                         </div>
@@ -244,7 +239,6 @@ export const Field = ({ onSelectSheep }) => {
                             />
                         </div>
                     ))}
-
                 </div>
             </div>
 
@@ -269,7 +263,7 @@ export const Field = ({ onSelectSheep }) => {
             {focusedSheepId && (
                 <div style={{
                     position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
-                    background: 'rgba(0,0,0,0.4)', color: '#fff',
+                    background: 'var(--bg-modal-overlay)', color: 'var(--text-inverse)',
                     padding: '8px 16px', borderRadius: '20px',
                     fontSize: '0.85rem', pointerEvents: 'none', zIndex: 600,
                     backdropFilter: 'blur(4px)'

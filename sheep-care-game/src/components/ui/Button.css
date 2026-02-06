@@ -1,0 +1,21 @@
+/* Button component - extends modal-btn-* from App.css */
+.btn-success {
+  background: var(--palette-deep-green) !important;
+}
+.btn-success:hover:not(:disabled) {
+  background: #3d8f52 !important;
+}
+
+.btn-ghost {
+  background: none !important;
+  border: none !important;
+  color: var(--text-body);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.btn--sm {
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+}

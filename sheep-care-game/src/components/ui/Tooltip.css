@@ -1,0 +1,36 @@
+/* Shadcn-style Tooltip - dark bg, white text, fade animation */
+.tooltip-root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip-content {
+  position: absolute;
+  z-index: 99999; /* Always on top - must not be covered by modals, overlays, etc. */
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-inverse);
+  background: hsl(0 0% 9%);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: tooltip-fade-in 0.15s ease-out;
+}
+
+/* Portal mode: position via inline style from JS */
+.tooltip-content--portal {
+  margin: 0 !important;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

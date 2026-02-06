@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { CloseButton } from './ui/CloseButton';
 
 export const NicknameSetup = ({ onClose }) => {
     const { updateNickname, nickname, weather, location } = useGame();
@@ -59,7 +60,7 @@ export const NicknameSetup = ({ onClose }) => {
                     {/* Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                         <h3 style={{ margin: 0, color: 'var(--text-header)' }}>📄 牧場主資料</h3>
-                        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✖</button>
+                        <CloseButton onClick={onClose} ariaLabel="關閉" />
                     </div>
 
                     {/* Info Block (Always Visible) */}
@@ -81,7 +82,7 @@ export const NicknameSetup = ({ onClose }) => {
                     {/* Nickname Section */}
                     {isEditing ? (
                         <form onSubmit={handleSave}>
-                            <div style={{ fontSize: '0.9rem', marginBottom: '5px', color: '#777' }}>修改暱稱:</div>
+                            <div style={{ fontSize: '0.9rem', marginBottom: '5px', color: 'var(--text-muted)' }}>修改暱稱:</div>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <input
                                     type="text"
@@ -129,42 +130,46 @@ export const NicknameSetup = ({ onClose }) => {
     // --- RENDER: INITIAL SETUP (Centered Modal) ---
     return (
         <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
-            <div className="simple-editor" style={{ width: '300px', textAlign: 'center', padding: '30px' }}>
-                <h2 style={{ marginBottom: '20px', color: 'var(--text-header)' }}>✨ 歡迎來到牧場</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '25px', lineHeight: '1.6' }}>
-                    為了讓羊群認識您<br />
-                    請告訴我們您的暱稱
-                </p>
+            <div className="modal-card modal-card--sm">
+                <div className="modal-header">
+                    <h3>✨ 歡迎來到牧場</h3>
+                    <div style={{ width: 32, height: 32, flexShrink: 0 }} aria-hidden="true" />
+                </div>
+                <div className="modal-form" style={{ textAlign: 'center', padding: '24px' }}>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
+                        為了讓羊群認識您<br />
+                        請告訴我們您的暱稱
+                    </p>
 
-                <form onSubmit={handleSave}>
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => { setName(e.target.value); setError(''); }}
-                        placeholder="請輸入您的暱稱"
-                        style={{
-                            width: '100%', padding: '12px', marginBottom: '10px',
-                            border: '1px solid var(--border-subtle)', borderRadius: '8px',
-                            fontSize: '1rem', outline: 'none', textAlign: 'center', background: 'white'
-                        }}
-                        autoFocus
-                    />
-                    {error && <div style={{ color: 'var(--palette-text-status)', fontSize: '0.9rem', marginBottom: '15px' }}>{error}</div>}
+                    <form onSubmit={handleSave}>
+                        <div className="form-group">
+                            <label htmlFor="nickname-setup-input">暱稱</label>
+                            <input
+                                id="nickname-setup-input"
+                                type="text"
+                                value={name}
+                                onChange={(e) => { setName(e.target.value); setError(''); }}
+                                placeholder="請輸入您的暱稱"
+                                style={{ textAlign: 'center' }}
+                                autoFocus
+                            />
+                        </div>
+                        {error && <div style={{ color: 'var(--palette-text-status)', fontSize: '0.9rem', marginBottom: '15px' }}>{error}</div>}
 
-                    <button
-                        type="submit"
-                        disabled={!name.trim()}
-                        style={{
-                            width: '100%', padding: '12px',
-                            background: name.trim() ? 'var(--btn-primary-bg)' : '#ccc',
-                            color: 'white', border: 'none', borderRadius: '8px',
-                            fontSize: '1.1rem', cursor: name.trim() ? 'pointer' : 'not-allowed',
-                            transition: 'background 0.2s', marginTop: '10px'
-                        }}
-                    >
-                        開始牧羊 🐑
-                    </button>
-                </form>
+                        <button
+                            type="submit"
+                            className="modal-btn-primary"
+                            disabled={!name.trim()}
+                            style={{
+                                width: '100%',
+                                background: !name.trim() ? 'var(--btn-disabled-bg)' : undefined,
+                                marginTop: '10px'
+                            }}
+                        >
+                            開始牧羊 🐑
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

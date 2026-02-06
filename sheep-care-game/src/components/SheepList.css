@@ -114,7 +114,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-subtle);
 }
 
 .sheep-card-selection-dot.sheep-card-selection-dot--selected {
@@ -131,7 +131,7 @@
   font-weight: bold;
 }
 
-/* Header row: health + tag + actions (pin) */
+/* Header row: health + tag (pin button is absolutely positioned, see .pin-btn below) */
 .sheep-card-header {
   width: max-content;
   display: flex;
@@ -139,15 +139,20 @@
   align-items: center;
   flex-shrink: 0;
   gap: 4px;
-  margin-right: 18px;
+  margin-right: 28px;
 }
 
-.sheep-card-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  margin-left: auto;
+/*
+ * Pin button: ALWAYS fixed at top-right corner of sheep card.
+ * Do NOT change to position: static or move into header flow.
+ * See SheepList.jsx comment above the pin button element.
+ */
+.pin-btn-wrapper {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .pin-btn:focus,
@@ -157,11 +162,23 @@
 }
 
 .pin-btn {
-  position: absolute;
-  top: 8px;
-  right: 11px;
-  z-index: 2;
+  position: static;
   pointer-events: auto;
+  width: var(--size-icon-btn);
+  height: var(--size-icon-btn);
+  min-width: var(--size-icon-btn);
+  min-height: var(--size-icon-btn);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-icon-btn);
+  color: var(--text-muted-light);
+  transition: background 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.pin-btn:hover {
+  background: var(--icon-btn-hover-bg);
+  color: var(--text-muted);
 }
 
 .sheep-card-health {
@@ -262,11 +279,49 @@
   flex-shrink: 0;
 }
 
+.sheep-card-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
 .sheep-card-name {
   font-weight: bold;
   font-size: 0.85rem;
   color: var(--palette-sheep-brown);
   white-space: nowrap;
+}
+
+/*
+ * Find button: SPECIAL CASE - Footprints icon uses solid fill (not stroke),
+ * 5% smaller (15px), 20deg rotation. See SheepList.jsx comment.
+ * Do NOT change - intentional for "follow and find" visual distinction.
+ */
+.find-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-icon-btn);
+  color: var(--text-muted-light);
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.find-btn:hover {
+  background: var(--icon-btn-hover-bg);
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.find-btn:focus,
+.find-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .sheep-card-pray {
@@ -284,8 +339,15 @@
 }
 
 /* --- Dock toolbar (aligned with SheepListModal chips) --- */
+/* Grouped toolbar + scroll area, with bottom margin */
+.sheep-dock-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
 .dock-toolbar {
-  padding: 10px 20px;
+  padding: 0px 20px;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -317,7 +379,9 @@
 .dock-toolbar-add-btn {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: var(--radius-icon-btn);
   background: var(--palette-orange-action);
   border: none;
   display: flex;
@@ -327,15 +391,16 @@
   color: var(--palette-sheep-brown);
   font-weight: bold;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px rgba(143, 125, 103, 0.15);
   cursor: pointer;
   padding: 0;
   box-sizing: border-box;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, box-shadow 0.2s;
 }
 
 .dock-toolbar-add-btn:hover {
-  opacity: 0.9;
+  opacity: 0.92;
+  box-shadow: 0 2px 6px rgba(143, 125, 103, 0.2);
 }
 
 .dock-toolbar-search-wrap {
@@ -435,7 +500,7 @@
   font-weight: bold;
   font-size: 12px;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-subtle);
   transition: all 0.2s;
   cursor: pointer;
   flex-shrink: 0;
@@ -455,7 +520,7 @@
   border-style: solid;
   border-color: var(--palette-sheep-brown);
   color: var(--palette-sheep-brown);
-  background: rgba(143, 125, 103, 0.18);
+  background: color-mix(in srgb, var(--palette-taupe) 18%, transparent);
 }
 
 .dock-toolbar-chip--settings.dock-toolbar-chip--selected {
@@ -474,7 +539,7 @@
   font-weight: bold;
   font-size: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-subtle);
   flex-shrink: 0;
   box-sizing: border-box;
   transition: all 0.2s;
@@ -500,7 +565,7 @@
   gap: 4px;
   box-sizing: border-box;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-subtle);
   height: 32px;
 }
 
