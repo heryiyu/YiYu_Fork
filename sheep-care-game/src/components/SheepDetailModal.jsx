@@ -49,8 +49,7 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
 
     return (
         <div className="tag-select">
-            <div className="form-group">
-                <label htmlFor="tag-select-dropdown">標籤</label>
+            <div className="form-group" style={{ marginBottom: '8px' }}>
                 <select
                     id="tag-select-dropdown"
                     value=""
@@ -79,11 +78,14 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '6px',
-                                marginBottom: '6px'
+                                gap: '10px',
+                                marginBottom: '8px',
+                                padding: '4px 8px',
+                                background: 'rgba(0,0,0,0.02)',
+                                borderRadius: '8px'
                             }}
                         >
-                            <Tag name={tag.name} color={tag.color} className="tag-select-tag" style={{ flex: 1 }} />
+                            <Tag name={tag.name} color={tag.color} className="tag-select-tag" style={{ flex: 1, textAlign: 'center' }} />
                             <IconButtonGroup>
                                 <IconButton icon={ChevronUp} onClick={() => moveUp(idx)} disabled={idx === 0} ariaLabel="上移" />
                                 <IconButton icon={ChevronDown} onClick={() => moveDown(idx)} disabled={idx === orderedIds.length - 1} ariaLabel="下移" />
@@ -273,7 +275,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const handleDeletePlan = async (id) => {
         const ok = await confirm({
             title: '刪除規劃',
-            message: '確定要刪除此靈程規劃嗎？',
+            message: '確定要刪除此認領規劃嗎？',
             variant: 'danger',
             confirmLabel: '刪除'
         });
@@ -365,7 +367,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                             data-tab="plan"
                             onClick={() => setActiveTab('PLAN')}
                         >
-                            靈程規劃
+                            認領規劃
                         </button>
                     </div>
 
@@ -404,27 +406,27 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                         onSave={(tagIds) => target?.id && setSheepTags(target.id, tagIds)}
                                     />
                                     <Tooltip content="管理標籤" side="top">
-                                    <button
-                                        type="button"
-                                        className="tag-manage-btn"
-                                        onClick={() => setShowTagManager(true)}
-                                        style={{
-                                            marginTop: '10px',
-                                            fontSize: '0.8rem',
-                                            padding: '4px 10px',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            background: 'rgba(0,0,0,0.04)',
-                                            border: '1px solid rgba(0,0,0,0.1)',
-                                            borderRadius: '6px',
-                                            color: 'var(--text-muted)',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <Settings size={12} strokeWidth={2} />
-                                        管理標籤
-                                    </button>
+                                        <button
+                                            type="button"
+                                            className="tag-manage-btn"
+                                            onClick={() => setShowTagManager(true)}
+                                            style={{
+                                                marginTop: '10px',
+                                                fontSize: '0.8rem',
+                                                padding: '4px 10px',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                background: 'rgba(0,0,0,0.04)',
+                                                border: '1px solid rgba(0,0,0,0.1)',
+                                                borderRadius: '6px',
+                                                color: 'var(--text-muted)',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <Settings size={12} strokeWidth={2} />
+                                            管理標籤
+                                        </button>
                                     </Tooltip>
                                 </div>
 
@@ -445,13 +447,13 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                     ariaLabel="管理員調整健康度"
                                                 />
                                                 <Tooltip content="直接歸零 (測試沉睡)" side="top">
-                                                <button
-                                                    type="button"
-                                                    className="admin-reset-btn btn-destructive"
-                                                    onClick={() => updateSheep(target.id, { health: 0 })}
-                                                >
-                                                    💀 歸零
-                                                </button>
+                                                    <button
+                                                        type="button"
+                                                        className="admin-reset-btn btn-destructive"
+                                                        onClick={() => updateSheep(target.id, { health: 0 })}
+                                                    >
+                                                        💀 歸零
+                                                    </button>
                                                 </Tooltip>
                                             </div>
                                         </div>
@@ -470,26 +472,26 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                 </div>
 
                                 <Tooltip content={isSleepingState ? '喚醒禱告' : '認領禱告'} side="top">
-                                <button
-                                    className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
-                                    onClick={handlePray}
-                                    disabled={!isSleepingState && isFull && !isAdmin}
-                                    style={{
-                                        opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
-                                        cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
-                                        position: 'relative', // Ensure particles position correctly
-                                        overflow: 'visible'   // Allow particles to float out
-                                    }}
-                                >
-                                    {buttonText}
-                                    {isPrayingAnim && (
-                                        <>
-                                            <span className="pray-particle p1">🙏</span>
-                                            <span className="pray-particle p2">❤️</span>
-                                            <span className="pray-particle p3">✨</span>
-                                        </>
-                                    )}
-                                </button>
+                                    <button
+                                        className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
+                                        onClick={handlePray}
+                                        disabled={!isSleepingState && isFull && !isAdmin}
+                                        style={{
+                                            opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
+                                            cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
+                                            position: 'relative', // Ensure particles position correctly
+                                            overflow: 'visible'   // Allow particles to float out
+                                        }}
+                                    >
+                                        {buttonText}
+                                        {isPrayingAnim && (
+                                            <>
+                                                <span className="pray-particle p1">🙏</span>
+                                                <span className="pray-particle p2">❤️</span>
+                                                <span className="pray-particle p3">✨</span>
+                                            </>
+                                        )}
+                                    </button>
                                 </Tooltip>
 
                                 {localMsg && (
@@ -509,16 +511,16 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                 {viewMode === 'LIST' ? (
                                     <>
                                         <div className="plan-list-header">
-                                            <Tooltip content="新增靈程規劃" side="bottom">
-                                            <button
-                                                type="button"
-                                                className="plan-add-btn"
-                                                onClick={openAddPlan}
-                                                aria-label="新增靈程規劃"
-                                            >
-                                                <Plus size={18} strokeWidth={2.5} />
-                                                <span>新增規劃</span>
-                                            </button>
+                                            <Tooltip content="新增認領規劃" side="bottom">
+                                                <button
+                                                    type="button"
+                                                    className="plan-add-btn"
+                                                    onClick={openAddPlan}
+                                                    aria-label="新增認領規劃"
+                                                >
+                                                    <Plus size={18} strokeWidth={2.5} />
+                                                    <span>新增規劃</span>
+                                                </button>
                                             </Tooltip>
                                         </div>
                                         <ModalHint className="plan-retention-hint">
@@ -529,7 +531,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                             {plans.length === 0 ? (
                                                 <div className="plan-list-empty">
                                                     <Calendar size={32} strokeWidth={1.5} />
-                                                    <p>目前沒有靈程規劃</p>
+                                                    <p>目前沒有認領規劃</p>
                                                     <p className="plan-list-empty-hint">點擊上方「新增規劃」開始安排</p>
                                                 </div>
                                             ) : (
