@@ -188,7 +188,6 @@ export const Field = ({ onSelectSheep }) => {
             style={{
                 position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
                 touchAction: 'none',
-                touchAction: 'none',
                 ...(!focusedSheepId ? {} : { cursor: 'grab' })
             }}
             onPointerDown={handlePointerDown}
