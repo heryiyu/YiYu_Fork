@@ -101,6 +101,7 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
             className="tooltip-root"
             onMouseEnter={handleOpen}
             onMouseLeave={handleClose}
+            onPointerDown={handleClose}
             onFocus={handleOpen}
             onBlur={handleClose}
         >

@@ -55,8 +55,8 @@ const ManualSection = () => {
                             transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
                             className="guide-menu-btn"
                             style={{
-                                gridColumn: index === 4 ? '1 / -1' : 'auto',
-                                width: index === 4 ? '50%' : '100%'
+                                gridColumn: (menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '1 / -1' : 'auto',
+                                width: (menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '50%' : '100%'
                             }}
                         >
                             <motion.img
@@ -90,7 +90,18 @@ const ManualSection = () => {
             case 'BIND_RELEASE':
                 return (
                     <div className="guide-section">
-                        <h4 style={{ textAlign: 'center', marginBottom: '8px' }}>🤲 五綑綁五釋放</h4>
+                        <h4 style={{ textAlign: 'center', marginBottom: '8px' }}>🤲 五釋放五綑綁</h4>
+
+                        <div className="guide-box-success">
+                            <h5 className="guide-box-title-success">✅ 5個釋放 BLESS</h5>
+                            <ul className="guide-list">
+                                <li><strong>Body:</strong> 身體健康、喜樂平安</li>
+                                <li><strong>Labors:</strong> 績效卓越、潛能突破</li>
+                                <li><strong>Emotion:</strong> 情緒管理、思想積極</li>
+                                <li><strong>Social:</strong> 人際、溝通、社交</li>
+                                <li><strong>Spiritual:</strong> 決志信主、信靠真神</li>
+                            </ul>
+                        </div>
 
                         <div className="guide-box-danger">
                             <h5 className="guide-box-title-danger">❌ 5個綑綁 HELLS</h5>
@@ -103,16 +114,6 @@ const ManualSection = () => {
                             </ul>
                         </div>
 
-                        <div className="guide-box-success">
-                            <h5 className="guide-box-title-success">✅ 5個釋放 BLESS</h5>
-                            <ul className="guide-list">
-                                <li><strong>Body:</strong> 身體健康、喜樂平安</li>
-                                <li><strong>Labors:</strong> 績效卓越、潛能突破</li>
-                                <li><strong>Emotion:</strong> 情緒管理、思想積極</li>
-                                <li><strong>Social:</strong> 人際、溝通、社交</li>
-                                <li><strong>Spiritual:</strong> 決志信主、信靠真神</li>
-                            </ul>
-                        </div>
 
                         <div style={{ marginTop: '20px' }}>
                             <h5 style={{ textAlign: 'center', marginBottom: '10px', color: 'var(--text-muted)' }}>📺 相關教學影片</h5>
