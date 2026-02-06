@@ -95,17 +95,22 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
         </span>
     );
 
+    const onPointerEnter = (e) => {
+        if (e.pointerType === 'touch') return;
+        handleOpen();
+    };
+
     return (
         <span
             ref={triggerRef}
             className="tooltip-root"
-            onMouseEnter={handleOpen}
-            onMouseLeave={handleClose}
-            onPointerDown={() => {
-                handleClose();
-                triggerRef.current?.blur();
+            onPointerEnter={onPointerEnter}
+            onPointerLeave={handleClose}
+            onPointerDown={handleClose}
+            onFocus={() => {
+                // Only show focus tooltip if the device supports hover (likely mouse/keyboard)
+                if (window.matchMedia('(hover: hover)').matches) handleOpen();
             }}
-            onFocus={handleOpen}
             onBlur={handleClose}
         >
             {children}
