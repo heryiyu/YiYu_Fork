@@ -11,6 +11,7 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
     const [position, setPosition] = useState({ top: 0, left: 0, transform: 'translate(-50%, -100%)' });
     const timeoutRef = useRef(null);
     const triggerRef = useRef(null);
+    const lastTouchTime = useRef(0);
 
     const updatePosition = useCallback(() => {
         if (!triggerRef.current) return;
@@ -46,17 +47,27 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
         setPosition({ top, left, transform });
     }, [side]);
 
-    const handleOpen = () => {
+    const handleOpen = useCallback(() => {
+        // Block simulated events on mobile/touch (happens within 500ms of touch)
+        const now = Date.now();
+        if (now - lastTouchTime.current < 500) return;
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         timeoutRef.current = setTimeout(() => {
             updatePosition();
             setOpen(true);
         }, delayDuration);
-    };
+    }, [delayDuration, updatePosition]);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setOpen(false);
-    };
+    }, []);
+
+    const onPointerDown = useCallback(() => {
+        lastTouchTime.current = Date.now();
+        handleClose();
+    }, [handleClose]);
 
     useEffect(() => {
         if (!open) return;
@@ -95,22 +106,14 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
         </span>
     );
 
-    const onPointerEnter = (e) => {
-        if (e.pointerType === 'touch') return;
-        handleOpen();
-    };
-
     return (
         <span
             ref={triggerRef}
             className="tooltip-root"
-            onPointerEnter={onPointerEnter}
-            onPointerLeave={handleClose}
-            onPointerDown={handleClose}
-            onFocus={() => {
-                // Only show focus tooltip if the device supports hover (likely mouse/keyboard)
-                if (window.matchMedia('(hover: hover)').matches) handleOpen();
-            }}
+            onMouseEnter={handleOpen}
+            onMouseLeave={handleClose}
+            onPointerDown={onPointerDown}
+            onFocus={handleOpen}
             onBlur={handleClose}
         >
             {children}
