@@ -41,7 +41,7 @@
 
 /* Pin/unpin feedback: visible highlight pulse */
 .sheep-card--pin-flash {
-  animation: sheep-card-pin-flash 0.5s ease;
+  animation: sheep-card-pin-flash 2s ease;
 }
 
 @keyframes sheep-card-pin-flash {

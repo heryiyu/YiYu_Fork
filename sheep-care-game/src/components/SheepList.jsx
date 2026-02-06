@@ -410,6 +410,7 @@ export const SheepList = ({ onSelect }) => {
     }), [sortedSheep, searchTerm, effectiveFilterStatus, settings?.pinnedSheepIds, tagAssignmentsBySheep]);
 
     const pinFlashTimeoutRef = useRef(null);
+    const pinHighlightTimeoutRef = useRef(null);
     const handleTogglePin = useCallback((id) => {
         if (!togglePin) return;
         const wasPinned = settings?.pinnedSheepIds?.includes(id);
@@ -438,33 +439,33 @@ export const SheepList = ({ onSelect }) => {
     useEffect(() => {
         const pendingId = pendingPinIdRef.current;
         if (!pendingId || lastPinActionRef.current !== 'pin') return;
-        pendingPinIdRef.current = null;
+        const scrollEl = scrollAreaRef.current;
+        const cardEl = cardRefs.current[pendingId];
+        if (!scrollEl || !cardEl) return;
+
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                setPinFlashId(pendingId);
-                if (pinFlashTimeoutRef.current) clearTimeout(pinFlashTimeoutRef.current);
-                pinFlashTimeoutRef.current = setTimeout(() => {
-                    setPinFlashId(null);
-                    pinFlashTimeoutRef.current = null;
-                }, 400);
+                const cardRect = cardEl.getBoundingClientRect();
+                const scrollRect = scrollEl.getBoundingClientRect();
+                const cardCenter = cardRect.left - scrollRect.left + scrollEl.scrollLeft + cardRect.width / 2;
+                const scrollCenter = scrollEl.clientWidth / 2;
+                scrollEl.scrollTo({ left: cardCenter - scrollCenter, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+
+                if (pinHighlightTimeoutRef.current) clearTimeout(pinHighlightTimeoutRef.current);
+                pinHighlightTimeoutRef.current = setTimeout(() => {
+                    pendingPinIdRef.current = null;
+                    setPinFlashId(pendingId);
+                    if (pinFlashTimeoutRef.current) clearTimeout(pinFlashTimeoutRef.current);
+                    pinFlashTimeoutRef.current = setTimeout(() => {
+                        setPinFlashId(null);
+                        pinFlashTimeoutRef.current = null;
+                    }, 400);
+                    pinHighlightTimeoutRef.current = null;
+                }, prefersReducedMotion ? 0 : 300);
+                lastPinActionRef.current = null;
             });
         });
-    }, [filteredSheep]);
-
-    useEffect(() => {
-        if (!pinFlashId || lastPinActionRef.current !== 'pin' || prefersReducedMotion) return;
-        const scrollEl = scrollAreaRef.current;
-        const cardEl = cardRefs.current[pinFlashId];
-        if (!scrollEl || !cardEl) return;
-        requestAnimationFrame(() => {
-            const cardRect = cardEl.getBoundingClientRect();
-            const scrollRect = scrollEl.getBoundingClientRect();
-            const cardCenter = cardRect.left - scrollRect.left + scrollEl.scrollLeft + cardRect.width / 2;
-            const scrollCenter = scrollEl.clientWidth / 2;
-            scrollEl.scrollTo({ left: cardCenter - scrollCenter, behavior: 'smooth' });
-        });
-        lastPinActionRef.current = null;
-    }, [pinFlashId, filteredSheep, prefersReducedMotion]);
+    }, [filteredSheep, prefersReducedMotion]);
 
     const counts = useMemo(() => {
         const acc = { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, SLEEPING: 0, PINNED: 0 };
