@@ -5,65 +5,39 @@ import { isSleeping } from '../utils/gameLogic';
 import { Sheep } from './Sheep';
 import { AssetBackground } from './AssetBackground';
 import { AssetPreloader } from './AssetPreloader';
+import { usePanGesture } from '../hooks/usePanGesture';
+
+const VISUAL_CONFIG = {
+    ZOOM_SCALE: 2.5,
+    CANVAS_SCALE: 2.5,
+    SHEEP_CENTER_OFFSET: 6
+};
+
+// Simple Hash for random consistency
+const simpleHash = (str) => {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) + hash) + str.charCodeAt(i); /* hash * 33 + c */
+    }
+    return Math.abs(hash);
+};
 
 export const Field = ({ onSelectSheep }) => {
     const { sheep, prayForSheep, weather, settings, focusedSheepId, clearFocus, lineId } = useGame();
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // --- Manual Panning Logic (Ref-based for Performance) ---
-    // We separate the "Zoom/Center" transform (React state) from "Pan" transform (Direct DOM)
-    // to avoid re-rendering the whole tree during drag.
-
-    // Refs for state without re-render
-    const panStateRef = React.useRef({ x: 0, y: 0, startX: 0, startY: 0, isPanning: false });
-    const panLayerRef = React.useRef(null);
-    const rafRef = React.useRef(null);
+    // --- Manual Panning Logic (via Hook) ---
+    const { domRef: panLayerRef, handlers: panHandlers, reset: resetPan, panState: panStateRef } = usePanGesture(!!focusedSheepId, VISUAL_CONFIG.ZOOM_SCALE);
 
     // Reset pan when focus changes
     useEffect(() => {
-        panStateRef.current = { x: 0, y: 0, startX: 0, startY: 0, isPanning: false };
-        if (panLayerRef.current) {
-            panLayerRef.current.style.transform = `translate(0px, 0px)`;
-        }
-    }, [focusedSheepId]);
+        resetPan();
+    }, [focusedSheepId, resetPan]);
 
-    const handlePointerDown = (e) => {
-        if (!focusedSheepId) return;
-        panStateRef.current.isPanning = true;
-        panStateRef.current.startX = e.clientX - panStateRef.current.x;
-        panStateRef.current.startY = e.clientY - panStateRef.current.y;
-        e.currentTarget.setPointerCapture(e.pointerId);
-        e.currentTarget.style.cursor = 'grabbing';
-    };
-
-    const handlePointerMove = (e) => {
-        if (!panStateRef.current.isPanning || !focusedSheepId) return;
-
-        const newX = e.clientX - panStateRef.current.startX;
-        const newY = e.clientY - panStateRef.current.startY;
-
-        panStateRef.current.x = newX;
-        panStateRef.current.y = newY;
-
-        // Apply directly to DOM via RAF
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => {
-            if (panLayerRef.current) {
-                // Adjust scale for 1:1 tracking feeling? 
-                // The PanLayer is inside the Scaled ZoomLayer.
-                // A 1px translate on PanLayer = 2.5px screen movement.
-                // To have 1:1 screen movement, we divide by scale.
-                const scale = 2.5;
-                panLayerRef.current.style.transform = `translate(${newX / scale}px, ${newY / scale}px)`;
-            }
-        });
-    };
-
-    const handlePointerUp = (e) => {
-        panStateRef.current.isPanning = false;
-        e.currentTarget.style.cursor = focusedSheepId ? 'grab' : 'default';
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    // Handlers wrapper to pass click checks
+    const handlePointerDown = (e) => panHandlers.onPointerDown(e);
+    const handlePointerMove = (e) => panHandlers.onPointerMove(e);
+    const handlePointerUp = (e) => panHandlers.onPointerUp(e);
 
     // --- 1. Separate Sheep ---
     const livingSheep = useMemo(() => sheep.filter(s => !isSleeping(s)), [sheep]);
@@ -139,7 +113,8 @@ export const Field = ({ onSelectSheep }) => {
             // But we want them to float around.
             // Let's override X/Y with a "Ghost Position".
             // We can use the seeded random based on ID + Time? No, just ID for stability.
-            const seed = s.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+            // Seeded random for Ghosts
+            const seed = simpleHash(s.id);
             const rand = (offset) => {
                 const x = Math.sin(seed + offset) * 10000;
                 return x - Math.floor(x);
@@ -175,28 +150,25 @@ export const Field = ({ onSelectSheep }) => {
         return visibleLiving;
     }, [visibleLiving, focusedSheepId, sheep]);
 
-    // Canvas is 250% of viewport; translate % is relative to element, so scale by 1/CANVAS_SCALE
-    const CANVAS_SCALE = 2.5;
 
     // Calculate Zoom Transform
     const fieldStyle = useMemo(() => {
         if (focusedSheepId) {
             const target = sheep.find(s => s.id === focusedSheepId);
             if (target) {
-                // Zoom in on target (Scale 2.5x)
+                // Zoom in on target
                 // Sheep position in % (0-100 within content area)
                 const sx = target.x;
                 const sy = (target.y || 0) * 0.95; // bottomPos from Sheep.jsx - sheep's FEET
-                const SHEEP_CENTER_OFFSET_PCT = 6;
-                const sy_center = sy + SHEEP_CENTER_OFFSET_PCT;
+                const sy_center = sy + VISUAL_CONFIG.SHEEP_CENTER_OFFSET;
 
-                const scale = 2.5;
+                const scale = VISUAL_CONFIG.ZOOM_SCALE;
 
                 return {
-                    transform: `scale(${scale}) translate(${(50 - sx) / CANVAS_SCALE}%, ${(sy_center - 50) / CANVAS_SCALE}%)`,
+                    transform: `scale(${scale}) translate(${(50 - sx) / VISUAL_CONFIG.CANVAS_SCALE}%, ${(sy_center - 50) / VISUAL_CONFIG.CANVAS_SCALE}%)`,
                     transformOrigin: '50% 50%',
                     transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    cursor: 'grab' // Static cursor, Dynamic handled in events
+                    cursor: 'grab'
                 };
             }
         }
