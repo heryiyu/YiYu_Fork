@@ -10,6 +10,34 @@ export const Field = ({ onSelectSheep }) => {
     const { sheep, prayForSheep, weather, settings, focusedSheepId, clearFocus, lineId } = useGame();
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // --- Manual Panning Logic ---
+    const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+    const [isPanning, setIsPanning] = useState(false);
+    const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+
+    // Reset pan when focus changes
+    useEffect(() => {
+        setPanOffset({ x: 0, y: 0 });
+    }, [focusedSheepId]);
+
+    const handlePointerDown = (e) => {
+        if (!focusedSheepId) return;
+        setIsPanning(true);
+        setStartPan({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    };
+
+    const handlePointerMove = (e) => {
+        if (!isPanning || !focusedSheepId) return;
+        setPanOffset({
+            x: e.clientX - startPan.x,
+            y: e.clientY - startPan.y
+        });
+    };
+
+    const handlePointerUp = () => {
+        setIsPanning(false);
+    };
+
     // --- 1. Separate Sheep ---
     const livingSheep = useMemo(() => sheep.filter(s => !isSleeping(s)), [sheep]);
     const sleepingSheep = useMemo(() => sheep.filter(s => isSleeping(s)), [sheep]);
@@ -146,23 +174,24 @@ export const Field = ({ onSelectSheep }) => {
                 // Center Y is 50%. Sheep Y is sy%.
                 // We want to move (50 - sx)% horizontally.
                 // We want to move (50 - sy)% vertically (relative to bottom).
-                // And then Scale.
+                // Adjust pan speed (divide by scale for 1:1 feel)
+                const adjustedPanX = panOffset.x / scale;
+                const adjustedPanY = panOffset.y / scale;
 
                 return {
-                    transform: `scale(${scale}) translate(${(50 - sx)}%, ${(50 - sy)}%)`,
-                    transformOrigin: '50% 50%', // Zoom relative to center, but we are translating the whole world relative to center?
-                    // Actually, if we translate first then scale:
-                    // translate moves the point (sx, sy) to (50, 50).
-                    // scale zooms in at (50, 50).
-                    transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    transform: `scale(${scale}) translate(calc(${(50 - sx)}% + ${adjustedPanX}px), calc(${(50 - sy)}% + ${adjustedPanY}px))`,
+                    transformOrigin: '50% 50%',
+                    transition: isPanning ? 'none' : 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    cursor: isPanning ? 'grabbing' : 'grab'
                 };
             }
         }
         return {
             transform: 'scale(1) translate(0%, 0%)',
-            transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            cursor: 'default'
         };
-    }, [focusedSheepId, sheep]);
+    }, [focusedSheepId, sheep, panOffset, isPanning]);
 
     if (!isLoaded) {
         return <AssetPreloader onLoaded={() => setIsLoaded(true)} />;
@@ -172,10 +201,18 @@ export const Field = ({ onSelectSheep }) => {
         <div className={`field-container`}
             style={{
                 position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
-                touchAction: 'none'
+                touchAction: 'none',
+                ...(!focusedSheepId ? {} : { cursor: isPanning ? 'grabbing' : 'grab' })
             }}
-            onClick={() => {
-                if (focusedSheepId) clearFocus();
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onClick={(e) => {
+                // Prevent click if we dragged significantly
+                if (focusedSheepId && !isPanning && Math.abs(panOffset.x) < 5 && Math.abs(panOffset.y) < 5) {
+                    clearFocus();
+                }
             }}
         >
             {/* New Asset Background (Handles Scene, Weather, Decor) */}
