@@ -23,8 +23,14 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName }) =>
     const zIdx = alwaysShowName ? 10000 : (sheep.zIndex !== undefined ? sheep.zIndex : Math.floor(1000 - (sheep.y || 0)));
 
     const handleInteract = (e) => {
+        // Prevent ghost clicks and double tapping issues
         e.preventDefault();
         e.stopPropagation();
+
+        // Trigger selection if handler exists
+        if (onSelect) {
+            onSelect(sheep.id);
+        }
 
         // Toggle name visibility
         setShowName(prev => {
