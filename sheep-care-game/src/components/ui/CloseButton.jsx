@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Tooltip } from './Tooltip';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import './CloseButton.css';
 
 /**
@@ -18,6 +19,8 @@ export const CloseButton = React.forwardRef(({
 }, ref) => {
     const iconSize = size ?? (variant === 'sm' ? 14 : 16);
     const tooltipContent = tooltip ?? ariaLabel;
+    const isMobile = useIsMobile();
+
     const btn = (
         <button
             ref={ref}
@@ -29,7 +32,8 @@ export const CloseButton = React.forwardRef(({
             <X size={iconSize} strokeWidth={2.5} />
         </button>
     );
-    return tooltipContent ? (
+    // Explicitly bypass Tooltip wrapper on mobile
+    return (tooltipContent && !isMobile) ? (
         <Tooltip content={tooltipContent} side="top">
             {btn}
         </Tooltip>
