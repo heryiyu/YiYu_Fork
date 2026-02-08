@@ -7,19 +7,23 @@ import { useState, useEffect } from 'react';
  * @returns {boolean} True if the device is mobile/touch, false otherwise.
  */
 export const useIsMobile = () => {
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return window.matchMedia('(pointer: coarse)').matches;
+    });
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+
         // Media query for coarse pointer (touch)
         const mediaQuery = window.matchMedia('(pointer: coarse)');
 
         // Handler to update state
         const handleChange = (e) => setIsMobile(e.matches);
 
-        // Initial check
-        setIsMobile(mediaQuery.matches);
-
         // Listen for changes
+        // 'change' event support is broad, but addEventListener is safer approach for MediaQueryList
+        // Some older browsers use addListener, but we target modern.
         mediaQuery.addEventListener('change', handleChange);
 
         // Cleanup
