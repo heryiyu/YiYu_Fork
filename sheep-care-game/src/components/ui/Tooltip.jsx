@@ -116,8 +116,8 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
             onMouseEnter={isMobile ? undefined : handleOpen}
             onMouseLeave={isMobile ? undefined : handleClose}
             onPointerDown={onPointerDown}
-            onFocus={handleOpen}
-            onBlur={handleClose}
+            onFocus={isMobile ? undefined : handleOpen}
+            onBlur={isMobile ? undefined : handleClose}
         >
             {children}
             {tooltipEl && ReactDOM.createPortal(tooltipEl, document.body)}
