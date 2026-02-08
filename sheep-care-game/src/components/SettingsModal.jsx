@@ -5,9 +5,12 @@ import { CloseButton } from './ui/CloseButton';
 import { Slider } from './ui/Slider';
 import { Tag } from './ui/Tag';
 
+import { useIsMobile } from '../hooks/useIsMobile';
+
 export const SettingsModal = ({ onClose }) => {
     const { settings, updateSetting, tags } = useGame();
     const closeBtnRef = useRef(null);
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -18,8 +21,10 @@ export const SettingsModal = ({ onClose }) => {
     }, [onClose]);
 
     useEffect(() => {
-        closeBtnRef.current?.focus();
-    }, []);
+        if (!isMobile) {
+            closeBtnRef.current?.focus();
+        }
+    }, [isMobile]);
 
     const handleChange = (e) => {
         updateSetting('maxVisibleSheep', parseInt(e.target.value));

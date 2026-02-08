@@ -99,11 +99,14 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     );
 };
 
+import { useIsMobile } from '../hooks/useIsMobile';
+
 export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags } = useGame();
     const confirm = useConfirm();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
+    const isMobile = useIsMobile();
 
     const target = (sheep || []).find(s => s.id === selectedSheepId);
     const [name, setName] = useState('');
@@ -163,8 +166,10 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     }, [onClose]);
 
     useEffect(() => {
-        closeBtnRef.current?.focus();
-    }, [selectedSheepId]);
+        if (!isMobile) {
+            closeBtnRef.current?.focus();
+        }
+    }, [selectedSheepId, isMobile]);
 
     if (!target) return null;
 
