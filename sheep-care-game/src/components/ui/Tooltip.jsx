@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import './Tooltip.css';
 
 /**
@@ -90,6 +91,8 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }, []);
 
+    const isMobile = useIsMobile();
+
     const tooltipEl = open && (
         <span
             className={`tooltip-content tooltip-content--portal`}
@@ -110,8 +113,8 @@ export const Tooltip = ({ children, content, side = 'top', delayDuration = 300 }
         <span
             ref={triggerRef}
             className="tooltip-root"
-            onMouseEnter={handleOpen}
-            onMouseLeave={handleClose}
+            onMouseEnter={isMobile ? undefined : handleOpen}
+            onMouseLeave={isMobile ? undefined : handleClose}
             onPointerDown={onPointerDown}
             onFocus={handleOpen}
             onBlur={handleClose}

@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SevenStepsMap } from './SevenStepsMap';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { CloseButton } from './ui/CloseButton';
 import { motion, useReducedMotion } from 'framer-motion';
 import './Guide.css';
 
 const ManualSection = () => {
     const shouldReduceMotion = useReducedMotion();
+    const isMobile = useIsMobile();
     const { isAdmin } = useGame();
     const [view, setView] = useState('MENU'); // MENU | SEVEN_STEPS | BIND_RELEASE | SCRIPTURES | CARDS | PRAYERS
     const [selectedId, setSelectedId] = useState(null);
@@ -50,7 +52,7 @@ const ManualSection = () => {
                                 filter: selectedId === item.id && !shouldReduceMotion ? 'brightness(1.2)' : 'brightness(1)',
                                 zIndex: selectedId === item.id ? 10 : 1
                             }}
-                            whileHover={!shouldReduceMotion ? { scale: 1.05 } : undefined}
+                            whileHover={(!isMobile && !shouldReduceMotion) ? { scale: 1.05 } : undefined}
                             whileTap={!shouldReduceMotion ? { scale: 0.95 } : undefined}
                             transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
                             className="guide-menu-btn"
@@ -230,7 +232,7 @@ const ManualSection = () => {
                                 <motion.div
                                     key={s.id}
                                     onClick={() => setActiveScripture(s)}
-                                    whileHover={{ scale: 1.02, y: -3 }}
+                                    whileHover={!isMobile ? { scale: 1.02, y: -3 } : undefined}
                                     whileTap={{ scale: 0.98, y: 0 }}
                                     style={{
                                         background: 'linear-gradient(145deg, #fffdf5 0%, #f0e6dc 100%)', // Subtle gradient for form
