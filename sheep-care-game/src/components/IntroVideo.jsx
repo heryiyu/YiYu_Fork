@@ -15,7 +15,7 @@ export const IntroVideo = ({ onClose, onComplete }) => {
     return (
         <div style={{
             position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-            background: 'rgba(0,0,0,0.9)', zIndex: 9999,
+            background: 'rgba(0,0,0,0.9)', zIndex: 'var(--z-cursor)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             backdropFilter: 'blur(5px)'
         }}>

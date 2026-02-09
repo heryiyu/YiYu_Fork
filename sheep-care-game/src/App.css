@@ -2,6 +2,36 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* --- Z-Index Refactoring --- */
+.weather-overlay {
+  z-index: 20;
+  /* Keep parralax/weather independent */
+}
+
+/* Modals */
+.modal-overlay,
+.debug-editor-overlay {
+  z-index: var(--z-modal-base);
+}
+
+.toast-container {
+  z-index: var(--z-toast);
+}
+
+.tooltip-portal {
+  z-index: var(--z-tooltip);
+}
+
+.dock-container,
+.sheep-list-dock {
+  z-index: var(--z-dock-layer);
+}
+
+.hud-container {
+  z-index: var(--z-ui-layer);
+}
+
+
 #root {
   /* Using new tokens */
   --glass-bg: var(--bg-card);
@@ -1412,7 +1442,7 @@ input[type="range"]::-moz-range-thumb:hover {
     border: var(--glass-border);
     border-radius: 12px;
     box-shadow: var(--shadow-card);
-    z-index: 5001;
+    z-index: var(--z-modal-overlay);
   }
 
   .hud-right-actions--open {
@@ -1434,7 +1464,7 @@ input[type="range"]::-moz-range-thumb:hover {
   height: 100%;
   background-color: var(--bg-modal-overlay);
   backdrop-filter: blur(2px);
-  z-index: 9999;
+  z-index: var(--z-modal-base);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1444,7 +1474,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .confirm-dialog-overlay {
-  z-index: 20000;
+  z-index: calc(var(--z-modal-overlay) + 1000);
 }
 
 /* --- Profile HUD Widget (Revamped) --- */
@@ -1452,7 +1482,7 @@ input[type="range"]::-moz-range-thumb:hover {
   position: absolute;
   top: 20px;
   left: 20px;
-  z-index: 1000;
+  z-index: var(--z-ui-layer);
   background-color: var(--bg-card);
   border-radius: 24px;
   border: var(--glass-border);
@@ -1560,7 +1590,7 @@ input[type="range"]::-moz-range-thumb:hover {
   width: 100vw;
   height: 35%;
   background: transparent;
-  z-index: 1500;
+  z-index: var(--z-dock-layer);
   display: flex;
   flex-direction: column;
   pointer-events: none;

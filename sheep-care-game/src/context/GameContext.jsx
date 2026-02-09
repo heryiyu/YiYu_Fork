@@ -862,6 +862,23 @@ export const GameProvider = ({ children }) => {
         return ok;
     };
 
+    const fetchWeeklySchedules = async () => {
+        if (!lineId) return [];
+        try {
+            const { data, error } = await supabase
+                .from('spiritual_plans')
+                .select('*, sheep:sheep_id(name, visual)')
+                .eq('user_id', lineId)
+                .order('scheduled_time', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching weekly schedules:', error);
+            return [];
+        }
+    };
+
     return (
         <GameContext.Provider value={{
             currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
@@ -890,6 +907,7 @@ export const GameProvider = ({ children }) => {
             updateTag,
             deleteTag,
             setSheepTags,
+            fetchWeeklySchedules, // Exposed
             focusedSheepId,
             findSheep,
             clearFocus

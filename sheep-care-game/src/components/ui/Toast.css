@@ -9,7 +9,7 @@
   color: var(--text-label);
   border-radius: 16px;
   padding: 10px 14px;
-  z-index: 3000;
+  z-index: var(--z-toast);
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-subtle);
   animation: toast-fade 3s ease forwards;

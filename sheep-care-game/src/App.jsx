@@ -15,7 +15,8 @@ import './App.css';
 
 import { AssetPreloader } from './components/AssetPreloader';
 import { IntroVideo } from './components/IntroVideo';
-import { Bell, BellOff, BookOpen, Settings, Menu } from 'lucide-react';
+import { ScheduleListModal } from './components/ScheduleListModal';
+import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react';
 
 function App() {
   const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather, showIntroVideo, markIntroWatched } = useGame();
@@ -23,6 +24,7 @@ function App() {
   const [showGuide, setShowGuide] = useState(false);
   // showList removed - permanent dock
   const [showSettings, setShowSettings] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
   const [isHudMenuOpen, setIsHudMenuOpen] = useState(false);
 
   // Reset state when user changes
@@ -30,6 +32,7 @@ function App() {
     setSelectedSheepId(null);
     setShowGuide(false);
     setShowSettings(false);
+    setShowSchedule(false);
   }, [currentUser]);
 
   // Handlers (Moved up to satisfy Rules of Hooks)
@@ -114,6 +117,19 @@ function App() {
             </button>
           </Tooltip>
 
+          {/* Schedule */}
+          <Tooltip content="牧羊人週記" side="bottom">
+            <button
+              className="hud-btn"
+              onClick={() => {
+                setShowSchedule(true);
+                setIsHudMenuOpen(false);
+              }}
+            >
+              <Calendar size={18} strokeWidth={2.5} />
+            </button>
+          </Tooltip>
+
           {/* Display Settings (Sheep Count) */}
           <Tooltip content="設定" side="bottom">
             <button
@@ -126,8 +142,6 @@ function App() {
               <Settings size={18} strokeWidth={2.5} />
             </button>
           </Tooltip>
-
-          {/* Skin Manager button hidden – not in use anymore */}
 
         </div>
       </div>
@@ -154,6 +168,10 @@ function App() {
 
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+
+      {showSchedule && (
+        <ScheduleListModal onClose={() => setShowSchedule(false)} />
       )}
 
       {showIntroVideo && (

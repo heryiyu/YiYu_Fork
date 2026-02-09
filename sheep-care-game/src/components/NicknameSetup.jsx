@@ -38,7 +38,7 @@ export const NicknameSetup = ({ onClose }) => {
             <>
                 {/* Transparent Backdrop to close on click outside */}
                 <div
-                    style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9998 }}
+                    style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'calc(var(--z-cursor) - 1)' }}
                     onClick={onClose}
                 />
 
@@ -52,7 +52,7 @@ export const NicknameSetup = ({ onClose }) => {
                     padding: '20px',
                     boxShadow: 'var(--shadow-card)',
                     border: '1px solid var(--border-subtle)',
-                    zIndex: 9999,
+                    zIndex: 'var(--z-cursor)',
                     animation: 'popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
                 }}>
                     <style>{`@keyframes popIn { from { transform: scale(0.8) translate(-10%, -10%); opacity: 0; } to { transform: scale(1) translate(0, 0); opacity: 1; } }`}</style>

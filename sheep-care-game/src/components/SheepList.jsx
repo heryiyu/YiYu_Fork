@@ -86,7 +86,7 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
                 borderRadius: '12px',
                 boxShadow: 'var(--shadow-card)',
                 border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
-                zIndex: 2500
+                zIndex: 'var(--z-modal-overlay)'
             }}
         >
             <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -629,7 +629,7 @@ export const SheepList = ({ onSelect }) => {
                     style={{
                         position: 'fixed',
                         top: 0, left: 0, right: 0, bottom: 0,
-                        zIndex: 1400, // Below SheepList (1500)
+                        zIndex: 'calc(var(--z-dock-layer) - 100)', // Below SheepList
                         background: 'transparent', // Invisible
                         cursor: 'default',
                         touchAction: 'none'
@@ -641,7 +641,7 @@ export const SheepList = ({ onSelect }) => {
             <div className="sheep-list-container" style={{
                 position: 'absolute', bottom: 0, left: 0, width: '100vw',
                 height: 'auto', // Container adapts to content
-                zIndex: 1500,
+                zIndex: 'var(--z-dock-layer)',
                 display: 'flex', flexDirection: 'column',
                 pointerEvents: 'none', // Allow clicks to pass through empty areas
                 transition: 'transform 0.3s ease'
@@ -988,7 +988,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Add Modal Overlay (Now managed here) */}
                 {showAddModal && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
                         <AddSheepModal
                             onConfirm={handleConfirmAdd}
                             onCancel={() => setShowAddModal(false)}
@@ -998,7 +998,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Edit Modal Overlay */}
                 {editingSheep && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
                         <AddSheepModal
                             editingSheep={editingSheep}
                             onConfirm={(updatedData) => {
@@ -1012,7 +1012,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Tag Manager Modal (from filter settings) */}
                 {showTagManagerModal && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
                         <TagManagerModal onClose={() => setShowTagManagerModal(false)} />
                     </div>
                 )}

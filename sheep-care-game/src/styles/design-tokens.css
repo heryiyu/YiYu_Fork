@@ -262,3 +262,24 @@
     --color-grass-foreground: #9EB494;
     /* Deep Forest Green */
 }
+
+:root {
+    /* --- Z-Index System --- */
+    --z-background: 0;
+    --z-field-content: 100;
+    /* Sheep, Field Items */
+    --z-ui-layer: 1000;
+    /* HUD, Standard UI */
+    --z-dock-layer: 1500;
+    /* SheepList Bottom Dock */
+    --z-modal-base: 2000;
+    /* Modals (ensure above Dock) */
+    --z-modal-overlay: 2100;
+    /* Modals on top of Modals */
+    --z-toast: 3000;
+    /* Toasts */
+    --z-cursor: 9999;
+    /* Custom Cursor / Dragging */
+    --z-tooltip: 10000;
+    /* Tooltips */
+}
