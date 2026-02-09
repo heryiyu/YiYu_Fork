@@ -179,6 +179,22 @@ export const Field = ({ onSelectSheep }) => {
         };
     }, [focusedSheepId, sheep]);
 
+    // --- 5. Resize Observer for Performance Optimization (Pixel Transforms) ---
+    const contentRef = React.useRef(null);
+    const [containerSize, setContainerSize] = useState(null);
+
+    useEffect(() => {
+        if (!contentRef.current) return;
+        const observer = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                setContainerSize({ width, height });
+            }
+        });
+        observer.observe(contentRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     if (!isLoaded) {
         return <AssetPreloader onLoaded={() => setIsLoaded(true)} />;
     }
@@ -218,14 +234,16 @@ export const Field = ({ onSelectSheep }) => {
                     <AssetBackground userId={lineId || 'guest'} weather={weather} />
 
                     {/* Content area: 40% x 40% centered so sheep 0-100 coords map to viewport */}
-                    <div style={{
-                        position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
-                        pointerEvents: 'none'
-                    }}>
+                    <div
+                        ref={contentRef}
+                        style={{
+                            position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
+                            pointerEvents: 'none'
+                        }}>
                         {/* 1. Ghosts (Floaty) */}
                         {ghostSheep.map(s => (
                             <div key={s.id} style={{ pointerEvents: 'auto' }}>
-                                <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} />
+                                <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} containerSize={containerSize} />
                             </div>
                         ))}
 
@@ -237,6 +255,7 @@ export const Field = ({ onSelectSheep }) => {
                                     onPray={prayForSheep}
                                     onSelect={onSelectSheep}
                                     alwaysShowName={s.id === focusedSheepId}
+                                    containerSize={containerSize}
                                 />
                             </div>
                         ))}

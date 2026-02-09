@@ -9,7 +9,7 @@ const mountainTintCache = new Map();
 const cloudSvgCache = new Map();
 const cloudTintCache = new Map();
 
-export const AssetBackground = ({ userId, weather }) => {
+export const AssetBackground = React.memo(({ userId, weather }) => {
     // Generate the deterministic scene for this user
     const scene = useMemo(() => generateScene(userId), [userId]);
     const timeStatus = weather?.timeStatus || 'day';
@@ -298,4 +298,4 @@ export const AssetBackground = ({ userId, weather }) => {
             </div>
         </div>
     );
-};
+});

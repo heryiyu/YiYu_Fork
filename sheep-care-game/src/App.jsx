@@ -32,6 +32,15 @@ function App() {
     setShowSettings(false);
   }, [currentUser]);
 
+  // Handlers (Moved up to satisfy Rules of Hooks)
+  const handleSelectSheep = React.useCallback((sheep) => {
+    setSelectedSheepId(sheep.id);
+  }, []);
+
+  const handleSelectFromList = React.useCallback((sheep) => {
+    setSelectedSheepId(sheep.id);
+  }, []);
+
   // 0. Global Loading (Use AssetPreloader for consistency)
   if (isLoading) {
     return <AssetPreloader onLoaded={() => { }} />;
@@ -47,14 +56,6 @@ function App() {
     return <NicknameSetup />;
   }
 
-  // 2. Main Game
-  const handleSelectSheep = (sheep) => {
-    setSelectedSheepId(sheep.id);
-  };
-
-  const handleSelectFromList = (sheep) => {
-    setSelectedSheepId(sheep.id);
-  };
 
   return (
     <div className="game-container" key={currentUser} data-theme={weather?.timeStatus || 'day'}>

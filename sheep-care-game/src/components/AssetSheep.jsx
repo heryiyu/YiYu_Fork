@@ -4,6 +4,24 @@ import { ASSETS } from '../utils/AssetRegistry';
 import { isSleeping } from '../utils/gameLogic';
 import '../styles/design-tokens.css';
 
+// --- 2. Animations (Static Definitions) ---
+const GHOST_ANIM = {
+    y: [0, -15, 0],
+    opacity: [0.7, 0.9, 0.7],
+    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+};
+
+const WALK_ANIM = {
+    y: [0, -4, 0],
+    rotate: [0, 2, 0, -2, 0],
+    transition: { duration: 0.6, repeat: Infinity, ease: "linear" }
+};
+
+const SLEEP_ANIM = {
+    scale: [1, 0.98, 1],
+    transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+};
+
 export const AssetSheep = ({
     x, y,
     state, // 'walking', 'idle', 'sleep'
@@ -35,49 +53,14 @@ export const AssetSheep = ({
         return status === 'sick' ? variant.SICK : variant.HEALTHY;
     }, [isSleepingState, status, visual?.variant]);
 
-    // --- 2. Animations ---
-    // Object Animation: We animate the CONTAINER or the IMG itself.
-
-    // A. Ghost Animation (Floating)
-    const ghostAnim = {
-        y: [0, -15, 0],
-        opacity: [0.7, 0.9, 0.7],
-        transition: {
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut"
-        }
-    };
-
-    // B. Walk Animation (Bouncing)
-    const walkAnim = {
-        y: [0, -4, 0],
-        rotate: [0, 2, 0, -2, 0],
-        transition: {
-            duration: 0.6,
-            repeat: Infinity,
-            ease: "linear"
-        }
-    };
-
-    // C. Sleep Animation (Zzz or subtle breathe)
-    const sleepAnim = {
-        scale: [1, 0.98, 1],
-        transition: {
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-        }
-    };
-
     // Select Animation (disabled in card/centered mode unless overridden)
     const shouldAnimate = animated !== undefined ? animated : !centered;
 
     let activeAnim = {};
     if (shouldAnimate) {
-        if (isSleepingState) activeAnim = ghostAnim;
-        else if (isWalking) activeAnim = walkAnim;
-        else if (state === 'sleep') activeAnim = sleepAnim;
+        if (isSleepingState) activeAnim = GHOST_ANIM;
+        else if (isWalking) activeAnim = WALK_ANIM;
+        else if (state === 'sleep') activeAnim = SLEEP_ANIM;
     }
 
     const containerStyle = centered ? {
@@ -108,7 +91,8 @@ export const AssetSheep = ({
                 animate={activeAnim}
                 style={{
                     width: '100%', height: '100%',
-                    display: 'flex', justifyContent: 'center', alignItems: 'flex-end'
+                    display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+                    willChange: 'transform' // Hint to browser
                 }}
             >
                 <img
