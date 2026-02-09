@@ -762,7 +762,7 @@ export const GameProvider = ({ children }) => {
                     if (newProgress >= 5) {
                         showMessage(`✨ 奇蹟發生了！${s.name} 甦醒了！`);
                         return {
-                            ...s, status: 'healthy', health: 100, type: 'LAMB', careLevel: 0,
+                            ...s, status: 'healthy', health: 40, type: 'LAMB', careLevel: 0,
                             resurrectionProgress: 0, awakeningProgress: 0, lastPrayedDate: today, prayedCount: 0
                         };
                     } else {
