@@ -82,6 +82,10 @@ export const GameProvider = ({ children }) => {
     const [tags, setTags] = useState([]);
     const [tagAssignmentsBySheep, setTagAssignmentsBySheep] = useState({});
 
+    // Schedule sync trigger
+    const [lastScheduleUpdate, setLastScheduleUpdate] = useState(0);
+    const notifyScheduleUpdate = () => setLastScheduleUpdate(Date.now());
+
     // Focusing / Find Logic (locate sheep on canvas)
     const [focusedSheepId, setFocusedSheepId] = useState(null);
 
@@ -867,7 +871,7 @@ export const GameProvider = ({ children }) => {
         try {
             const { data, error } = await supabase
                 .from('spiritual_plans')
-                .select('*, sheep:sheep_id(name, visual)')
+                .select('*')
                 .eq('user_id', lineId)
                 .order('scheduled_time', { ascending: true });
 
@@ -908,6 +912,8 @@ export const GameProvider = ({ children }) => {
             deleteTag,
             setSheepTags,
             fetchWeeklySchedules, // Exposed
+            lastScheduleUpdate, // Exposed
+            notifyScheduleUpdate, // Exposed
             focusedSheepId,
             findSheep,
             clearFocus

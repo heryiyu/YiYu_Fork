@@ -103,7 +103,7 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
 import { useIsMobile } from '../hooks/useIsMobile';
 
 export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags } = useGame();
+    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate } = useGame();
     const confirm = useConfirm();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
@@ -268,6 +268,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                 const { error } = await supabase.from('spiritual_plans').insert([payload]);
                 if (error) throw error;
             }
+            notifyScheduleUpdate();
             await fetchPlans();
             setViewMode('LIST');
             setEditingPlanId(null);
@@ -294,6 +295,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                 .delete()
                 .eq('id', id);
             if (error) throw error;
+            notifyScheduleUpdate();
             await fetchPlans();
             setViewMode('LIST');
             setEditingPlanId(null);

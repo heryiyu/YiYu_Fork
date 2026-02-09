@@ -23,7 +23,7 @@ const addDays = (date, days) => {
 };
 
 export const ScheduleListModal = ({ onClose }) => {
-    const { fetchWeeklySchedules, sheep } = useGame();
+    const { fetchWeeklySchedules, sheep, lastScheduleUpdate } = useGame();
     const [schedules, setSchedules] = useState([]);
     const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(new Date()));
     const [selectedDayIndex, setSelectedDayIndex] = useState(new Date().getDay()); // 0-6
@@ -39,7 +39,7 @@ export const ScheduleListModal = ({ onClose }) => {
 
     useEffect(() => {
         loadSchedules();
-    }, []);
+    }, [lastScheduleUpdate]);
 
     const prevWeek = () => {
         const newStart = new Date(currentWeekStart);
@@ -68,6 +68,21 @@ export const ScheduleListModal = ({ onClose }) => {
             return d.toDateString() === targetDateStr;
         }).sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
     }, [schedules, currentWeekStart, selectedDayIndex]);
+
+    const unscheduledSchedules = useMemo(() => {
+        return schedules.filter(s => !s.scheduled_time);
+    }, [schedules]);
+
+    const hasEventOnDay = (date) => {
+        const dStr = date.toDateString();
+        return schedules.some(s => s.scheduled_time && new Date(s.scheduled_time).toDateString() === dStr);
+    };
+
+    const goToToday = () => {
+        const today = new Date();
+        setCurrentWeekStart(getStartOfWeek(today));
+        setSelectedDayIndex(today.getDay());
+    };
 
     const formatTime = (isoString) => {
         const d = new Date(isoString);
@@ -102,6 +117,14 @@ export const ScheduleListModal = ({ onClose }) => {
                             <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto', marginRight: '8px' }}>
                                 <button className="icon-btn" onClick={prevWeek} title="上一週">
                                     <ChevronLeft size={18} />
+                                </button>
+                                <button
+                                    className="icon-btn"
+                                    onClick={goToToday}
+                                    style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--palette-blue-action)' }}
+                                    title="回到今天"
+                                >
+                                    今
                                 </button>
                                 <button className="icon-btn" onClick={nextWeek} title="下一週">
                                     <ChevronRight size={18} />
@@ -161,6 +184,16 @@ export const ScheduleListModal = ({ onClose }) => {
                                 >
                                     <span style={{ fontSize: '0.8rem' }}>{day}</span>
                                     <span style={{ fontSize: '0.9rem' }}>{date.getDate()}</span>
+                                    {hasEventOnDay(date) && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: '4px',
+                                            width: '4px',
+                                            height: '4px',
+                                            borderRadius: '50%',
+                                            background: isSelected ? '#fff' : 'var(--palette-danger)'
+                                        }} />
+                                    )}
                                 </button>
                             );
                         })}
@@ -252,6 +285,48 @@ export const ScheduleListModal = ({ onClose }) => {
                                         </div>
                                     );
                                 })}
+                            </div>
+                        )}
+
+                        {unscheduledSchedules.length > 0 && (
+                            <div style={{ marginTop: '24px' }}>
+                                <div style={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: 'bold',
+                                    color: 'var(--text-muted)',
+                                    marginBottom: '12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}>
+                                    <div style={{ width: '4px', height: '12px', background: 'var(--palette-blue-action)', borderRadius: '2px' }} />
+                                    待安排行程 ({unscheduledSchedules.length})
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {unscheduledSchedules.map(plan => {
+                                        const sheepData = sheep.find(s => s.id === plan.sheep_id);
+                                        return (
+                                            <div key={plan.id} className="schedule-card" style={{
+                                                background: 'rgba(255,255,255,0.6)',
+                                                borderRadius: '12px',
+                                                padding: '12px',
+                                                border: '1px dashed var(--border-subtle)',
+                                                display: 'flex',
+                                                gap: '12px',
+                                                alignItems: 'center',
+                                                opacity: 0.8
+                                            }}>
+                                                <div style={{ width: '40px', height: '40px', background: 'var(--bg-app)', borderRadius: '50%', flexShrink: 0, overflow: 'hidden' }}>
+                                                    {sheepData ? <AssetSheep visual={sheepData.visual} centered={true} status={sheepData.status} /> : <User size={20} style={{ margin: '10px' }} />}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{plan.action}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{sheepData?.name || '未知小羊'}</div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
                     </div>
