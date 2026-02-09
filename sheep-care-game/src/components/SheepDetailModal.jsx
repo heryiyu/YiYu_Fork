@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { useConfirm } from '../context/ConfirmContext';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { supabase } from '../services/supabaseClient';
 import { TagManagerModal } from './TagManagerModal';
@@ -11,6 +11,7 @@ import { Slider } from './ui/Slider';
 import { Tag } from './ui/Tag';
 import { IconButton, IconButtonGroup } from './ui/IconButton';
 import { Tooltip } from './ui/Tooltip';
+import { Portal } from './ui/Portal';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     const [orderedIds, setOrderedIds] = useState(assignedIds);
@@ -352,313 +353,316 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     };
 
     return (
-        <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="sheep-detail-title">
-            <div className="modal-card" ref={modalRef} onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3 id="sheep-detail-title">{isSleepingState ? '🪦 沉睡紀錄' : '📝 小羊資料'}</h3>
-                    <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
-                </div>
-
-                <div className="modal-form sheep-detail-modal-form">
-                    <div className="modal-tabs">
-                        <button
-                            className={`modal-tab ${activeTab === 'BASIC' ? 'modal-tab-active' : ''}`}
-                            onClick={() => setActiveTab('BASIC')}
-                        >
-                            基本資料
-                        </button>
-                        <button
-                            className={`modal-tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''}`}
-                            data-tab="plan"
-                            onClick={() => setActiveTab('PLAN')}
-                        >
-                            認領規劃
-                        </button>
+        <Portal>
+            <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="sheep-detail-title">
+                <div className="modal-card" ref={modalRef} onClick={(e) => e.stopPropagation()}>
+                    {/* ... content ... */}
+                    <div className="modal-header">
+                        <h3 id="sheep-detail-title">{isSleepingState ? '🪦 沉睡紀錄' : '📝 小羊資料'}</h3>
+                        <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                     </div>
 
-                    <div className="sheep-detail-scroll">
-                        {activeTab === 'BASIC' && (
-                            <div className="sheep-detail-basic">
-                                <div className="form-group">
-                                    <label>{isSleepingState ? '沉睡紀錄 (姓名)' : '姓名'}</label>
-                                    <input
-                                        type="text"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        onBlur={() => handleBasicAutoSave('name', name)}
-                                        maxLength={10}
-                                        placeholder="名字..."
-                                    />
-                                </div>
+                    <div className="modal-form sheep-detail-modal-form">
+                        <div className="modal-tabs">
+                            <button
+                                className={`modal-tab ${activeTab === 'BASIC' ? 'modal-tab-active' : ''}`}
+                                onClick={() => setActiveTab('BASIC')}
+                            >
+                                基本資料
+                            </button>
+                            <button
+                                className={`modal-tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''}`}
+                                data-tab="plan"
+                                onClick={() => setActiveTab('PLAN')}
+                            >
+                                認領規劃
+                            </button>
+                        </div>
 
-                                <div className="form-group">
-                                    <label>狀態</label>
-                                    <div className="modal-status-box" style={{ color: isSleepingState ? 'var(--text-muted)' : (target.health >= 80 ? 'var(--palette-blue-action)' : (target.status === 'healthy' ? 'var(--palette-deep-green)' : 'var(--palette-danger)')) }}>
-                                        <div>
-                                            {getStatusText(target.status, target.health)}
-                                            {!isSleepingState && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
-                                            {!isSleepingState && <span style={{ marginLeft: '10px', color: 'var(--palette-orange-action)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
+                        <div className="sheep-detail-scroll">
+                            {activeTab === 'BASIC' && (
+                                <div className="sheep-detail-basic">
+                                    <div className="form-group">
+                                        <label>{isSleepingState ? '沉睡紀錄 (姓名)' : '姓名'}</label>
+                                        <input
+                                            type="text"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            onBlur={() => handleBasicAutoSave('name', name)}
+                                            maxLength={10}
+                                            placeholder="名字..."
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>狀態</label>
+                                        <div className="modal-status-box" style={{ color: isSleepingState ? 'var(--text-muted)' : (target.health >= 80 ? 'var(--palette-blue-action)' : (target.status === 'healthy' ? 'var(--palette-deep-green)' : 'var(--palette-danger)')) }}>
+                                            <div>
+                                                {getStatusText(target.status, target.health)}
+                                                {!isSleepingState && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
+                                                {!isSleepingState && <span style={{ marginLeft: '10px', color: 'var(--palette-orange-action)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="form-group">
-                                    <label>標籤</label>
-                                    <TagSelect
-                                        sheepId={target?.id}
-                                        tags={tags}
-                                        assignedIds={(tagAssignmentsBySheep[target?.id] || []).map(a => a.tagId)}
-                                        onSave={(tagIds) => target?.id && setSheepTags(target.id, tagIds)}
-                                    />
-                                    <Tooltip content="管理標籤" side="top">
+                                    <div className="form-group">
+                                        <label>標籤</label>
+                                        <TagSelect
+                                            sheepId={target?.id}
+                                            tags={tags}
+                                            assignedIds={(tagAssignmentsBySheep[target?.id] || []).map(a => a.tagId)}
+                                            onSave={(tagIds) => target?.id && setSheepTags(target.id, tagIds)}
+                                        />
+                                        <Tooltip content="管理標籤" side="top">
+                                            <button
+                                                type="button"
+                                                className="tag-manage-btn"
+                                                onClick={() => setShowTagManager(true)}
+                                                style={{
+                                                    marginTop: '10px',
+                                                    fontSize: '0.8rem',
+                                                    padding: '4px 10px',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    background: 'rgba(0,0,0,0.04)',
+                                                    border: '1px solid rgba(0,0,0,0.1)',
+                                                    borderRadius: '6px',
+                                                    color: 'var(--text-muted)',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <Settings size={12} strokeWidth={2} />
+                                                管理標籤
+                                            </button>
+                                        </Tooltip>
+                                    </div>
+
+                                    {isAdmin && !isSleepingState && (
+                                        <div className="form-group">
+                                            <div className="modal-admin-box">
+                                                <label>🔧 管理員調整: {Math.ceil(target.health)}%</label>
+                                                <div className="admin-actions">
+                                                    <Slider
+                                                        min={1}
+                                                        max={100}
+                                                        value={target.health}
+                                                        onChange={(e) => {
+                                                            const newHealth = Number(e.target.value);
+                                                            const { health, status, type } = calculateSheepState(newHealth, target.status);
+                                                            updateSheep(target.id, { health, type, status });
+                                                        }}
+                                                        ariaLabel="管理員調整健康度"
+                                                    />
+                                                    <Tooltip content="直接歸零 (測試沉睡)" side="top">
+                                                        <button
+                                                            type="button"
+                                                            className="admin-reset-btn btn-destructive"
+                                                            onClick={() => updateSheep(target.id, { health: 0 })}
+                                                        >
+                                                            💀 歸零
+                                                        </button>
+                                                    </Tooltip>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="form-group">
+                                        <label>備註 (狀況需要)</label>
+                                        <textarea
+                                            value={note}
+                                            onChange={(e) => setNote(e.target.value)}
+                                            onBlur={() => handleBasicAutoSave('note', note)}
+                                            rows={3}
+                                            placeholder={isSleepingState ? "寫下對他的負擔..." : "記錄這隻小羊的狀況..."}
+                                        />
+                                    </div>
+
+                                    <Tooltip content={isSleepingState ? '喚醒禱告' : '認領禱告'} side="top">
                                         <button
-                                            type="button"
-                                            className="tag-manage-btn"
-                                            onClick={() => setShowTagManager(true)}
+                                            className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
+                                            onClick={handlePray}
+                                            disabled={!isSleepingState && isFull && !isAdmin}
                                             style={{
-                                                marginTop: '10px',
-                                                fontSize: '0.8rem',
-                                                padding: '4px 10px',
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                background: 'rgba(0,0,0,0.04)',
-                                                border: '1px solid rgba(0,0,0,0.1)',
-                                                borderRadius: '6px',
-                                                color: 'var(--text-muted)',
-                                                cursor: 'pointer'
+                                                opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
+                                                cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
+                                                position: 'relative', // Ensure particles position correctly
+                                                overflow: 'visible'   // Allow particles to float out
                                             }}
                                         >
-                                            <Settings size={12} strokeWidth={2} />
-                                            管理標籤
+                                            {buttonText}
+                                            {isPrayingAnim && (
+                                                <>
+                                                    <span className="pray-particle p1">🙏</span>
+                                                    <span className="pray-particle p2">❤️</span>
+                                                    <span className="pray-particle p3">✨</span>
+                                                </>
+                                            )}
                                         </button>
                                     </Tooltip>
-                                </div>
 
-                                {isAdmin && !isSleepingState && (
-                                    <div className="form-group">
-                                        <div className="modal-admin-box">
-                                            <label>🔧 管理員調整: {Math.ceil(target.health)}%</label>
-                                            <div className="admin-actions">
-                                                <Slider
-                                                    min={1}
-                                                    max={100}
-                                                    value={target.health}
-                                                    onChange={(e) => {
-                                                        const newHealth = Number(e.target.value);
-                                                        const { health, status, type } = calculateSheepState(newHealth, target.status);
-                                                        updateSheep(target.id, { health, type, status });
-                                                    }}
-                                                    ariaLabel="管理員調整健康度"
-                                                />
-                                                <Tooltip content="直接歸零 (測試沉睡)" side="top">
+                                    {localMsg && (
+                                        <div className="modal-local-msg">
+                                            {localMsg}
+                                        </div>
+                                    )}
+
+                                    <div className="modal-hint">
+                                        (內容將自動儲存)
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'PLAN' && (
+                                <div className="spiritual-plan-container">
+                                    {viewMode === 'LIST' ? (
+                                        <>
+                                            <div className="plan-list-header">
+                                                <Tooltip content="新增認領規劃" side="bottom">
                                                     <button
                                                         type="button"
-                                                        className="admin-reset-btn btn-destructive"
-                                                        onClick={() => updateSheep(target.id, { health: 0 })}
+                                                        className="plan-add-btn"
+                                                        onClick={openAddPlan}
+                                                        aria-label="新增認領規劃"
                                                     >
-                                                        💀 歸零
+                                                        <Plus size={18} strokeWidth={2.5} />
+                                                        <span>新增規劃</span>
                                                     </button>
                                                 </Tooltip>
                                             </div>
-                                        </div>
-                                    </div>
-                                )}
+                                            <ModalHint className="plan-retention-hint">
+                                                系統會自動清理超過一個月的過期行程
+                                            </ModalHint>
 
-                                <div className="form-group">
-                                    <label>備註 (狀況需要)</label>
-                                    <textarea
-                                        value={note}
-                                        onChange={(e) => setNote(e.target.value)}
-                                        onBlur={() => handleBasicAutoSave('note', note)}
-                                        rows={3}
-                                        placeholder={isSleepingState ? "寫下對他的負擔..." : "記錄這隻小羊的狀況..."}
-                                    />
-                                </div>
-
-                                <Tooltip content={isSleepingState ? '喚醒禱告' : '認領禱告'} side="top">
-                                    <button
-                                        className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
-                                        onClick={handlePray}
-                                        disabled={!isSleepingState && isFull && !isAdmin}
-                                        style={{
-                                            opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
-                                            cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
-                                            position: 'relative', // Ensure particles position correctly
-                                            overflow: 'visible'   // Allow particles to float out
-                                        }}
-                                    >
-                                        {buttonText}
-                                        {isPrayingAnim && (
-                                            <>
-                                                <span className="pray-particle p1">🙏</span>
-                                                <span className="pray-particle p2">❤️</span>
-                                                <span className="pray-particle p3">✨</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </Tooltip>
-
-                                {localMsg && (
-                                    <div className="modal-local-msg">
-                                        {localMsg}
-                                    </div>
-                                )}
-
-                                <div className="modal-hint">
-                                    (內容將自動儲存)
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'PLAN' && (
-                            <div className="spiritual-plan-container">
-                                {viewMode === 'LIST' ? (
-                                    <>
-                                        <div className="plan-list-header">
-                                            <Tooltip content="新增認領規劃" side="bottom">
-                                                <button
-                                                    type="button"
-                                                    className="plan-add-btn"
-                                                    onClick={openAddPlan}
-                                                    aria-label="新增認領規劃"
-                                                >
-                                                    <Plus size={18} strokeWidth={2.5} />
-                                                    <span>新增規劃</span>
-                                                </button>
-                                            </Tooltip>
-                                        </div>
-                                        <ModalHint className="plan-retention-hint">
-                                            系統會自動清理超過一個月的過期行程
-                                        </ModalHint>
-
-                                        <div className="plan-list">
-                                            {plans.length === 0 ? (
-                                                <div className="plan-list-empty">
-                                                    <Calendar size={32} strokeWidth={1.5} />
-                                                    <p>目前沒有認領規劃</p>
-                                                    <p className="plan-list-empty-hint">點擊上方「新增規劃」開始安排</p>
-                                                </div>
-                                            ) : (
-                                                plans.map(p => (
-                                                    <button
-                                                        key={p.id}
-                                                        type="button"
-                                                        className="plan-item"
-                                                        onClick={() => openEditPlan(p)}
-                                                    >
-                                                        <div className="plan-item-content">
-                                                            <span className="plan-item-action">{p.action}</span>
-                                                            {p.scheduled_time && (
-                                                                <span className="plan-item-time">
-                                                                    {formatDisplayTime(p.scheduled_time)}
-                                                                </span>
-                                                            )}
-                                                            {p.location?.trim() && (
-                                                                <span className="plan-item-location">{p.location}</span>
-                                                            )}
-                                                        </div>
-                                                        <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
-                                                    </button>
-                                                ))
-                                            )}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="spiritual-plan-form">
-                                        <div className="form-group">
-                                            <label>📝 行動</label>
-                                            <input
-                                                type="text"
-                                                value={tempPlan.name}
-                                                onChange={(e) => setTempPlan({ ...tempPlan, name: e.target.value })}
-                                                placeholder="例如：探訪、陪讀..."
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>📅 時間</label>
-                                            <input
-                                                type="datetime-local"
-                                                value={tempPlan.time}
-                                                onChange={(e) => setTempPlan({ ...tempPlan, time: e.target.value })}
-                                            />
-                                        </div>
-
-                                        {tempPlan.time && (
-                                            <div className="form-group">
-                                                <label>⏰ 提醒設定</label>
-                                                <select
-                                                    value={reminderOffset}
-                                                    onChange={(e) => setReminderOffset(Number(e.target.value))}
-                                                >
-                                                    <option value={-1}>🔕 不提醒</option>
-                                                    <option value={0}>⚡ 準時提醒</option>
-                                                    <option value={15}>🔔 提前 15 分鐘</option>
-                                                    <option value={30}>🔔 提前 30 分鐘</option>
-                                                    <option value={60}>🔔 提前 1 小時</option>
-                                                    <option value={120}>🔔 提前 2 小時</option>
-                                                    <option value={1440}>📅 提前 1 天</option>
-                                                </select>
+                                            <div className="plan-list">
+                                                {plans.length === 0 ? (
+                                                    <div className="plan-list-empty">
+                                                        <Calendar size={32} strokeWidth={1.5} />
+                                                        <p>目前沒有認領規劃</p>
+                                                        <p className="plan-list-empty-hint">點擊上方「新增規劃」開始安排</p>
+                                                    </div>
+                                                ) : (
+                                                    plans.map(p => (
+                                                        <button
+                                                            key={p.id}
+                                                            type="button"
+                                                            className="plan-item"
+                                                            onClick={() => openEditPlan(p)}
+                                                        >
+                                                            <div className="plan-item-content">
+                                                                <span className="plan-item-action">{p.action}</span>
+                                                                {p.scheduled_time && (
+                                                                    <span className="plan-item-time">
+                                                                        {formatDisplayTime(p.scheduled_time)}
+                                                                    </span>
+                                                                )}
+                                                                {p.location?.trim() && (
+                                                                    <span className="plan-item-location">{p.location}</span>
+                                                                )}
+                                                            </div>
+                                                            <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
+                                                        </button>
+                                                    ))
+                                                )}
                                             </div>
-                                        )}
+                                        </>
+                                    ) : (
+                                        <div className="spiritual-plan-form">
+                                            <div className="form-group">
+                                                <label>📝 行動</label>
+                                                <input
+                                                    type="text"
+                                                    value={tempPlan.name}
+                                                    onChange={(e) => setTempPlan({ ...tempPlan, name: e.target.value })}
+                                                    placeholder="例如：探訪、陪讀..."
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>📅 時間</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    value={tempPlan.time}
+                                                    onChange={(e) => setTempPlan({ ...tempPlan, time: e.target.value })}
+                                                />
+                                            </div>
 
-                                        <div className="form-group">
-                                            <label>📍 地點</label>
-                                            <input
-                                                type="text"
-                                                value={tempPlan.location}
-                                                onChange={(e) => setTempPlan({ ...tempPlan, location: e.target.value })}
-                                                placeholder="例如：教會小組室"
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>📋 內容規劃</label>
-                                            <textarea
-                                                value={tempPlan.content}
-                                                onChange={(e) => setTempPlan({ ...tempPlan, content: e.target.value })}
-                                                rows={5}
-                                                placeholder="例如：讀經分享、生活關懷..."
-                                            />
-                                        </div>
+                                            {tempPlan.time && (
+                                                <div className="form-group">
+                                                    <label>⏰ 提醒設定</label>
+                                                    <select
+                                                        value={reminderOffset}
+                                                        onChange={(e) => setReminderOffset(Number(e.target.value))}
+                                                    >
+                                                        <option value={-1}>🔕 不提醒</option>
+                                                        <option value={0}>⚡ 準時提醒</option>
+                                                        <option value={15}>🔔 提前 15 分鐘</option>
+                                                        <option value={30}>🔔 提前 30 分鐘</option>
+                                                        <option value={60}>🔔 提前 1 小時</option>
+                                                        <option value={120}>🔔 提前 2 小時</option>
+                                                        <option value={1440}>📅 提前 1 天</option>
+                                                    </select>
+                                                </div>
+                                            )}
 
-                                        <div className="spiritual-plan-form-actions">
-                                            <button
-                                                type="button"
-                                                className="modal-btn-secondary"
-                                                onClick={handleCancelPlan}
-                                                disabled={planActionLoading}
-                                            >
-                                                取消
-                                            </button>
-                                            {editingPlanId && (
+                                            <div className="form-group">
+                                                <label>📍 地點</label>
+                                                <input
+                                                    type="text"
+                                                    value={tempPlan.location}
+                                                    onChange={(e) => setTempPlan({ ...tempPlan, location: e.target.value })}
+                                                    placeholder="例如：教會小組室"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>📋 內容規劃</label>
+                                                <textarea
+                                                    value={tempPlan.content}
+                                                    onChange={(e) => setTempPlan({ ...tempPlan, content: e.target.value })}
+                                                    rows={5}
+                                                    placeholder="例如：讀經分享、生活關懷..."
+                                                />
+                                            </div>
+
+                                            <div className="spiritual-plan-form-actions">
                                                 <button
                                                     type="button"
-                                                    className="modal-btn-secondary btn-destructive"
-                                                    onClick={() => handleDeletePlan(editingPlanId)}
+                                                    className="modal-btn-secondary"
+                                                    onClick={handleCancelPlan}
                                                     disabled={planActionLoading}
                                                 >
-                                                    刪除
+                                                    取消
                                                 </button>
-                                            )}
-                                            <button
-                                                type="button"
-                                                className="modal-btn-primary"
-                                                onClick={handleSavePlan}
-                                                disabled={planActionLoading}
-                                            >
-                                                {planActionLoading ? '處理中...' : '儲存'}
-                                            </button>
+                                                {editingPlanId && (
+                                                    <button
+                                                        type="button"
+                                                        className="modal-btn-secondary btn-destructive"
+                                                        onClick={() => handleDeletePlan(editingPlanId)}
+                                                        disabled={planActionLoading}
+                                                    >
+                                                        刪除
+                                                    </button>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="modal-btn-primary"
+                                                    onClick={handleSavePlan}
+                                                    disabled={planActionLoading}
+                                                >
+                                                    {planActionLoading ? '處理中...' : '儲存'}
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
             {showTagManager && (
                 <TagManagerModal onClose={() => setShowTagManager(false)} />
             )}
-        </div>
+        </Portal>
     );
 };

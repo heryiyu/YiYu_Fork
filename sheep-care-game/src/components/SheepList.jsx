@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useGame } from '../context/GameContext';
-import { useConfirm } from '../context/ConfirmContext';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { supabase } from '../services/supabaseClient';
 import { CloseButton } from './ui/CloseButton';
+import { Portal } from './ui/Portal';
 import { AssetSheep } from './AssetSheep';
 import { Checkbox } from './ui/Checkbox';
 import { Search, Calendar, MapPin, Clock } from 'lucide-react';
@@ -93,173 +94,175 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
     };
 
     return (
-        <div className="debug-editor-overlay" style={{ zIndex: 'var(--z-modal-overlay)' }}>
-            <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <Portal>
+            <div className="debug-editor-overlay">
+                <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
 
-                {/* Header */}
-                <div className="modal-header">
-                    <h3>{step === STEPS.SELECT_SHEEP ? '選擇小羊' : '批量規劃'}</h3>
-                    <CloseButton onClick={onClose} />
-                </div>
+                    {/* Header */}
+                    <div className="modal-header">
+                        <h3>{step === STEPS.SELECT_SHEEP ? '選擇小羊' : '批量規劃'}</h3>
+                        <CloseButton onClick={onClose} />
+                    </div>
 
-                {/* Body */}
-                <div className="modal-content" style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                    {/* Body */}
+                    <div className="modal-content" style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
 
-                    {step === STEPS.SELECT_SHEEP && (
-                        <>
-                            {/* Search & Select All */}
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                                <div style={{
-                                    flex: 1, display: 'flex', alignItems: 'center',
-                                    background: 'var(--bg-light-gray)', borderRadius: '8px', padding: '4px 8px'
-                                }}>
-                                    <Search size={16} color="var(--text-muted)" />
-                                    <input
-                                        type="text"
-                                        placeholder="搜尋小羊..."
-                                        value={searchTerm}
-                                        onChange={e => setSearchTerm(e.target.value)}
+                        {step === STEPS.SELECT_SHEEP && (
+                            <>
+                                {/* Search & Select All */}
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                    <div style={{
+                                        flex: 1, display: 'flex', alignItems: 'center',
+                                        background: 'var(--bg-light-gray)', borderRadius: '8px', padding: '4px 8px'
+                                    }}>
+                                        <Search size={16} color="var(--text-muted)" />
+                                        <input
+                                            type="text"
+                                            placeholder="搜尋小羊..."
+                                            value={searchTerm}
+                                            onChange={e => setSearchTerm(e.target.value)}
+                                            style={{
+                                                border: 'none', background: 'transparent', outline: 'none',
+                                                padding: '4px', width: '100%', fontSize: '0.9rem'
+                                            }}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={toggleAll}
                                         style={{
-                                            border: 'none', background: 'transparent', outline: 'none',
-                                            padding: '4px', width: '100%', fontSize: '0.9rem'
-                                        }}
-                                    />
-                                </div>
-                                <button
-                                    onClick={toggleAll}
-                                    style={{
-                                        border: '1px solid var(--border-main)', borderRadius: '8px',
-                                        background: 'white', padding: '0 12px', fontSize: '0.85rem'
-                                    }}
-                                >
-                                    {selectedSheepIds.size === filteredSheep.length ? '全取消' : '全選'}
-                                </button>
-                            </div>
-
-                            {/* List */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {filteredSheep.map(s => (
-                                    <div
-                                        key={s.id}
-                                        onClick={() => toggleSheep(s.id)}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: '12px',
-                                            padding: '8px', borderRadius: '8px',
-                                            background: selectedSheepIds.has(s.id) ? 'var(--palette-pale-blue-bg)' : 'white',
-                                            border: selectedSheepIds.has(s.id) ? '1px solid var(--palette-blue-action)' : '1px solid transparent',
-                                            cursor: 'pointer', transition: 'all 0.2s'
+                                            border: '1px solid var(--border-main)', borderRadius: '8px',
+                                            background: 'white', padding: '0 12px', fontSize: '0.85rem'
                                         }}
                                     >
-                                        <Checkbox checked={selectedSheepIds.has(s.id)} readOnly />
-                                        <div style={{ width: '40px', height: '40px' }}>
-                                            <AssetSheep visual={s.visual} centered={true} animated={false} scale={0.8} />
+                                        {selectedSheepIds.size === filteredSheep.length ? '全取消' : '全選'}
+                                    </button>
+                                </div>
+
+                                {/* List */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {filteredSheep.map(s => (
+                                        <div
+                                            key={s.id}
+                                            onClick={() => toggleSheep(s.id)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '12px',
+                                                padding: '8px', borderRadius: '8px',
+                                                background: selectedSheepIds.has(s.id) ? 'var(--palette-pale-blue-bg)' : 'white',
+                                                border: selectedSheepIds.has(s.id) ? '1px solid var(--palette-blue-action)' : '1px solid transparent',
+                                                cursor: 'pointer', transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <Checkbox checked={selectedSheepIds.has(s.id)} readOnly />
+                                            <div style={{ width: '40px', height: '40px' }}>
+                                                <AssetSheep visual={s.visual} centered={true} animated={false} scale={0.8} />
+                                            </div>
+                                            <span style={{ fontWeight: 500 }}>{s.name}</span>
                                         </div>
-                                        <span style={{ fontWeight: 500 }}>{s.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
-                    )}
+                                    ))}
+                                </div>
+                            </>
+                        )}
 
-                    {step === STEPS.CONFIGURE_PLAN && (
-                        <div className="spiritual-plan-form">
-                            <div className="modal-hint" style={{ marginBottom: '16px' }}>
-                                已選擇 {selectedSheepIds.size} 隻小羊加入此規劃
-                            </div>
+                        {step === STEPS.CONFIGURE_PLAN && (
+                            <div className="spiritual-plan-form">
+                                <div className="modal-hint" style={{ marginBottom: '16px' }}>
+                                    已選擇 {selectedSheepIds.size} 隻小羊加入此規劃
+                                </div>
 
-                            <div className="form-group">
-                                <label>📝 行動名稱</label>
-                                <input
-                                    type="text"
-                                    value={formData.action}
-                                    onChange={(e) => setFormData({ ...formData, action: e.target.value })}
-                                    placeholder="例如：晨禱、小組聚會..."
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label>📝 行動名稱</label>
+                                    <input
+                                        type="text"
+                                        value={formData.action}
+                                        onChange={(e) => setFormData({ ...formData, action: e.target.value })}
+                                        placeholder="例如：晨禱、小組聚會..."
+                                    />
+                                </div>
 
-                            <div className="form-group">
-                                <label>📅 時間</label>
-                                <input
-                                    type="datetime-local"
-                                    value={formData.time}
-                                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label>📅 時間</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={formData.time}
+                                        onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                                    />
+                                </div>
 
-                            <div className="form-group">
-                                <label>⏰ 提醒</label>
-                                <select
-                                    value={formData.reminderOffset}
-                                    onChange={(e) => setFormData({ ...formData, reminderOffset: Number(e.target.value) })}
-                                >
-                                    <option value={-1}>🔕 不提醒</option>
-                                    <option value={0}>⚡ 準時提醒</option>
-                                    <option value={15}>🔔 提前 15 分鐘</option>
-                                    <option value={30}>🔔 提前 30 分鐘</option>
-                                    <option value={60}>🔔 提前 1 小時</option>
-                                </select>
-                            </div>
+                                <div className="form-group">
+                                    <label>⏰ 提醒</label>
+                                    <select
+                                        value={formData.reminderOffset}
+                                        onChange={(e) => setFormData({ ...formData, reminderOffset: Number(e.target.value) })}
+                                    >
+                                        <option value={-1}>🔕 不提醒</option>
+                                        <option value={0}>⚡ 準時提醒</option>
+                                        <option value={15}>🔔 提前 15 分鐘</option>
+                                        <option value={30}>🔔 提前 30 分鐘</option>
+                                        <option value={60}>🔔 提前 1 小時</option>
+                                    </select>
+                                </div>
 
-                            <div className="form-group">
-                                <label>📍 地點</label>
-                                <input
-                                    type="text"
-                                    value={formData.location}
-                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    placeholder="選填"
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label>📍 地點</label>
+                                    <input
+                                        type="text"
+                                        value={formData.location}
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        placeholder="選填"
+                                    />
+                                </div>
 
-                            <div className="form-group">
-                                <label>📋 備註內容</label>
-                                <textarea
-                                    value={formData.content}
-                                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                    rows={3}
-                                    placeholder="選填"
-                                />
+                                <div className="form-group">
+                                    <label>📋 備註內容</label>
+                                    <textarea
+                                        value={formData.content}
+                                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                        rows={3}
+                                        placeholder="選填"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
 
-                {/* Footer */}
-                <div className="modal-footer" style={{
-                    padding: '16px', background: 'var(--bg-card-secondary)', borderRadius: '0 0 24px 24px',
-                    display: 'flex', gap: '8px'
-                }}>
-                    {step === STEPS.SELECT_SHEEP ? (
-                        <button
-                            className="modal-btn-primary"
-                            style={{ width: '100%' }}
-                            disabled={selectedSheepIds.size === 0}
-                            onClick={() => setStep(STEPS.CONFIGURE_PLAN)}
-                        >
-                            下一步 ({selectedSheepIds.size})
-                        </button>
-                    ) : (
-                        <>
-                            <button
-                                className="modal-btn-secondary"
-                                style={{ flex: 1 }}
-                                onClick={() => setStep(STEPS.SELECT_SHEEP)}
-                                disabled={isSubmitting}
-                            >
-                                回上一步
-                            </button>
+                    {/* Footer */}
+                    <div className="modal-footer" style={{
+                        padding: '16px', background: 'var(--bg-card-secondary)', borderRadius: '0 0 24px 24px',
+                        display: 'flex', gap: '8px'
+                    }}>
+                        {step === STEPS.SELECT_SHEEP ? (
                             <button
                                 className="modal-btn-primary"
-                                style={{ flex: 2 }}
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
+                                style={{ width: '100%' }}
+                                disabled={selectedSheepIds.size === 0}
+                                onClick={() => setStep(STEPS.CONFIGURE_PLAN)}
                             >
-                                {isSubmitting ? '建立中...' : '確認建立'}
+                                下一步 ({selectedSheepIds.size})
                             </button>
-                        </>
-                    )}
-                </div>
+                        ) : (
+                            <>
+                                <button
+                                    className="modal-btn-secondary"
+                                    style={{ flex: 1 }}
+                                    onClick={() => setStep(STEPS.SELECT_SHEEP)}
+                                    disabled={isSubmitting}
+                                >
+                                    回上一步
+                                </button>
+                                <button
+                                    className="modal-btn-primary"
+                                    style={{ flex: 2 }}
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? '建立中...' : '確認建立'}
+                                </button>
+                            </>
+                        )}
+                    </div>
 
+                </div>
             </div>
-        </div>
+        </Portal>
     );
 };

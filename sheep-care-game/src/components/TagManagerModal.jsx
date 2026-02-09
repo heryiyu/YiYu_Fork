@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { useConfirm } from '../context/ConfirmContext';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import { CloseButton } from './ui/CloseButton';
 import { Tag } from './ui/Tag';

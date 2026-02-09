@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { CloseButton } from './ui/CloseButton';
+import { Portal } from './ui/Portal';
 
 export const NicknameSetup = ({ onClose }) => {
     const { updateNickname, nickname, weather, location } = useGame();
@@ -35,7 +36,7 @@ export const NicknameSetup = ({ onClose }) => {
     // --- RENDER: PROFILE POPOVER (Top Left) ---
     if (isProfileMode) {
         return (
-            <>
+            <Portal>
                 {/* Transparent Backdrop to close on click outside */}
                 <div
                     style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'calc(var(--z-cursor) - 1)' }}
@@ -123,54 +124,56 @@ export const NicknameSetup = ({ onClose }) => {
                         </div>
                     )}
                 </div>
-            </>
+            </Portal>
         );
     }
 
     // --- RENDER: INITIAL SETUP (Centered Modal) ---
     return (
-        <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
-            <div className="modal-card modal-card--sm">
-                <div className="modal-header">
-                    <h3>✨ 歡迎來到牧場</h3>
-                    <div style={{ width: 32, height: 32, flexShrink: 0 }} aria-hidden="true" />
-                </div>
-                <div className="modal-form" style={{ textAlign: 'center', padding: '24px' }}>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
-                        為了讓羊群認識您<br />
-                        請告訴我們您的暱稱
-                    </p>
+        <Portal>
+            <div className="debug-editor-overlay" style={{ background: 'var(--bg-modal-overlay)' }}>
+                <div className="modal-card modal-card--sm">
+                    <div className="modal-header">
+                        <h3>✨ 歡迎來到牧場</h3>
+                        <div style={{ width: 32, height: 32, flexShrink: 0 }} aria-hidden="true" />
+                    </div>
+                    <div className="modal-form" style={{ textAlign: 'center', padding: '24px' }}>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.6' }}>
+                            為了讓羊群認識您<br />
+                            請告訴我們您的暱稱
+                        </p>
 
-                    <form onSubmit={handleSave}>
-                        <div className="form-group">
-                            <label htmlFor="nickname-setup-input">暱稱</label>
-                            <input
-                                id="nickname-setup-input"
-                                type="text"
-                                value={name}
-                                onChange={(e) => { setName(e.target.value); setError(''); }}
-                                placeholder="請輸入您的暱稱"
-                                style={{ textAlign: 'center' }}
-                                autoFocus
-                            />
-                        </div>
-                        {error && <div style={{ color: 'var(--palette-text-status)', fontSize: '0.9rem', marginBottom: '15px' }}>{error}</div>}
+                        <form onSubmit={handleSave}>
+                            <div className="form-group">
+                                <label htmlFor="nickname-setup-input">暱稱</label>
+                                <input
+                                    id="nickname-setup-input"
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => { setName(e.target.value); setError(''); }}
+                                    placeholder="請輸入您的暱稱"
+                                    style={{ textAlign: 'center' }}
+                                    autoFocus
+                                />
+                            </div>
+                            {error && <div style={{ color: 'var(--palette-text-status)', fontSize: '0.9rem', marginBottom: '15px' }}>{error}</div>}
 
-                        <button
-                            type="submit"
-                            className="modal-btn-primary"
-                            disabled={!name.trim()}
-                            style={{
-                                width: '100%',
-                                background: !name.trim() ? 'var(--btn-disabled-bg)' : undefined,
-                                marginTop: '10px'
-                            }}
-                        >
-                            開始牧羊 🐑
-                        </button>
-                    </form>
+                            <button
+                                type="submit"
+                                className="modal-btn-primary"
+                                disabled={!name.trim()}
+                                style={{
+                                    width: '100%',
+                                    background: !name.trim() ? 'var(--btn-disabled-bg)' : undefined,
+                                    marginTop: '10px'
+                                }}
+                            >
+                                開始牧羊 🐑
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Portal>
     );
 };
