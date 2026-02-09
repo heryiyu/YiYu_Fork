@@ -1442,7 +1442,7 @@ input[type="range"]::-moz-range-thumb:hover {
     border: var(--glass-border);
     border-radius: 12px;
     box-shadow: var(--shadow-card);
-    z-index: var(--z-modal-overlay);
+    z-index: var(--z-ui-layer);
   }
 
   .hud-right-actions--open {
