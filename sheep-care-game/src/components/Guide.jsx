@@ -1,21 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SevenStepsMap } from './SevenStepsMap';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { useGame } from '../context/GameContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { CloseButton } from './ui/CloseButton';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import './Guide.css';
 
 const ManualSection = () => {
+    const shouldReduceMotion = useReducedMotion();
+    const isMobile = useIsMobile();
+    const { isAdmin } = useGame();
     const [view, setView] = useState('MENU'); // MENU | SEVEN_STEPS | BIND_RELEASE | SCRIPTURES | CARDS | PRAYERS
     const [selectedId, setSelectedId] = useState(null);
     const [activeScripture, setActiveScripture] = useState(null); // New state for Scriptures
 
-    const menuItems = [
+    const allMenuItems = [
         { id: 'SEVEN_STEPS', label: '領人歸主七招', icon: '🗺️' },
         { id: 'BIND_RELEASE', label: '五綑綁五釋放', icon: '🤲' },
-        { id: 'SCRIPTURES', label: '七經文', icon: '📖' },
-        { id: 'CARDS', label: '天父小卡', icon: '💌' },
+        { id: 'SCRIPTURES', label: '七經文', icon: '📖', wip: true },
+        { id: 'CARDS', label: '天父小卡', icon: '💌', wip: true },
         { id: 'PRAYERS', label: '認領禱告詞範例', icon: '🙏' },
     ];
+
+    const menuItems = isAdmin ? allMenuItems : allMenuItems.filter(item => !item.wip);
 
     const handleItemClick = (id) => {
         setSelectedId(id);
@@ -26,45 +34,31 @@ const ManualSection = () => {
     };
 
     if (view === 'MENU') {
-        // ... (Keep existing MENU render, unrelated to this change but inside the component)
         return (
-            <div style={{ padding: '20px 10px' }}>
-                <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+            <div className="guide-menu">
+                <p className="guide-menu-hint">
                     點擊卷軸領取秘笈
                 </p>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '20px',
-                    justifyContent: 'center'
-                }}>
+                <div className="guide-menu-grid">
                     {menuItems.map((item, index) => (
                         <motion.button
                             key={item.id}
                             onClick={() => handleItemClick(item.id)}
-                            layout
+                            layout={!shouldReduceMotion}
                             initial={{ scale: 1, opacity: 0 }}
                             animate={{
-                                scale: selectedId === item.id ? 1.15 : 1,
+                                scale: selectedId === item.id && !shouldReduceMotion ? 1.15 : 1,
                                 opacity: 1,
-                                filter: selectedId === item.id ? 'brightness(1.2)' : 'brightness(1)',
+                                filter: selectedId === item.id && !shouldReduceMotion ? 'brightness(1.2)' : 'brightness(1)',
                                 zIndex: selectedId === item.id ? 10 : 1
                             }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ duration: 0.3 }}
+                            whileHover={(!isMobile && !shouldReduceMotion) ? { scale: 1.05 } : undefined}
+                            whileTap={!shouldReduceMotion ? { scale: 0.95 } : undefined}
+                            transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+                            className="guide-menu-btn"
                             style={{
-                                background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '8px',
-                                gridColumn: index === 4 ? '1 / -1' : 'auto', // Last item centered if odd count
-                                width: index === 4 ? '50%' : '100%',
-                                justifySelf: 'center',
-                                outline: 'none'
+                                gridColumn: (menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '1 / -1' : 'auto',
+                                width: (menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '50%' : '100%'
                             }}
                         >
                             <motion.img
@@ -75,19 +69,14 @@ const ManualSection = () => {
                                     maxWidth: '100px',
                                     filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))'
                                 }}
-                                animate={selectedId === item.id ? {
+                                animate={selectedId === item.id && !shouldReduceMotion ? {
                                     rotate: [0, -5, 5, -5, 5, 0],
                                     transition: { duration: 0.5 }
                                 } : {}}
                             />
-                            <span style={{
-                                color: '#5d4037',
-                                fontWeight: 'bold',
-                                fontSize: '0.95rem',
-                                textAlign: 'center',
-                                textShadow: '0 1px 2px rgba(255,255,255,0.8)'
-                            }}>
+                            <span className="guide-menu-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 {item.label}
+                                {item.wip && <span style={{ fontSize: '0.6rem', background: 'var(--palette-orange-action)', color: '#fff', padding: '2px 4px', borderRadius: '4px' }}>WIP</span>}
                             </span>
                         </motion.button>
                     ))}
@@ -102,34 +91,35 @@ const ManualSection = () => {
                 return <SevenStepsMap />;
             case 'BIND_RELEASE':
                 return (
-                    <div style={{ padding: '20px' }}>
-                        <h4 style={{ textAlign: 'center', marginBottom: '8px' }}>🤲 五綑綁五釋放</h4>
+                    <div className="guide-section">
+                        <h4 style={{ textAlign: 'center', marginBottom: '8px' }}>🤲 五釋放五綑綁</h4>
 
-                        <div style={{ background: '#fff0f0', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #ffcdd2' }}>
-                            <h5 style={{ color: '#d32f2f', marginBottom: '10px', borderBottom: '1px solid #ffcdd2', paddingBottom: '5px' }}>❌ 5個綑綁 HELLS</h5>
-                            <ul style={{ paddingLeft: '0', listStyle: 'none', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                                <li style={{ marginBottom: '8px' }}><strong>Hades:</strong> 脫離 陰間、罪惡、死亡權勢</li>
-                                <li style={{ marginBottom: '8px' }}><strong>Enemy:</strong> 得勝 仇敵攻擊、試探、迷惑</li>
-                                <li style={{ marginBottom: '8px' }}><strong>Lusts:</strong> 勝過 肉體、情慾、驕傲、自我中心</li>
-                                <li style={{ marginBottom: '8px' }}><strong>Lying:</strong> 綑綁 虛謊、錯誤、巫術的靈</li>
-                                <li><strong>Sickness:</strong> 免於 疾病、意外、宿疾</li>
-                            </ul>
-                        </div>
-
-                        <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '10px', border: '1px solid #c8e6c9', marginBottom: '20px' }}>
-                            <h5 style={{ color: '#2e7d32', marginBottom: '10px', borderBottom: '1px solid #c8e6c9', paddingBottom: '5px' }}>✅ 5個釋放 BLESS</h5>
-                            <ul style={{ paddingLeft: '0', listStyle: 'none', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                                <li style={{ marginBottom: '8px' }}><strong>Body:</strong> 身體健康、喜樂平安</li>
-                                <li style={{ marginBottom: '8px' }}><strong>Labors:</strong> 績效卓越、潛能突破</li>
-                                <li style={{ marginBottom: '8px' }}><strong>Emotion:</strong> 情緒管理、思想積極</li>
-                                <li style={{ marginBottom: '8px' }}><strong>Social:</strong> 人際、溝通、社交</li>
+                        <div className="guide-box-success">
+                            <h5 className="guide-box-title-success">✅ 5個釋放 BLESS</h5>
+                            <ul className="guide-list">
+                                <li><strong>Body:</strong> 身體健康、喜樂平安</li>
+                                <li><strong>Labors:</strong> 績效卓越、潛能突破</li>
+                                <li><strong>Emotion:</strong> 情緒管理、思想積極</li>
+                                <li><strong>Social:</strong> 人際、溝通、社交</li>
                                 <li><strong>Spiritual:</strong> 決志信主、信靠真神</li>
                             </ul>
                         </div>
 
+                        <div className="guide-box-danger">
+                            <h5 className="guide-box-title-danger">❌ 5個綑綁 HELLS</h5>
+                            <ul className="guide-list">
+                                <li><strong>Hades:</strong> 脫離 陰間、罪惡、死亡權勢</li>
+                                <li><strong>Enemy:</strong> 得勝 仇敵攻擊、試探、迷惑</li>
+                                <li><strong>Lusts:</strong> 勝過 肉體、情慾、驕傲、自我中心</li>
+                                <li><strong>Lying:</strong> 綑綁 虛謊、錯誤、巫術的靈</li>
+                                <li><strong>Sickness:</strong> 免於 疾病、意外、宿疾</li>
+                            </ul>
+                        </div>
+
+
                         <div style={{ marginTop: '20px' }}>
-                            <h5 style={{ textAlign: 'center', marginBottom: '10px', color: '#555' }}>📺 相關教學影片</h5>
-                            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                            <h5 style={{ textAlign: 'center', marginBottom: '10px', color: 'var(--text-muted)' }}>📺 相關教學影片</h5>
+                            <div className="guide-video-wrap">
                                 <iframe
                                     src="https://www.youtube.com/embed/tZ_Yt9Yt5v4"
                                     title="五綑綁五釋放教學"
@@ -242,7 +232,7 @@ const ManualSection = () => {
                                 <motion.div
                                     key={s.id}
                                     onClick={() => setActiveScripture(s)}
-                                    whileHover={{ scale: 1.02, y: -3 }}
+                                    whileHover={!isMobile ? { scale: 1.02, y: -3 } : undefined}
                                     whileTap={{ scale: 0.98, y: 0 }}
                                     style={{
                                         background: 'linear-gradient(145deg, #fffdf5 0%, #f0e6dc 100%)', // Subtle gradient for form
@@ -302,8 +292,8 @@ const ManualSection = () => {
                 return (
                     <div style={{ padding: '20px', textAlign: 'center' }}>
                         <h4 style={{ marginBottom: '20px' }}>💌 天父小卡</h4>
-                        <p style={{ color: '#666' }}>（每日一張天父的話語...）</p>
-                        <div style={{ padding: '20px', border: '1px dashed #ccc', borderRadius: '10px', background: '#fcfcfc', color: '#999' }}>
+                        <p style={{ color: 'var(--text-muted)' }}>（每日一張天父的話語...）</p>
+                        <div style={{ padding: '20px', border: '1px dashed var(--border-subtle)', borderRadius: '10px', background: 'var(--bg-light-gray)', color: 'var(--text-muted-light)' }}>
                             🚧 內容建置中
                         </div>
                     </div>

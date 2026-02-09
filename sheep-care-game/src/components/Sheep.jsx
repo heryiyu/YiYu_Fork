@@ -3,7 +3,7 @@ import { AssetSheep } from './AssetSheep';
 import { isSleeping } from '../utils/gameLogic';
 import { SHEEP_TYPES } from '../data/sheepData';
 
-export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
+export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, containerSize }) => {
     const isGolden = sheep.type === 'GOLDEN';
     const [showName, setShowName] = React.useState(false);
 
@@ -20,11 +20,17 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
     // Fix Scale: 0.6 + (y / 200). (At 0 -> 0.6. At 100 -> 1.1)
 
     const depthScale = 1.1 - ((sheep.y || 0) / 200);
-    const zIdx = sheep.zIndex !== undefined ? sheep.zIndex : Math.floor(1000 - (sheep.y || 0));
+    const zIdx = alwaysShowName ? 10000 : (sheep.zIndex !== undefined ? sheep.zIndex : Math.floor(1000 - (sheep.y || 0)));
 
     const handleInteract = (e) => {
+        // Prevent ghost clicks and double tapping issues
         e.preventDefault();
         e.stopPropagation();
+
+        // Trigger selection if handler exists
+        if (onSelect) {
+            onSelect(sheep.id);
+        }
 
         // Toggle name visibility
         setShowName(prev => {
@@ -37,27 +43,54 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
         });
     };
 
+    // Performance Optimization: Use Transform instead of Left/Bottom
+    const style = React.useMemo(() => {
+        const baseStyle = {
+            position: 'absolute',
+            width: '100px', // Explicit width for centering
+            height: '100px',
+            marginLeft: '-50px', // Center the wrapper on the x-coordinate
+            zIndex: zIdx,
+            transformOrigin: 'bottom center'
+        };
+
+        if (containerSize && containerSize.width > 0) {
+            // Pixel Transform Mode (GPU Friendly)
+            const px = (sheep.x / 100) * containerSize.width;
+            const py = (bottomPos / 100) * containerSize.height;
+            // Calculate Top (Y) position: ContainerHeight - BottomOffset - ElementHeight
+            // Since transform is relative to "top: 0, left: 0" (if we set them)
+            const topPx = containerSize.height - py - 100;
+
+            return {
+                ...baseStyle,
+                left: 0,
+                top: 0,
+                transform: `translate3d(${px}px, ${topPx}px, 0) scale(${depthScale})`,
+                transition: isSleeping(sheep) ? 'none' : 'transform 0.5s linear',
+            };
+        } else {
+            // Fallback (Layout Thrashing but reliable)
+            return {
+                ...baseStyle,
+                left: `${sheep.x}%`,
+                bottom: `${bottomPos}%`,
+                transform: `scale(${depthScale})`,
+                transition: isSleeping(sheep) ? 'none' : 'left 0.5s linear, bottom 0.5s linear',
+            };
+        }
+    }, [sheep.x, bottomPos, depthScale, zIdx, containerSize, isSleeping(sheep)]);
+
     return (
         <div
             className="sheep-wrapper"
-            style={{
-                left: `${sheep.x}%`,
-                bottom: `${bottomPos}%`,
-                position: 'absolute',
-                width: '100px', // Explicit width for centering
-                height: '100px',
-                marginLeft: '-50px', // Center the wrapper on the x-coordinate
-                transition: isSleeping(sheep) ? 'none' : 'left 0.5s linear, bottom 0.5s linear',
-                zIndex: zIdx,
-                transform: `scale(${depthScale})`,
-                transformOrigin: 'bottom center'
-            }}
+            style={style}
         >
-            {/* Name Tag - Only Show when toggled */}
-            {showName && (
+            {/* Name Tag - Only Show when toggled or forced */}
+            {(showName || alwaysShowName) && (
                 <div className="sheep-name-tag" style={{
                     position: 'absolute',
-                    top: '0px', // Closer to head
+                    bottom: '-25px', // At the feet
                     left: '50%',
                     transform: 'translateX(-50%)',
                     zIndex: 100,
@@ -108,6 +141,9 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect }) => {
     // Ignore micro-changes in health (decay) unless it changes the visual stage
     const prev = prevProps.sheep;
     const next = nextProps.sheep;
+
+    // Check Container Size (Critical for Pixel Transforms)
+    if (prevProps.containerSize !== nextProps.containerSize) return false;
 
     if (prev.id !== next.id) return false;
     if (prev.x !== next.x) return false;

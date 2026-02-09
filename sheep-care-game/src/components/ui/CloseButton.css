@@ -2,12 +2,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+  width: var(--size-icon-btn);
+  height: var(--size-icon-btn);
+  min-width: var(--size-icon-btn);
+  min-height: var(--size-icon-btn);
+  border-radius: var(--radius-icon-btn);
   border: 1px solid transparent;
   background: transparent;
-  color: var(--text-icon);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   line-height: 0;
@@ -21,14 +23,16 @@
 }
 
 .close-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.16);
-  color: var(--text-icon-hover);
+  background: var(--icon-btn-hover-bg);
+  border-color: var(--icon-btn-hover-border);
+  color: var(--text-muted);
 }
 
 .close-btn--sm {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .close-btn--sm svg {

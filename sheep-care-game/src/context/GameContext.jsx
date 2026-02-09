@@ -30,6 +30,9 @@ const defaultGameContext = {
     updateTag: () => null,
     deleteTag: () => false,
     setSheepTags: () => false,
+    focusedSheepId: null,
+    findSheep: () => { },
+    clearFocus: () => { },
 };
 
 const GameContext = createContext(defaultGameContext);
@@ -79,7 +82,38 @@ export const GameProvider = ({ children }) => {
     const [tags, setTags] = useState([]);
     const [tagAssignmentsBySheep, setTagAssignmentsBySheep] = useState({});
 
+    // Schedule sync trigger
+    const [lastScheduleUpdate, setLastScheduleUpdate] = useState(0);
+    const notifyScheduleUpdate = () => setLastScheduleUpdate(Date.now());
 
+    // Focusing / Find Logic (locate sheep on canvas)
+    const [focusedSheepId, setFocusedSheepId] = useState(null);
+
+    const findSheep = (id) => {
+        setFocusedSheepId(id);
+
+        // Visual Response
+        setSheep(prev => prev.map(s => {
+            if (s.id === id) {
+                return { ...s, message: "咩～！" };
+            }
+            return s;
+        }));
+
+        // Clear message after delay
+        setTimeout(() => {
+            setSheep(prev => prev.map(s => {
+                if (s.id === id && s.message === "咩～！") {
+                    return { ...s, message: null };
+                }
+                return s;
+            }));
+        }, 3000);
+    };
+
+    const clearFocus = () => {
+        setFocusedSheepId(null);
+    };
 
 
     // --- SETTINGS (Device Specific) ---
@@ -555,7 +589,7 @@ export const GameProvider = ({ children }) => {
 
     // Ref Sync: Keep Ref up to date for saveToCloud and handleUnload (async access)
     useEffect(() => {
-        stateRef.current = { sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched };
+        stateRef.current = { sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched, focusedSheepId };
         lastSaveTimeRef.current = Date.now(); // Optional: track local changes? No, unsafe.
     }, [sheep, inventory, settings, nickname, currentUser, userAvatarUrl, introWatched]);
 
@@ -732,7 +766,7 @@ export const GameProvider = ({ children }) => {
                     if (newProgress >= 5) {
                         showMessage(`✨ 奇蹟發生了！${s.name} 甦醒了！`);
                         return {
-                            ...s, status: 'healthy', health: 100, type: 'LAMB', careLevel: 0,
+                            ...s, status: 'healthy', health: 40, type: 'LAMB', careLevel: 0,
                             resurrectionProgress: 0, awakeningProgress: 0, lastPrayedDate: today, prayedCount: 0
                         };
                     } else {
@@ -832,6 +866,23 @@ export const GameProvider = ({ children }) => {
         return ok;
     };
 
+    const fetchWeeklySchedules = async () => {
+        if (!lineId) return [];
+        try {
+            const { data, error } = await supabase
+                .from('spiritual_plans')
+                .select('*')
+                .eq('user_id', lineId)
+                .order('scheduled_time', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching weekly schedules:', error);
+            return [];
+        }
+    };
+
     return (
         <GameContext.Provider value={{
             currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
@@ -859,7 +910,13 @@ export const GameProvider = ({ children }) => {
             createTag,
             updateTag,
             deleteTag,
-            setSheepTags
+            setSheepTags,
+            fetchWeeklySchedules, // Exposed
+            lastScheduleUpdate, // Exposed
+            notifyScheduleUpdate, // Exposed
+            focusedSheepId,
+            findSheep,
+            clearFocus
         }}>
             {children}
         </GameContext.Provider>

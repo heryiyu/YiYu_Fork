@@ -161,6 +161,7 @@
     --color-primary-cream: var(--palette-cream);
     --color-action-blue: var(--palette-blue-action);
     --color-action-pink: var(--palette-pink-action);
+    --color-text-brown: var(--palette-sheep-brown);
 
     /* backgrounds (semantic) */
     --bg-light-gray: #f5f5f5;
@@ -180,11 +181,61 @@
 
     /* visuals */
     --shadow-card: 0 4px 12px rgba(143, 125, 103, 0.15);
+    --shadow-soft: 0 2px 8px rgba(143, 125, 103, 0.2);
+    --shadow-subtle: 0 2px 4px rgba(0, 0, 0, 0.1);
     --btn-shadow: 0 4px 0 rgba(143, 125, 103, 0.4);
     --btn-shadow-active: 0 2px 0 rgba(143, 125, 103, 0.4);
     --radius-card: 24px;
     --radius-btn: 30px;
     --radius-tag: 12px;
+    --radius-icon-btn: 8px;
+    --size-icon-btn: 32px;
+    --icon-btn-hover-bg: rgba(0, 0, 0, 0.03);
+    --icon-btn-hover-border: rgba(0, 0, 0, 0.05);
+    /* Narrow gap when 2+ IconButtons are grouped together */
+    --gap-icon-btn-group: 1px;
+    --margin-icon-btn-group: 6px;
+
+    /* typography */
+    --font-size-label: 0.9rem;
+    --font-size-body: 1rem;
+    --font-size-heading: 1.1rem;
+
+    /* breakpoints (for reference in media queries) */
+    --bp-xs: 320px;
+    --bp-sm: 480px;
+    --bp-md: 640px;
+    --bp-lg: 768px;
+
+    /* spacing scale */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+
+    /* button shadows (primary variant) */
+    --btn-primary-shadow: 0 4px 0 #3d92ad;
+
+    /* theme-dependent (night canvas) */
+    --bg-canvas-night: #0B1026;
+
+    /* list item background (semi-transparent) */
+    --bg-list-item: rgba(255, 255, 255, 0.5);
+    --bg-content-subtle: rgba(255, 255, 255, 0.15);
+
+    /* Guide / Parchment sub-theme */
+    --parchment-bg: #fdfbf7;
+    --parchment-border: #d7ccc8;
+    --parchment-text: #5d4037;
+    --parchment-text-dark: #4e342e;
+    --parchment-accent: #8d6e63;
+    --parchment-danger-bg: #fff0f0;
+    --parchment-danger-border: #ffcdd2;
+    --parchment-danger-text: #d32f2f;
+    --parchment-success-bg: #e8f5e9;
+    --parchment-success-border: #c8e6c9;
+    --parchment-success-text: #2e7d32;
 
     /* Scene Colors - Default (Day) */
     --color-sky: #E1F5FE;
@@ -210,4 +261,28 @@
     /* Dark Olive */
     --color-grass-foreground: #9EB494;
     /* Deep Forest Green */
+}
+
+:root {
+    /* --- Z-Index System --- */
+    --z-background: 0;
+    /* 背景層：草地、天空 */
+    --z-weather: 20;
+    /* 天氣層：下雨、下雪特效 (在小羊後面) */
+    --z-field-content: 100;
+    /* 遊戲層：小羊、裝飾物 */
+    --z-ui-layer: 1000;
+    /* 介面層：左上角個人資料、右上角功能按鈕 (HUD) */
+    --z-dock-layer: 1500;
+    /* 底部選單層：所有小羊列表 (Dock) */
+    --z-modal-base: 2000;
+    /* 視窗層：小羊資料卡、設定頁面、週記視窗 */
+    --z-modal-overlay: 2100;
+    /* 疊加視窗層：在視窗上再開的小視窗 (例如確認對話框) */
+    --z-toast: 3000;
+    /* 通知層：操作成功/失敗的提示訊息 */
+    --z-cursor: 9999;
+    /* 游標層：自定義滑鼠游標 */
+    --z-tooltip: 10000;
+    /* 提示層：滑鼠移到按鈕上顯示的說明文字 (最上層) */
 }

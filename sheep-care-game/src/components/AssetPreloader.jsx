@@ -19,6 +19,7 @@ export const AssetPreloader = ({ onLoaded }) => {
         ];
 
         let loadedCount = 0;
+        let isMounted = true;
 
         const loadImage = (src) => {
             return new Promise((resolve, reject) => {
@@ -30,18 +31,39 @@ export const AssetPreloader = ({ onLoaded }) => {
         };
 
         const loadAll = async () => {
-            for (const src of assetsToLoad) {
+            const loadPromises = assetsToLoad.map(async (src) => {
                 await loadImage(src);
-                loadedCount++;
-                setProgress(Math.round((loadedCount / assetsToLoad.length) * 100));
-            }
-            // Small artificial delay for UX (so specific animation can finish)
-            setTimeout(() => {
-                onLoaded();
-            }, 500);
+                if (isMounted) {
+                    loadedCount++;
+                    setProgress(Math.round((loadedCount / assetsToLoad.length) * 100));
+                }
+            });
+
+            await Promise.all(loadPromises);
         };
 
-        loadAll();
+        // Safety Timeout Wrapper
+        const safeLoad = async () => {
+            // 8-second timeout safety net
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve('timeout'), 8000));
+
+            const result = await Promise.race([loadAll(), timeoutPromise]);
+
+            if (result === 'timeout') {
+                console.warn("Asset loading timed out, forcing entry.");
+            }
+
+            if (isMounted) {
+                // Small artificial delay for UX (so specific animation can finish)
+                setTimeout(() => {
+                    onLoaded();
+                }, 500);
+            }
+        };
+
+        safeLoad();
+
+        return () => { isMounted = false; };
     }, [onLoaded]);
 
     return (

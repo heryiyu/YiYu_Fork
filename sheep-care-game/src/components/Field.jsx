@@ -5,10 +5,39 @@ import { isSleeping } from '../utils/gameLogic';
 import { Sheep } from './Sheep';
 import { AssetBackground } from './AssetBackground';
 import { AssetPreloader } from './AssetPreloader';
+import { usePanGesture } from '../hooks/usePanGesture';
+
+const VISUAL_CONFIG = {
+    ZOOM_SCALE: 2.5,
+    CANVAS_SCALE: 2.5,
+    SHEEP_CENTER_OFFSET: 6
+};
+
+// Simple Hash for random consistency
+const simpleHash = (str) => {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) + hash) + str.charCodeAt(i); /* hash * 33 + c */
+    }
+    return Math.abs(hash);
+};
 
 export const Field = ({ onSelectSheep }) => {
-    const { sheep, prayForSheep, weather, settings, user } = useGame();
+    const { sheep, prayForSheep, weather, settings, focusedSheepId, clearFocus, lineId } = useGame();
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // --- Manual Panning Logic (via Hook) ---
+    const { domRef: panLayerRef, handlers: panHandlers, reset: resetPan, panState: panStateRef } = usePanGesture(!!focusedSheepId, VISUAL_CONFIG.ZOOM_SCALE);
+
+    // Reset pan when focus changes
+    useEffect(() => {
+        resetPan();
+    }, [focusedSheepId, resetPan]);
+
+    // Handlers wrapper to pass click checks
+    const handlePointerDown = (e) => panHandlers.onPointerDown(e);
+    const handlePointerMove = (e) => panHandlers.onPointerMove(e);
+    const handlePointerUp = (e) => panHandlers.onPointerUp(e);
 
     // --- 1. Separate Sheep ---
     const livingSheep = useMemo(() => sheep.filter(s => !isSleeping(s)), [sheep]);
@@ -84,7 +113,8 @@ export const Field = ({ onSelectSheep }) => {
             // But we want them to float around.
             // Let's override X/Y with a "Ghost Position".
             // We can use the seeded random based on ID + Time? No, just ID for stability.
-            const seed = s.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+            // Seeded random for Ghosts
+            const seed = simpleHash(s.id);
             const rand = (offset) => {
                 const x = Math.sin(seed + offset) * 10000;
                 return x - Math.floor(x);
@@ -101,6 +131,70 @@ export const Field = ({ onSelectSheep }) => {
     }, [visibleSleeping]);
 
 
+
+    // --- 4. Focus / Zoom Logic ---
+    const focusedSheep = useMemo(() => {
+        return sheep.find(s => s.id === focusedSheepId);
+    }, [sheep, focusedSheepId]);
+
+    // Force visibility of focused sheep
+    const finalVisibleLiving = useMemo(() => {
+        if (!focusedSheepId) return visibleLiving;
+        // If focused sheep is already visible, return as is
+        if (visibleLiving.find(s => s.id === focusedSheepId)) return visibleLiving;
+        // If not, add it (temporarily exceed max count if needed)
+        const target = sheep.find(s => s.id === focusedSheepId);
+        if (target && !isSleeping(target)) {
+            return [...visibleLiving, target];
+        }
+        return visibleLiving;
+    }, [visibleLiving, focusedSheepId, sheep]);
+
+
+    // Calculate Zoom Transform
+    const fieldStyle = useMemo(() => {
+        if (focusedSheepId) {
+            const target = sheep.find(s => s.id === focusedSheepId);
+            if (target) {
+                // Zoom in on target
+                // Sheep position in % (0-100 within content area)
+                const sx = target.x;
+                const sy = (target.y || 0) * 0.95; // bottomPos from Sheep.jsx - sheep's FEET
+                const sy_center = sy + VISUAL_CONFIG.SHEEP_CENTER_OFFSET;
+
+                const scale = VISUAL_CONFIG.ZOOM_SCALE;
+
+                return {
+                    transform: `scale(${scale}) translate(${(50 - sx) / VISUAL_CONFIG.CANVAS_SCALE}%, ${(sy_center - 50) / VISUAL_CONFIG.CANVAS_SCALE}%)`,
+                    transformOrigin: '50% 50%',
+                    transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    cursor: 'grab'
+                };
+            }
+        }
+        return {
+            transform: 'scale(1) translate(0%, 0%)',
+            transition: 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            cursor: 'default'
+        };
+    }, [focusedSheepId, sheep]);
+
+    // --- 5. Resize Observer for Performance Optimization (Pixel Transforms) ---
+    const contentRef = React.useRef(null);
+    const [containerSize, setContainerSize] = useState(null);
+
+    useEffect(() => {
+        if (!contentRef.current) return;
+        const observer = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                setContainerSize({ width, height });
+            }
+        });
+        observer.observe(contentRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     if (!isLoaded) {
         return <AssetPreloader onLoaded={() => setIsLoaded(true)} />;
     }
@@ -109,37 +203,70 @@ export const Field = ({ onSelectSheep }) => {
         <div className={`field-container`}
             style={{
                 position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
-                // Disable browser default touch actions for game feel
-                touchAction: 'none'
+                touchAction: 'none',
+                ...(!focusedSheepId ? {} : { cursor: 'grab' })
+            }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            onClick={(e) => {
+                // Prevent click if we dragged significantly
+                const dx = Math.abs(panStateRef.current.x);
+                const dy = Math.abs(panStateRef.current.y);
+                if (focusedSheepId && !panStateRef.current.isPanning && dx < 5 && dy < 5) {
+                    clearFocus();
+                }
             }}
         >
-            {/* New Asset Background (Handles Scene, Weather, Decor) */}
-            <AssetBackground userId={user?.id || 'guest'} weather={weather} />
+            {/* Oversized canvas (250%) so pan/zoom never reveals blank; content in center 40% */}
+            <div style={{
+                position: 'absolute', left: '-75%', top: '-75%',
+                width: '250%', height: '250%',
+                transformOrigin: '50% 50%',
+                ...fieldStyle
+            }}>
+                {/* Pan Layer: Inner wrapper for manual drag that DOES NOT trigger React renders */}
+                <div
+                    ref={panLayerRef}
+                    style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, willChange: 'transform' }}
+                >
+                    <AssetBackground userId={lineId || 'guest'} weather={weather} />
 
-            {/* Render Sheep Layer (Living + Ghosts) */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                    {/* Content area: 40% x 40% centered so sheep 0-100 coords map to viewport */}
+                    <div
+                        ref={contentRef}
+                        style={{
+                            position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
+                            pointerEvents: 'none'
+                        }}>
+                        {/* 1. Ghosts (Floaty) */}
+                        {ghostSheep.map(s => (
+                            <div key={s.id} style={{ pointerEvents: 'auto' }}>
+                                <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} containerSize={containerSize} />
+                            </div>
+                        ))}
 
-                {/* 1. Ghosts (Floaty) */}
-                {ghostSheep.map(s => (
-                    // Re-enable pointer events for sheep
-                    <div key={s.id} style={{ pointerEvents: 'auto' }}>
-                        <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} />
+                        {/* 2. Living Sheep (Grounded) */}
+                        {finalVisibleLiving.map(s => (
+                            <div key={s.id} style={{ pointerEvents: 'auto' }}>
+                                <Sheep
+                                    sheep={s}
+                                    onPray={prayForSheep}
+                                    onSelect={onSelectSheep}
+                                    alwaysShowName={s.id === focusedSheepId}
+                                    containerSize={containerSize}
+                                />
+                            </div>
+                        ))}
                     </div>
-                ))}
-
-                {/* 2. Living Sheep (Grounded) */}
-                {visibleLiving.map(s => (
-                    <div key={s.id} style={{ pointerEvents: 'auto' }}>
-                        <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} />
-                    </div>
-                ))}
-
+                </div>
             </div>
 
             {/* Message / HUD Overlay usually goes here via App.jsx, but if Field owns some: */}
 
             {/* Count Overlay: Show if Total Sheep > Currently Shown */}
-            {sheep.length > visibleIds.size && (
+            {sheep.length > visibleIds.size && !focusedSheepId && (
                 <div style={{
                     position: 'absolute', top: '80px', right: '10px',
                     background: 'var(--color-primary-cream)', color: 'var(--color-text-brown)',
@@ -150,6 +277,19 @@ export const Field = ({ onSelectSheep }) => {
                 }}>
                     <Eye size={14} strokeWidth={2} style={{ opacity: 0.8 }} />
                     {visibleIds.size} / {sheep.length}
+                </div>
+            )}
+
+            {/* Call Focus Overlay Cancel Hint */}
+            {focusedSheepId && (
+                <div style={{
+                    position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'var(--bg-modal-overlay)', color: 'var(--text-inverse)',
+                    padding: '8px 16px', borderRadius: '20px',
+                    fontSize: '0.85rem', pointerEvents: 'none', zIndex: 600,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    點擊畫面任意處取消鎖定
                 </div>
             )}
 

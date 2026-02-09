@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useGame } from '../context/GameContext';
-import { useConfirm } from '../context/ConfirmContext';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import { isSleeping, getAwakeningProgress } from '../utils/gameLogic';
 import { AssetSheep } from './AssetSheep';
 import { AddSheepModal } from './AddSheepModal';
 import { TagManagerModal } from './TagManagerModal';
-import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, CheckSquare, SlidersHorizontal, Search, Footprints } from 'lucide-react';
 import { CloseButton } from './ui/CloseButton';
+import { Tooltip } from './ui/Tooltip';
 import { Checkbox } from './ui/Checkbox';
 import '../styles/design-tokens.css';
 import './SheepList.css';
@@ -83,9 +84,9 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
                 flexDirection: 'column',
                 background: 'var(--card-inner-bg, #fff)',
                 borderRadius: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                boxShadow: 'var(--shadow-card)',
                 border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
-                zIndex: 2500
+                zIndex: 'var(--z-modal-overlay)'
             }}
         >
             <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -98,39 +99,39 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
                     onScroll={checkScrollState}
                     style={{ padding: '0 12px 0', flex: 1, minHeight: 0, overflowY: 'auto' }}
                 >
-                {filters.map((f) => {
-                    const isHidden = hiddenFilterIds.has(f.id);
-                    return (
-                        <label
-                            key={f.id}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '6px 0',
-                                cursor: 'pointer',
-                                fontSize: '0.9rem'
-                            }}
-                        >
-                            <Checkbox
-                                checked={!isHidden}
-                                onChange={() => onToggle(f.id)}
-                                ariaLabel={f.label}
-                            />
-                            {f.color ? (
-                                <span
-                                    style={{
-                                        width: 10,
-                                        height: 10,
-                                        borderRadius: 4,
-                                        background: f.color
-                                    }}
+                    {filters.map((f) => {
+                        const isHidden = hiddenFilterIds.has(f.id);
+                        return (
+                            <label
+                                key={f.id}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '6px 0',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem'
+                                }}
+                            >
+                                <Checkbox
+                                    checked={!isHidden}
+                                    onChange={() => onToggle(f.id)}
+                                    ariaLabel={f.label}
                                 />
-                            ) : null}
-                            <span>{f.label}</span>
-                        </label>
-                    );
-                })}
+                                {f.color ? (
+                                    <span
+                                        style={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: 4,
+                                            background: f.color
+                                        }}
+                                    />
+                                ) : null}
+                                <span>{f.label}</span>
+                            </label>
+                        );
+                    })}
                 </div>
                 {showFadeOverlay && (
                     <div
@@ -226,7 +227,7 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     };
 };
 
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onLongPress, tags = [], tagAssignmentsBySheep = {} }) => {
+const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onFind, onLongPress, tags = [], tagAssignmentsBySheep = {}, pinFlashId }) => {
     const assigned = (tagAssignmentsBySheep[s.id] || []);
     const firstTagId = assigned.length > 0 ? assigned[0].tagId : null;
     const firstTag = firstTagId ? tags.find(t => t.id === firstTagId) : null;
@@ -247,15 +248,48 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
     // Use the hook
     const longPressEventHandlers = useLongPress(handleCardLongPress, handleCardClick, { delay: 500 });
 
+    const isPinFlash = pinFlashId === s.id;
+
     return (
         <div
-            className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''} ${isSelectionMode ? 'sheep-card--select-mode' : ''}`}
+            className={`sheep-card ${isSelectionMode && isSelected ? 'selected' : ''} ${isSelectionMode ? 'sheep-card--select-mode' : ''} ${isPinFlash ? 'sheep-card--pin-flash' : ''}`}
             {...longPressEventHandlers}
             style={{ touchAction: 'manipulation', userSelect: 'none' }} // 'manipulation' allows scroll but blocks double-tap zoom
         >
             {isSelectionMode && (
                 <div className={`sheep-card-selection-dot ${isSelected ? 'sheep-card-selection-dot--selected' : ''}`}>
                     {isSelected && <span className="sheep-card-selection-check">✓</span>}
+                </div>
+            )}
+
+            {/* Pin button: MUST stay absolutely positioned at top-right of card. See .pin-btn in SheepList.css. */}
+            {!isSelectionMode && onTogglePin && (
+                <div className="pin-btn-wrapper">
+                    <Tooltip content={isPinned ? '取消釘選' : '釘選'} side="top">
+                        <button
+                            type="button"
+                            className="pin-btn"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onTogglePin(s.id);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseUp={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchEnd={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onPointerUp={(e) => e.stopPropagation()}
+                            style={{
+                                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                                opacity: isPinned ? 1 : 0.2,
+                                fontSize: '1rem',
+                                transition: 'transform 0.2s, opacity 0.2s',
+                            }}
+                        >
+                            📌
+                        </button>
+                    </Tooltip>
                 </div>
             )}
 
@@ -266,32 +300,9 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
                 </div>
                 <div
                     className={`sheep-card-tag sheep-card-tag--${tagVariant}`}
-                    style={firstTag ? { background: firstTag.color || '#6b7280', color: '#fff' } : undefined}
+                    style={firstTag ? { background: firstTag.color || 'var(--palette-gray-muted)', color: 'var(--text-inverse)' } : undefined}
                 >
                     {tagLabel}
-                </div>
-                <div className="sheep-card-header-actions">
-                    {!isSelectionMode && onTogglePin && (
-                        <button
-                            type="button"
-                            className="pin-btn"
-                            onClick={(e) => {
-                                e.stopPropagation(); // Standard click stop propagation is enough here
-                                onTogglePin(s.id);
-                            }}
-                            // MouseDown/TouchStart here should NOT trigger the card's long press
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            style={{
-                                background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-                                opacity: isPinned ? 1 : 0.2,
-                                fontSize: '1rem',
-                                transition: 'transform 0.2s, opacity 0.2s'
-                            }}
-                        >
-                            📌
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -311,7 +322,38 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             </div>
 
             <div className="sheep-card-footer">
-                <div className="sheep-card-name">{s.name}</div>
+                <div className="sheep-card-name-row">
+                    <div className="sheep-card-name">{s.name}</div>
+                    {!isSelectionMode && onFind && !isSleepingState && (
+                        <Tooltip content="在草原上尋找此小羊" side="top">
+                            <button
+                                type="button"
+                                className="find-btn"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onFind(s.id);
+                                }}
+                                aria-label="在草原上尋找此小羊"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onMouseUp={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchEnd={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onPointerUp={(e) => e.stopPropagation()}
+                                style={{
+                                    background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+                                    fontSize: '1rem',
+                                    opacity: 0.6,
+                                }}
+                            >
+                                {/* SPECIAL CASE: Footprints icon uses solid fill (not stroke), 5% smaller, 20deg rotation.
+                                    Do NOT change - this is intentional for "follow and find" visual distinction. */}
+                                <Footprints size={15} strokeWidth={2.5} fill="currentColor" style={{ transform: 'rotate(20deg)' }} />
+                            </button>
+                        </Tooltip>
+                    )}
+                </div>
                 {!isSelectionMode && (
                     <div className={`sheep-card-pray ${isSleepingState ? 'sheep-card-pray--dead' : ''}`}>
                         {isSleepingState ? `🕯️ 喚醒禱告 ${getAwakeningProgress(s)}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
@@ -324,7 +366,7 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
 
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {
-    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, tags, tagAssignmentsBySheep, updateSetting } = useGame();
+    const { sheep, deleteMultipleSheep, updateSheep, adoptSheep, updateMultipleSheep, settings, togglePin, findSheep, tags, tagAssignmentsBySheep, updateSetting } = useGame();
     const confirm = useConfirm();
     const pinnedSet = useMemo(() => new Set(settings?.pinnedSheepIds || []), [settings?.pinnedSheepIds]);
     const sortedSheep = useMemo(() => {
@@ -348,9 +390,25 @@ export const SheepList = ({ onSelect }) => {
     const filterMenuAnchorRef = useRef(null);
     const searchWrapRef = useRef(null);
     const searchInputRef = useRef(null);
+    const scrollAreaRef = useRef(null);
+    const cardRefs = useRef({});
+    const lastPinActionRef = useRef(null);
+    const pendingPinIdRef = useRef(null);
 
     // Collapsible State (Default Open)
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [pinFlashId, setPinFlashId] = useState(null);
+    const [unpinPlaceholder, setUnpinPlaceholder] = useState(null);
+
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Auto-collapse when focusing on a sheep
+    const { focusedSheepId } = useGame();
+    useEffect(() => {
+        if (focusedSheepId) {
+            setIsCollapsed(true);
+        }
+    }, [focusedSheepId]);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -362,6 +420,7 @@ export const SheepList = ({ onSelect }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
 
     const toggleFilterVisibility = (filterId) => {
         const next = new Set(hiddenFilterIds);
@@ -392,6 +451,64 @@ export const SheepList = ({ onSelect }) => {
         }
         return true;
     }), [sortedSheep, searchTerm, effectiveFilterStatus, settings?.pinnedSheepIds, tagAssignmentsBySheep]);
+
+    const pinFlashTimeoutRef = useRef(null);
+    const pinHighlightTimeoutRef = useRef(null);
+    const handleTogglePin = useCallback((id) => {
+        if (!togglePin) return;
+        const wasPinned = settings?.pinnedSheepIds?.includes(id);
+        const idx = filteredSheep.findIndex((s) => s.id === id);
+        const wrapperEl = cardRefs.current[id];
+
+        if (wasPinned && idx >= 0 && wrapperEl && !prefersReducedMotion) {
+            const width = wrapperEl.offsetWidth + 12;
+            togglePin(id);
+            lastPinActionRef.current = 'unpin';
+            setUnpinPlaceholder({ index: idx, width, id });
+            setPinFlashId(id);
+            if (pinFlashTimeoutRef.current) clearTimeout(pinFlashTimeoutRef.current);
+            pinFlashTimeoutRef.current = setTimeout(() => {
+                setPinFlashId(null);
+                setUnpinPlaceholder(null);
+                pinFlashTimeoutRef.current = null;
+            }, 320);
+        } else {
+            togglePin(id);
+            lastPinActionRef.current = 'pin';
+            pendingPinIdRef.current = id;
+        }
+    }, [togglePin, settings?.pinnedSheepIds, filteredSheep, prefersReducedMotion]);
+
+    useEffect(() => {
+        const pendingId = pendingPinIdRef.current;
+        if (!pendingId || lastPinActionRef.current !== 'pin') return;
+        const scrollEl = scrollAreaRef.current;
+        const cardEl = cardRefs.current[pendingId];
+        if (!scrollEl || !cardEl) return;
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const cardRect = cardEl.getBoundingClientRect();
+                const scrollRect = scrollEl.getBoundingClientRect();
+                const cardCenter = cardRect.left - scrollRect.left + scrollEl.scrollLeft + cardRect.width / 2;
+                const scrollCenter = scrollEl.clientWidth / 2;
+                scrollEl.scrollTo({ left: cardCenter - scrollCenter, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+
+                if (pinHighlightTimeoutRef.current) clearTimeout(pinHighlightTimeoutRef.current);
+                pinHighlightTimeoutRef.current = setTimeout(() => {
+                    pendingPinIdRef.current = null;
+                    setPinFlashId(pendingId);
+                    if (pinFlashTimeoutRef.current) clearTimeout(pinFlashTimeoutRef.current);
+                    pinFlashTimeoutRef.current = setTimeout(() => {
+                        setPinFlashId(null);
+                        pinFlashTimeoutRef.current = null;
+                    }, 400);
+                    pinHighlightTimeoutRef.current = null;
+                }, prefersReducedMotion ? 0 : 300);
+                lastPinActionRef.current = null;
+            });
+        });
+    }, [filteredSheep, prefersReducedMotion]);
 
     const counts = useMemo(() => {
         const acc = { ALL: sortedSheep.length, HEALTHY: 0, SICK: 0, SLEEPING: 0, PINNED: 0 };
@@ -453,12 +570,12 @@ export const SheepList = ({ onSelect }) => {
         const n = selectedIds.size;
         const ok = await confirm({
             title: '重置狀態',
-            message: `確定要將這 ${n} 隻小羊重置為「健康 (100%)」嗎？`,
+            message: `確定要將這 ${n} 隻小羊重置為「健康」嗎？`,
             variant: 'default'
         });
         if (!ok) return;
         updateMultipleSheep(Array.from(selectedIds), {
-            health: 100,
+            health: 60,
             status: 'healthy',
             careLevel: 0,
             resurrectionProgress: 0,
@@ -512,7 +629,7 @@ export const SheepList = ({ onSelect }) => {
                     style={{
                         position: 'fixed',
                         top: 0, left: 0, right: 0, bottom: 0,
-                        zIndex: 1400, // Below SheepList (1500)
+                        zIndex: 'calc(var(--z-dock-layer) - 100)', // Below SheepList
                         background: 'transparent', // Invisible
                         cursor: 'default',
                         touchAction: 'none'
@@ -524,7 +641,7 @@ export const SheepList = ({ onSelect }) => {
             <div className="sheep-list-container" style={{
                 position: 'absolute', bottom: 0, left: 0, width: '100vw',
                 height: 'auto', // Container adapts to content
-                zIndex: 1500,
+                zIndex: 'var(--z-dock-layer)',
                 display: 'flex', flexDirection: 'column',
                 pointerEvents: 'none', // Allow clicks to pass through empty areas
                 transition: 'transform 0.3s ease'
@@ -537,281 +654,333 @@ export const SheepList = ({ onSelect }) => {
                     }
                 `}</style>
 
-                {/* Toolbar: Add | Search | Filters | Select */}
-                <div
-                    className={`dock-child dock-toolbar ${isSearchExpanded ? 'dock-toolbar--search-expanded' : ''}`}
-                    onClick={handleToolbarClick}
-                >
-                    {/* Inner wrapper: functional when Open, pass-through when Collapsed */}
-                    <div style={{
-                        display: 'contents',
-                        pointerEvents: isCollapsed ? 'none' : 'auto'
-                    }} onClick={(e) => !isCollapsed && e.stopPropagation()}>
+                {/* Grouped: Toolbar + Scroll Area, with bottom margin */}
+                <div className="sheep-dock-group">
+                    {/* Toolbar: Add | Search | Filters | Select */}
+                    <div
+                        className={`dock-child dock-toolbar ${isSearchExpanded ? 'dock-toolbar--search-expanded' : ''}`}
+                        onClick={handleToolbarClick}
+                    >
+                        {/* Inner wrapper: functional when Open, pass-through when Collapsed */}
+                        <div style={{
+                            display: 'contents',
+                            pointerEvents: isCollapsed ? 'none' : 'auto'
+                        }} onClick={(e) => !isCollapsed && e.stopPropagation()}>
 
-                        {isSelectionMode ? (
-                            // --- SELECTION TOOLBAR (same chip style as standard) ---
-                            <>
-                                <span className="dock-toolbar-label">已選取 {selectedIds.size}</span>
+                            {isSelectionMode ? (
+                                // --- SELECTION TOOLBAR (same chip style as standard) ---
+                                <>
+                                    <span className="dock-toolbar-label">已選取 {selectedIds.size}</span>
 
-                                <div
-                                    ref={searchWrapRef}
-                                    className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
-                                >
-                                    <input
-                                        ref={searchInputRef}
-                                        type="text"
-                                        className="dock-toolbar-search-input"
-                                        placeholder="搜尋..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        onFocus={() => setIsSearchExpanded(true)}
-                                    />
-                                    {isSearchExpanded && (
-                                        <CloseButton
-                                            className="dock-toolbar-search-clear"
-                                            ariaLabel="收起搜尋"
-                                            variant="sm"
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                setIsSearchExpanded(false);
-                                                searchInputRef.current?.blur();
-                                            }}
-                                        />
-                                    )}
-                                    <span className="dock-toolbar-search-icon" aria-hidden="true">
-                                        <Search size={16} strokeWidth={2.5} />
-                                    </span>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className="dock-toolbar-action-btn"
-                                    onClick={() => {
-                                        if (selectedIds.size === sortedSheep.length) {
-                                            setSelectedIds(new Set());
-                                        } else {
-                                            setSelectedIds(new Set(sortedSheep.map(s => s.id)));
-                                        }
-                                    }}
-                                    style={{
-                                        background: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'var(--palette-blue-action)' : 'rgba(255, 255, 255, 0.9)',
-                                        color: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'white' : 'var(--palette-sheep-brown)',
-                                        borderColor: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'transparent' : 'var(--palette-sheep-brown)'
-                                    }}
-                                >
-                                    <CheckSquare size={14} strokeWidth={2.5} />
-                                    {selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'}
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--delete btn-destructive"
-                                    onClick={handleDeleteSelected}
-                                    disabled={selectedIds.size === 0}
-                                >
-                                    <Trash2 size={14} strokeWidth={2.5} />
-                                    刪除
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--reset"
-                                    onClick={handleResetSelected}
-                                    disabled={selectedIds.size === 0}
-                                >
-                                    <RotateCcw size={14} strokeWidth={2.5} />
-                                    重置
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="dock-toolbar-action-btn dock-toolbar-action-btn--cancel"
-                                    onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
-                                >
-                                    取消
-                                </button>
-                            </>
-                        ) : (
-                            // --- STANDARD TOOLBAR ---
-                            <>
-                                {/* 1. Add Button (rounded chip style like SheepListModal) */}
-                                <button
-                                    type="button"
-                                    className="dock-toolbar-add-btn"
-                                    onClick={() => setShowAddModal(true)}
-                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
-                                >
-                                    <Plus size={18} strokeWidth={2.5} />
-                                </button>
-
-                                {/* 2. Search Bar */}
-                                <div
-                                    ref={searchWrapRef}
-                                    className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
-                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
-                                >
-                                    <input
-                                        ref={searchInputRef}
-                                        type="text"
-                                        className="dock-toolbar-search-input"
-                                        placeholder="搜尋..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        onFocus={() => setIsSearchExpanded(true)}
-                                    />
-                                    {isSearchExpanded && (
-                                        <CloseButton
-                                            className="dock-toolbar-search-clear"
-                                            ariaLabel="收起搜尋"
-                                            variant="sm"
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                setIsSearchExpanded(false);
-                                                searchInputRef.current?.blur();
-                                            }}
-                                        />
-                                    )}
-                                    <span className="dock-toolbar-search-icon" aria-hidden="true">
-                                        <Search size={16} strokeWidth={2.5} />
-                                    </span>
-                                </div>
-
-                                {/* Divider */}
-                                <div className="dock-toolbar-divider" />
-
-                                {/* 3. Filters (chip style) */}
-                                {[
-                                    { id: 'ALL', label: '全部' },
-                                    { id: 'PINNED', label: '📌釘選' },
-                                    { id: 'HEALTHY', label: '健康' },
-                                    { id: 'SICK', label: '生病' },
-                                    { id: 'SLEEPING', label: '沉睡' },
-                                    ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
-                                ]
-                                    .filter(f => !hiddenFilterIds.has(f.id))
-                                    .map(f => (
-                                    <button
-                                        type="button"
-                                        key={f.id}
-                                        className={`dock-toolbar-chip ${effectiveFilterStatus === f.id ? 'dock-toolbar-chip--selected' : ''}`}
-                                        onClick={() => setFilterStatus(f.id)}
-                                        style={{
-                                            opacity: isCollapsed ? 0.6 : 1,
-                                            ...(f.color && effectiveFilterStatus === f.id && { borderColor: f.color, color: '#fff', background: f.color })
-                                        }}
+                                    <div
+                                        ref={searchWrapRef}
+                                        className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
                                     >
-                                        {f.label} {counts[f.id] ?? 0}
-                                    </button>
-                                ))}
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            className="dock-toolbar-search-input"
+                                            placeholder="搜尋..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onFocus={() => setIsSearchExpanded(true)}
+                                        />
+                                        {isSearchExpanded && (
+                                            <CloseButton
+                                                className="dock-toolbar-search-clear"
+                                                ariaLabel="清除並收起搜尋"
+                                                variant="sm"
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setIsSearchExpanded(false);
+                                                    searchInputRef.current?.blur();
+                                                }}
+                                            />
+                                        )}
+                                        <span className="dock-toolbar-search-icon" aria-hidden="true">
+                                            <Search size={16} strokeWidth={2.5} />
+                                        </span>
+                                    </div>
 
-                                {/* 4. Filter Settings */}
-                                <div style={{ position: 'relative', display: 'inline-flex' }} ref={filterMenuAnchorRef}>
-                                    <button
-                                        type="button"
-                                        className={`dock-toolbar-chip dock-toolbar-chip--settings ${showFilterMenu ? 'dock-toolbar-chip--selected' : ''}`}
-                                        onClick={() => setShowFilterMenu(prev => !prev)}
+                                    <Tooltip content={selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'} side="bottom">
+                                        <button
+                                            type="button"
+                                            className="dock-toolbar-action-btn"
+                                            onClick={() => {
+                                                if (selectedIds.size === sortedSheep.length) {
+                                                    setSelectedIds(new Set());
+                                                } else {
+                                                    setSelectedIds(new Set(sortedSheep.map(s => s.id)));
+                                                }
+                                            }}
+                                            style={{
+                                                background: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'var(--palette-blue-action)' : 'rgba(255, 255, 255, 0.9)',
+                                                color: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'white' : 'var(--palette-sheep-brown)',
+                                                borderColor: selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? 'transparent' : 'var(--palette-sheep-brown)'
+                                            }}
+                                        >
+                                            <CheckSquare size={14} strokeWidth={2.5} />
+                                            {selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'}
+                                        </button>
+                                    </Tooltip>
+
+                                    <Tooltip content="刪除所選小羊" side="bottom">
+                                        <button
+                                            type="button"
+                                            className="dock-toolbar-action-btn dock-toolbar-action-btn--delete btn-destructive"
+                                            onClick={handleDeleteSelected}
+                                            disabled={selectedIds.size === 0}
+                                        >
+                                            <Trash2 size={14} strokeWidth={2.5} />
+                                            刪除
+                                        </button>
+                                    </Tooltip>
+
+                                    <Tooltip content="重置所選小羊的禱告次數" side="bottom">
+                                        <button
+                                            type="button"
+                                            className="dock-toolbar-action-btn dock-toolbar-action-btn--reset"
+                                            onClick={handleResetSelected}
+                                            disabled={selectedIds.size === 0}
+                                        >
+                                            <RotateCcw size={14} strokeWidth={2.5} />
+                                            重置
+                                        </button>
+                                    </Tooltip>
+
+                                    <Tooltip content="取消選取" side="bottom">
+                                        <button
+                                            type="button"
+                                            className="dock-toolbar-action-btn dock-toolbar-action-btn--cancel"
+                                            onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
+                                        >
+                                            取消
+                                        </button>
+                                    </Tooltip>
+                                </>
+                            ) : (
+                                // --- STANDARD TOOLBAR ---
+                                <>
+                                    {/* 1. Add Button (rounded chip style like SheepListModal) */}
+                                    <Tooltip content="新增小羊" side="bottom">
+                                        <button
+                                            type="button"
+                                            className="dock-toolbar-add-btn"
+                                            onClick={() => setShowAddModal(true)}
+                                            style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                        >
+                                            <Plus size={18} strokeWidth={2.5} />
+                                        </button>
+                                    </Tooltip>
+
+                                    {/* 2. Search Bar */}
+                                    <div
+                                        ref={searchWrapRef}
+                                        className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
                                         style={{ opacity: isCollapsed ? 0.6 : 1 }}
-                                        title="篩選設定"
-                                        aria-label="篩選設定"
                                     >
-                                        <SlidersHorizontal size={14} strokeWidth={2.5} />
-                                        <span>篩選設定</span>
-                                    </button>
-                                    {showFilterMenu && (
-                                        <FilterSettingsMenu
-                                            filters={[
-                                                { id: 'ALL', label: '全部' },
-                                                { id: 'PINNED', label: '📌釘選' },
-                                                { id: 'HEALTHY', label: '健康' },
-                                                { id: 'SICK', label: '生病' },
-                                                { id: 'SLEEPING', label: '沉睡' },
-                                                ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
-                                            ]}
-                                            hiddenFilterIds={hiddenFilterIds}
-                                            onToggle={toggleFilterVisibility}
-                                            onManageTags={() => {
-                                                setShowFilterMenu(false);
-                                                setShowTagManagerModal(true);
-                                            }}
-                                            onClose={() => setShowFilterMenu(false)}
-                                            anchorRef={filterMenuAnchorRef}
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            className="dock-toolbar-search-input"
+                                            placeholder="搜尋..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onFocus={() => setIsSearchExpanded(true)}
                                         />
-                                    )}
-                                </div>
+                                        {isSearchExpanded && (
+                                            <CloseButton
+                                                className="dock-toolbar-search-clear"
+                                                ariaLabel="清除並收起搜尋"
+                                                variant="sm"
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setIsSearchExpanded(false);
+                                                    searchInputRef.current?.blur();
+                                                }}
+                                            />
+                                        )}
+                                        <span className="dock-toolbar-search-icon" aria-hidden="true">
+                                            <Search size={16} strokeWidth={2.5} />
+                                        </span>
+                                    </div>
 
-                                {/* 5. Select Button */}
-                                <button
-                                    type="button"
-                                    className={`dock-toolbar-select-btn ${isSelectionMode ? 'dock-toolbar-select-btn--active' : ''}`}
-                                    onClick={() => {
-                                        setIsSelectionMode(!isSelectionMode);
-                                        setSelectedIds(new Set());
-                                        setFilterStatus('ALL');
-                                    }}
-                                    style={{ opacity: isCollapsed ? 0.6 : 1 }}
-                                >
-                                    {isSelectionMode ? '取消' : '選取'}
-                                </button>
-                            </>
-                        )}
+                                    {/* Divider */}
+                                    <div className="dock-toolbar-divider" />
+
+                                    {/* 3. Filters (chip style) */}
+                                    {[
+                                        { id: 'ALL', label: '全部' },
+                                        { id: 'PINNED', label: '📌釘選' },
+                                        { id: 'HEALTHY', label: '健康' },
+                                        { id: 'SICK', label: '生病' },
+                                        { id: 'SLEEPING', label: '沉睡' },
+                                        ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
+                                    ]
+                                        .filter(f => !hiddenFilterIds.has(f.id))
+                                        .map(f => (
+                                            <button
+                                                type="button"
+                                                key={f.id}
+                                                className={`dock-toolbar-chip ${effectiveFilterStatus === f.id ? 'dock-toolbar-chip--selected' : ''}`}
+                                                onClick={() => setFilterStatus(f.id)}
+                                                style={{
+                                                    opacity: isCollapsed ? 0.6 : 1,
+                                                    ...(f.color && effectiveFilterStatus === f.id && { borderColor: f.color, color: 'var(--text-inverse)', background: f.color })
+                                                }}
+                                            >
+                                                {f.label} {counts[f.id] ?? 0}
+                                            </button>
+                                        ))}
+
+                                    {/* 4. Filter Settings */}
+                                    <div style={{ position: 'relative', display: 'inline-flex' }} ref={filterMenuAnchorRef}>
+                                        <Tooltip content="篩選設定" side="bottom">
+                                            <button
+                                                type="button"
+                                                className={`dock-toolbar-chip dock-toolbar-chip--settings ${showFilterMenu ? 'dock-toolbar-chip--selected' : ''}`}
+                                                onClick={() => setShowFilterMenu(prev => !prev)}
+                                                style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                                aria-label="篩選設定"
+                                            >
+                                                <SlidersHorizontal size={14} strokeWidth={2.5} />
+                                                <span>篩選設定</span>
+                                            </button>
+                                        </Tooltip>
+                                        {showFilterMenu && (
+                                            <FilterSettingsMenu
+                                                filters={[
+                                                    { id: 'ALL', label: '全部' },
+                                                    { id: 'PINNED', label: '📌釘選' },
+                                                    { id: 'HEALTHY', label: '健康' },
+                                                    { id: 'SICK', label: '生病' },
+                                                    { id: 'SLEEPING', label: '沉睡' },
+                                                    ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))
+                                                ]}
+                                                hiddenFilterIds={hiddenFilterIds}
+                                                onToggle={toggleFilterVisibility}
+                                                onManageTags={() => {
+                                                    setShowFilterMenu(false);
+                                                    setShowTagManagerModal(true);
+                                                }}
+                                                onClose={() => setShowFilterMenu(false)}
+                                                anchorRef={filterMenuAnchorRef}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* 5. Select Button */}
+                                    <Tooltip content={isSelectionMode ? '取消選取模式' : '選取小羊'} side="bottom">
+                                        <button
+                                            type="button"
+                                            className={`dock-toolbar-select-btn ${isSelectionMode ? 'dock-toolbar-select-btn--active' : ''}`}
+                                            onClick={() => {
+                                                setIsSelectionMode(!isSelectionMode);
+                                                setSelectedIds(new Set());
+                                                setFilterStatus('ALL');
+                                            }}
+                                            style={{ opacity: isCollapsed ? 0.6 : 1 }}
+                                        >
+                                            {isSelectionMode ? '取消' : '選取'}
+                                        </button>
+                                    </Tooltip>
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                {/* Collapsible Content Area */}
-                <div
-                    className="list-content-wrapper"
-                    style={{
-                        // FIX: Responsive height constraint (Short Cards)
-                        // clamp(MIN, VAL, MAX) -> Reduced to be much more compact
-                        height: isCollapsed ? '0px' : 'clamp(180px, 25vh, 260px)',
-                        opacity: isCollapsed ? 0 : 1,
-                        display: 'flex', flexDirection: 'column',
-                        pointerEvents: isCollapsed ? 'none' : 'auto'
-                    }}
-                >
-                    {/* Horizontal Scroll List */}
-                    <div className="dock-scroll-area" style={{
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'flex-end',
-                        gap: '12px', // Slightly reduced gap
-                        padding: '10px 16px 12px 16px', // Adjusted padding
-                        overflowX: 'auto',
-                        overflowY: 'hidden',
-                        scrollBehavior: 'smooth',
-                        pointerEvents: 'auto',
-                        height: '100%' // Ensure it fills the wrapper
-                    }}>
-                        {filteredSheep.map(s => (
-                            <div key={s.id} style={{
-                                width: 'max-content',
-                                minWidth: 'max-content',
-                                height: '100%',
-                                paddingBottom: '5px',
-                                pointerEvents: 'auto'
-                            }}>
-                                <SheepCard
-                                    s={s}
-                                    isSelectionMode={isSelectionMode}
-                                    isSelected={selectedIds.has(s.id)}
-                                    isPinned={settings?.pinnedSheepIds?.includes(s.id)}
-                                    onTogglePin={() => togglePin && togglePin(s.id)}
-                                    onSelect={(sheep) => { if (onSelect) onSelect(sheep); }}
-                                    onToggleSelect={toggleSelection}
-                                    onLongPress={handleLongPress}
-                                    isSleepingState={isSleeping(s)}
-                                    isSick={s.status === 'sick'}
-                                    tags={tags}
-                                    tagAssignmentsBySheep={tagAssignmentsBySheep}
-                                />
-                            </div>
-                        ))}
-
-
-                        {filteredSheep.length === 0 && (
-                            <div style={{ color: 'rgba(0,0,0,0.5)', padding: '20px', fontWeight: 'bold' }}>沒有小羊...</div>
-                        )}
+                    {/* Collapsible Content Area */}
+                    <div
+                        className="list-content-wrapper"
+                        style={{
+                            // FIX: Responsive height constraint (Short Cards)
+                            // clamp(MIN, VAL, MAX) -> Reduced to be much more compact
+                            height: isCollapsed ? '0px' : 'clamp(180px, 25vh, 260px)',
+                            opacity: isCollapsed ? 0 : 1,
+                            display: 'flex', flexDirection: 'column',
+                            pointerEvents: isCollapsed ? 'none' : 'auto'
+                        }}
+                    >
+                        {/* Horizontal Scroll List */}
+                        <div
+                            ref={scrollAreaRef}
+                            className="dock-scroll-area"
+                            style={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'flex-end',
+                                gap: '12px',
+                                // Reduce bottom padding so the scroll area sits closer to the bottom edge
+                                padding: '10px 16px 6px 16px',
+                                overflowX: 'auto',
+                                overflowY: 'hidden',
+                                scrollBehavior: 'smooth',
+                                pointerEvents: 'auto',
+                                height: '100%'
+                            }}
+                        >
+                            {(() => {
+                                const items = [];
+                                const ph = unpinPlaceholder;
+                                filteredSheep.forEach((s, i) => {
+                                    if (ph && ph.index === i) {
+                                        items.push(
+                                            <div
+                                                key={`placeholder-${ph.id}`}
+                                                className="sheep-card-placeholder"
+                                                style={{ '--ph-width': `${ph.width}px` }}
+                                                aria-hidden="true"
+                                            />
+                                        );
+                                    }
+                                    items.push(
+                                        <div
+                                            key={s.id}
+                                            ref={(el) => { if (el) cardRefs.current[s.id] = el; }}
+                                            style={{
+                                                width: 'max-content',
+                                                minWidth: 'max-content',
+                                                height: '100%',
+                                                paddingBottom: '5px',
+                                                pointerEvents: 'auto'
+                                            }}
+                                        >
+                                            <SheepCard
+                                                s={s}
+                                                isSelectionMode={isSelectionMode}
+                                                isSelected={selectedIds.has(s.id)}
+                                                isPinned={settings?.pinnedSheepIds?.includes(s.id)}
+                                                onTogglePin={handleTogglePin}
+                                                pinFlashId={pinFlashId}
+                                                onSelect={(sheep) => { if (onSelect) onSelect(sheep); }}
+                                                onToggleSelect={toggleSelection}
+                                                onLongPress={handleLongPress}
+                                                isSleepingState={isSleeping(s)}
+                                                isSick={s.status === 'sick'}
+                                                tags={tags}
+                                                tagAssignmentsBySheep={tagAssignmentsBySheep}
+                                                onFind={findSheep}
+                                            />
+                                        </div>
+                                    );
+                                });
+                                if (ph && ph.index === filteredSheep.length) {
+                                    items.push(
+                                        <div
+                                            key={`placeholder-${ph.id}`}
+                                            className="sheep-card-placeholder"
+                                            style={{ '--ph-width': `${ph.width}px` }}
+                                            aria-hidden="true"
+                                        />
+                                    );
+                                }
+                                return items;
+                            })()}
+                            {filteredSheep.length === 0 && !unpinPlaceholder && (
+                                <div style={{ color: 'rgba(0,0,0,0.5)', padding: '20px', fontWeight: 'bold' }}>沒有小羊...</div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -819,7 +988,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Add Modal Overlay (Now managed here) */}
                 {showAddModal && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
                         <AddSheepModal
                             onConfirm={handleConfirmAdd}
                             onCancel={() => setShowAddModal(false)}
@@ -829,7 +998,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Edit Modal Overlay */}
                 {editingSheep && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
                         <AddSheepModal
                             editingSheep={editingSheep}
                             onConfirm={(updatedData) => {
@@ -843,7 +1012,7 @@ export const SheepList = ({ onSelect }) => {
 
                 {/* Tag Manager Modal (from filter settings) */}
                 {showTagManagerModal && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 3000, pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
                         <TagManagerModal onClose={() => setShowTagManagerModal(false)} />
                     </div>
                 )}

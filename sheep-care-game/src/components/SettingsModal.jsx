@@ -3,10 +3,14 @@ import { useGame } from '../context/GameContext';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from './ui/CloseButton';
 import { Slider } from './ui/Slider';
+import { Tag } from './ui/Tag';
+
+import { useIsMobile } from '../hooks/useIsMobile';
 
 export const SettingsModal = ({ onClose }) => {
     const { settings, updateSetting, tags } = useGame();
     const closeBtnRef = useRef(null);
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -17,42 +21,50 @@ export const SettingsModal = ({ onClose }) => {
     }, [onClose]);
 
     useEffect(() => {
-        closeBtnRef.current?.focus();
-    }, []);
+        if (!isMobile) {
+            closeBtnRef.current?.focus();
+        }
+    }, [isMobile]);
 
     const handleChange = (e) => {
         updateSetting('maxVisibleSheep', parseInt(e.target.value));
     };
 
-    const [activeTab, setActiveTab] = React.useState('DISPLAY'); // DISPLAY | SYSTEM
+    const [activeTab, setActiveTab] = React.useState('DISPLAY'); // DISPLAY | GUIDE | ABOUT
 
     return (
         <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h3 id="settings-modal-title">⚙️ 系統設定</h3>
+                    <h3 id="settings-modal-title">⚙️ 設定 <span style={{ fontSize: '0.7em', opacity: 0.7, marginLeft: '5px' }}>v1.0.1</span></h3>
                     <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                 </div>
 
                 <div className="modal-form">
                     {/* Tabs */}
-                    <div className="modal-tabs">
+                    <div className="modal-tabs" style={{ gap: '4px' }}>
                         <button
                             className={`modal-tab ${activeTab === 'DISPLAY' ? 'modal-tab-active' : ''}`}
                             onClick={() => setActiveTab('DISPLAY')}
                         >
-                            🖥️ 顯示設定
+                            🖥️ 顯示
                         </button>
                         <button
-                            className={`modal-tab ${activeTab === 'SYSTEM' ? 'modal-tab-active' : ''}`}
-                            onClick={() => setActiveTab('SYSTEM')}
+                            className={`modal-tab ${activeTab === 'GUIDE' ? 'modal-tab-active' : ''}`}
+                            onClick={() => setActiveTab('GUIDE')}
                         >
-                            📖 系統說明
+                            📖 手冊
+                        </button>
+                        <button
+                            className={`modal-tab ${activeTab === 'ABOUT' ? 'modal-tab-active' : ''}`}
+                            onClick={() => setActiveTab('ABOUT')}
+                        >
+                            ℹ️ 關於
                         </button>
                     </div>
 
                     <div className="modal-scroll" style={{ marginTop: '0' }}>
-                        {activeTab === 'DISPLAY' ? (
+                        {activeTab === 'DISPLAY' && (
                             <div className="modal-content" style={{ padding: '10px' }}>
                                 <div className="form-group">
                                     <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -69,7 +81,7 @@ export const SettingsModal = ({ onClose }) => {
                                         ariaLabel="畫面顯示小羊數量"
                                     />
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#999', marginTop: '5px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted-light)', marginTop: '5px' }}>
                                         <span>10 (效能)</span>
                                         <span>50 (豐富)</span>
                                     </div>
@@ -83,13 +95,15 @@ export const SettingsModal = ({ onClose }) => {
                                     確定
                                 </button>
                             </div>
-                        ) : (
+                        )}
+
+                        {activeTab === 'GUIDE' && (
                             <div className="modal-content guide-modal-content" style={{
-                                color: '#000',
+                                color: 'var(--text-body)',
                                 padding: '16px',
-                                background: 'rgba(255, 255, 255, 0.15)',
+                                background: 'var(--bg-content-subtle)',
                                 borderRadius: '12px',
-                                border: '2px solid rgba(143, 125, 103, 0.15)',
+                                border: '2px solid var(--border-subtle)',
                                 fontSize: '0.95rem',
                                 lineHeight: '1.6'
                             }}>
@@ -102,30 +116,18 @@ export const SettingsModal = ({ onClose }) => {
 
                                 <h4>2. 小羊標籤 (Tags)</h4>
                                 <p>您可自訂標籤來分類小羊，在小羊詳情中選擇「標籤」並點「管理標籤」新增。卡片上會顯示您為該小羊設定的第一個標籤。</p>
-                                <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
                                 {tags && tags.length > 0 ? (
                                     <div style={{ marginTop: '8px' }}>
                                         <p style={{ marginBottom: '6px', fontWeight: 600 }}>您目前的標籤：</p>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                             {tags.map(t => (
-                                                <span
-                                                    key={t.id}
-                                                    style={{
-                                                        padding: '2px 8px',
-                                                        borderRadius: 6,
-                                                        fontSize: '0.85rem',
-                                                        fontWeight: 600,
-                                                        background: t.color || '#6b7280',
-                                                        color: '#fff'
-                                                    }}
-                                                >
-                                                    {t.name}
-                                                </span>
+                                                <Tag key={t.id} name={t.name} color={t.color} />
                                             ))}
                                         </div>
                                     </div>
                                 ) : (
-                                    <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
                                 )}
 
                                 <h4>3. 離線與自然衰退</h4>
@@ -155,9 +157,49 @@ export const SettingsModal = ({ onClose }) => {
                                     <li><strong>提醒時刻:</strong> 早上 8:00、中午 12:00、晚上 18:30。</li>
                                 </ul>
 
-                                <p style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
+                                <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>
                                     <em>"信心若沒有行為就是死的。"</em>
                                 </p>
+                            </div>
+                        )}
+
+                        {activeTab === 'ABOUT' && (
+                            <div className="modal-content" style={{ padding: '16px' }}>
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '20px 0',
+                                    marginBottom: '20px',
+                                    borderBottom: '1px solid var(--border-subtle)'
+                                }}>
+                                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🐑</div>
+                                    <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>小羊牧場</h4>
+                                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>版本 v1.0.1 (Beta)</p>
+                                </div>
+
+                                <h4 style={{ fontSize: '1rem', marginBottom: '10px' }}>🛠️ 系統維護</h4>
+                                <div style={{
+                                    background: 'var(--bg-content-subtle)',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border-subtle)'
+                                }}>
+                                    <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                                        若您遇到畫面顯示異常、資料未更新或功能無法使用，可能是因為您的裝置使用了舊的快取檔案。
+                                    </p>
+                                    <button
+                                        className="modal-btn-secondary"
+                                        style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                        onClick={() => window.location.reload(true)}
+                                    >
+                                        <span>🔄</span>
+                                        <span>強制重新載入 (Clear Cache)</span>
+                                    </button>
+                                </div>
+
+                                <div style={{ marginTop: '20px', fontSize: '0.85rem', color: 'var(--text-muted-light)', textAlign: 'center' }}>
+                                    <p>Designed for NLCIT Ministry</p>
+                                    <p>&copy; 2024 Sheep Care Project</p>
+                                </div>
                             </div>
                         )}
                     </div>

@@ -1,0 +1,44 @@
+/* Tag component - colored pill for status/custom tags */
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag--custom {
+  background: var(--palette-gray-muted);
+  color: var(--text-inverse);
+}
+
+.tag--new {
+  background: var(--tag-new-bg);
+  color: var(--tag-new-text);
+}
+
+.tag--seeker {
+  background: var(--tag-seeker-bg);
+  color: var(--tag-seeker-text);
+}
+
+.tag--christian {
+  background: var(--tag-christian-bg);
+  color: var(--tag-christian-text);
+}
+
+.tag--dead {
+  background: var(--tag-dead-bg);
+  color: var(--tag-dead-text);
+}
+
+.tag--sick {
+  background: var(--tag-sick-bg);
+  color: var(--tag-sick-text);
+}
+
+.tag--healthy {
+  background: var(--tag-healthy-bg);
+  color: var(--tag-healthy-text);
+}

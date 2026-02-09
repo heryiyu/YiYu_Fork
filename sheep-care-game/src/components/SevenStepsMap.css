@@ -8,7 +8,7 @@
 .map-overlay {
     position: fixed;
     inset: 0;
-    z-index: 11000;
+    z-index: var(--z-tooltip);
     background: var(--bg-modal-overlay);
     backdrop-filter: blur(4px);
     display: flex;
@@ -52,16 +52,17 @@
     z-index: 60;
     width: 40px;
     height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-card);
-    border: 2px solid var(--border-main);
-    border-radius: var(--radius-tag);
-    color: var(--text-body);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-icon-btn);
+    color: var(--text-muted-light);
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    box-shadow: var(--shadow-card);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .map-expand-btn svg {
@@ -71,8 +72,9 @@
 }
 
 .map-expand-btn:hover {
-    background: var(--bg-card-secondary);
-    color: var(--text-primary);
+    background: var(--icon-btn-hover-bg);
+    border-color: var(--icon-btn-hover-border);
+    color: var(--text-muted);
 }
 
 .map-expand-btn:focus {
@@ -191,28 +193,35 @@
     top: 8px;
     right: 8px;
     z-index: 10;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: var(--size-icon-btn);
+    height: var(--size-icon-btn);
+    min-width: var(--size-icon-btn);
+    min-height: var(--size-icon-btn);
     padding: 0;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-card);
-    border: 2px solid var(--border-main);
-    border-radius: 50%;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-icon-btn);
     font-size: 1rem;
     cursor: pointer;
-    color: var(--text-body);
+    color: var(--text-muted-light);
     box-sizing: border-box;
+}
+
+.map-video-modal .close-btn:hover {
+    background: var(--icon-btn-hover-bg);
+    border-color: var(--icon-btn-hover-border);
+    color: var(--text-muted);
 }
 
 .map-video-wrapper {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; /* 16:9 */
+    padding-bottom: 56.25%;
+    /* 16:9 */
     height: 0;
     overflow: hidden;
     border-radius: var(--radius-tag);
@@ -297,6 +306,11 @@
     stroke-dasharray: 4 6;
     stroke-linecap: round;
     animation: dashMove 180s ease-in-out infinite;
+}
+
+/* Night theme: boost path contrast using design token */
+[data-theme='night'] .map-path-line {
+    stroke: var(--palette-pale-blue);
 }
 
 @keyframes dashMove {
@@ -413,19 +427,24 @@
     position: absolute;
     top: 12px;
     right: 12px;
-    background: none;
+    background: transparent;
     border: none;
     font-size: 1rem;
     cursor: pointer;
-    color: var(--text-accent);
-    /* Muted color */
-    width: 24px;
-    height: 24px;
+    color: var(--text-muted-light);
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.03);
+    border-radius: var(--radius-icon-btn);
+}
+
+.step-detail-card .close-btn:hover {
+    background: var(--icon-btn-hover-bg);
+    color: var(--text-muted);
 }
 
 .detail-header {

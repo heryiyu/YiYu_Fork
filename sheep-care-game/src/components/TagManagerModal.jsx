@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { useConfirm } from '../context/ConfirmContext';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import { CloseButton } from './ui/CloseButton';
+import { Tag } from './ui/Tag';
+import { IconButton, IconButtonGroup } from './ui/IconButton';
 
 export const TagManagerModal = ({ onClose }) => {
     const { tags, createTag, updateTag, deleteTag, tagAssignmentsBySheep } = useGame();
@@ -118,7 +120,7 @@ export const TagManagerModal = ({ onClose }) => {
                     <div className="form-group" style={{ marginTop: '16px' }}>
                         <label>您的標籤</label>
                         {tags.length === 0 ? (
-                            <p style={{ color: '#666', fontSize: '0.9rem' }}>尚無標籤，請在上方新增</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>尚無標籤，請在上方新增</p>
                         ) : (
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                                 {tags.map((tag) => (
@@ -184,35 +186,11 @@ export const TagManagerModal = ({ onClose }) => {
                                             </>
                                         ) : (
                                             <>
-                                                <span
-                                                    style={{
-                                                        display: 'inline-block',
-                                                        padding: '2px 8px',
-                                                        borderRadius: 6,
-                                                        fontSize: '0.85rem',
-                                                        fontWeight: 600,
-                                                        background: tag.color || '#6b7280',
-                                                        color: '#fff'
-                                                    }}
-                                                >
-                                                    {tag.name}
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => startEdit(tag)}
-                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
-                                                    aria-label="編輯"
-                                                >
-                                                    <Pencil size={14} strokeWidth={2} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDelete(tag)}
-                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--palette-danger)' }}
-                                                    aria-label="刪除"
-                                                >
-                                                    <Trash2 size={14} strokeWidth={2} />
-                                                </button>
+                                                <Tag name={tag.name} color={tag.color} />
+                                                <IconButtonGroup>
+                                                    <IconButton icon={Pencil} onClick={() => startEdit(tag)} ariaLabel="編輯" size={14} />
+                                                    <IconButton icon={Trash2} onClick={() => handleDelete(tag)} variant="danger" ariaLabel="刪除" size={14} />
+                                                </IconButtonGroup>
                                             </>
                                         )}
                                     </li>
