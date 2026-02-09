@@ -266,20 +266,23 @@
 :root {
     /* --- Z-Index System --- */
     --z-background: 0;
+    /* 背景層：草地、天空 */
+    --z-weather: 20;
+    /* 天氣層：下雨、下雪特效 (在小羊後面) */
     --z-field-content: 100;
-    /* Sheep, Field Items */
+    /* 遊戲層：小羊、裝飾物 */
     --z-ui-layer: 1000;
-    /* HUD, Standard UI */
+    /* 介面層：左上角個人資料、右上角功能按鈕 (HUD) */
     --z-dock-layer: 1500;
-    /* SheepList Bottom Dock */
+    /* 底部選單層：所有小羊列表 (Dock) */
     --z-modal-base: 2000;
-    /* Modals (ensure above Dock) */
+    /* 視窗層：小羊資料卡、設定頁面、週記視窗 */
     --z-modal-overlay: 2100;
-    /* Modals on top of Modals */
+    /* 疊加視窗層：在視窗上再開的小視窗 (例如確認對話框) */
     --z-toast: 3000;
-    /* Toasts */
+    /* 通知層：操作成功/失敗的提示訊息 */
     --z-cursor: 9999;
-    /* Custom Cursor / Dragging */
+    /* 游標層：自定義滑鼠游標 */
     --z-tooltip: 10000;
-    /* Tooltips */
+    /* 提示層：滑鼠移到按鈕上顯示的說明文字 (最上層) */
 }
