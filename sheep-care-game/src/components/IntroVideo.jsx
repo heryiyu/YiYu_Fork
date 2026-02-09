@@ -90,5 +90,6 @@ export const IntroVideo = ({ onClose, onComplete }) => {
                     ※ 日後可至「牧羊人手冊」重溫
                 </p>
             </div>
-            );
+        </Portal>
+    );
 };
