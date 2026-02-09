@@ -1388,7 +1388,7 @@ input[type="range"]::-moz-range-thumb:hover {
   right: 10px;
   display: flex;
   gap: 10px;
-  z-index: 5000;
+  z-index: var(--z-ui-layer);
   align-items: center;
 }
 
@@ -1640,7 +1640,7 @@ input[type="range"]::-moz-range-thumb:hover {
   border-radius: 8px;
   padding: 8px 12px;
   position: absolute;
-  z-index: 2000;
+  z-index: var(--z-tooltip);
   top: 100%;
   right: 0;
   margin-top: 8px;
