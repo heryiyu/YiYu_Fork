@@ -30,35 +30,41 @@ export const SettingsModal = ({ onClose }) => {
         updateSetting('maxVisibleSheep', parseInt(e.target.value));
     };
 
-    const [activeTab, setActiveTab] = React.useState('DISPLAY'); // DISPLAY | SYSTEM
+    const [activeTab, setActiveTab] = React.useState('DISPLAY'); // DISPLAY | GUIDE | ABOUT
 
     return (
         <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h3 id="settings-modal-title">⚙️ 系統設定 <span style={{ fontSize: '0.7em', opacity: 0.7, marginLeft: '5px' }}>v1.0.1</span></h3>
+                    <h3 id="settings-modal-title">⚙️ 設定 <span style={{ fontSize: '0.7em', opacity: 0.7, marginLeft: '5px' }}>v1.0.1</span></h3>
                     <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                 </div>
 
                 <div className="modal-form">
                     {/* Tabs */}
-                    <div className="modal-tabs">
+                    <div className="modal-tabs" style={{ gap: '4px' }}>
                         <button
                             className={`modal-tab ${activeTab === 'DISPLAY' ? 'modal-tab-active' : ''}`}
                             onClick={() => setActiveTab('DISPLAY')}
                         >
-                            🖥️ 顯示設定
+                            🖥️ 顯示
                         </button>
                         <button
-                            className={`modal-tab ${activeTab === 'SYSTEM' ? 'modal-tab-active' : ''}`}
-                            onClick={() => setActiveTab('SYSTEM')}
+                            className={`modal-tab ${activeTab === 'GUIDE' ? 'modal-tab-active' : ''}`}
+                            onClick={() => setActiveTab('GUIDE')}
                         >
-                            📖 系統說明
+                            📖 手冊
+                        </button>
+                        <button
+                            className={`modal-tab ${activeTab === 'ABOUT' ? 'modal-tab-active' : ''}`}
+                            onClick={() => setActiveTab('ABOUT')}
+                        >
+                            ℹ️ 關於
                         </button>
                     </div>
 
                     <div className="modal-scroll" style={{ marginTop: '0' }}>
-                        {activeTab === 'DISPLAY' ? (
+                        {activeTab === 'DISPLAY' && (
                             <div className="modal-content" style={{ padding: '10px' }}>
                                 <div className="form-group">
                                     <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -89,7 +95,9 @@ export const SettingsModal = ({ onClose }) => {
                                     確定
                                 </button>
                             </div>
-                        ) : (
+                        )}
+
+                        {activeTab === 'GUIDE' && (
                             <div className="modal-content guide-modal-content" style={{
                                 color: 'var(--text-body)',
                                 padding: '16px',
@@ -152,6 +160,46 @@ export const SettingsModal = ({ onClose }) => {
                                 <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>
                                     <em>"信心若沒有行為就是死的。"</em>
                                 </p>
+                            </div>
+                        )}
+
+                        {activeTab === 'ABOUT' && (
+                            <div className="modal-content" style={{ padding: '16px' }}>
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '20px 0',
+                                    marginBottom: '20px',
+                                    borderBottom: '1px solid var(--border-subtle)'
+                                }}>
+                                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🐑</div>
+                                    <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>小羊牧場</h4>
+                                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>版本 v1.0.1 (Beta)</p>
+                                </div>
+
+                                <h4 style={{ fontSize: '1rem', marginBottom: '10px' }}>🛠️ 系統維護</h4>
+                                <div style={{
+                                    background: 'var(--bg-content-subtle)',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--border-subtle)'
+                                }}>
+                                    <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                                        若您遇到畫面顯示異常、資料未更新或功能無法使用，可能是因為您的裝置使用了舊的快取檔案。
+                                    </p>
+                                    <button
+                                        className="modal-btn-secondary"
+                                        style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                        onClick={() => window.location.reload(true)}
+                                    >
+                                        <span>🔄</span>
+                                        <span>強制重新載入 (Clear Cache)</span>
+                                    </button>
+                                </div>
+
+                                <div style={{ marginTop: '20px', fontSize: '0.85rem', color: 'var(--text-muted-light)', textAlign: 'center' }}>
+                                    <p>Designed for NLCIT Ministry</p>
+                                    <p>&copy; 2024 Sheep Care Project</p>
+                                </div>
                             </div>
                         )}
                     </div>
