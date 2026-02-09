@@ -5,6 +5,7 @@ import { CloseButton } from './ui/CloseButton';
 import { AssetSheep } from './AssetSheep';
 import { BatchAddScheduleModal } from './BatchAddScheduleModal';
 import { Portal } from './ui/Portal';
+import { generateGoogleCalendarUrl } from '../utils/calendarHelper';
 import '../styles/design-tokens.css';
 
 const DAYS = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
@@ -279,6 +280,28 @@ export const ScheduleListModal = ({ onClose }) => {
                                                             <MapPin size={12} />
                                                             {plan.location}
                                                         </span>
+                                                    )}
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    {plan.scheduled_time && (
+                                                        <button
+                                                            className="icon-btn"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const url = generateGoogleCalendarUrl(plan, sheepData);
+                                                                if (url) window.open(url, '_blank');
+                                                            }}
+                                                            title="同步到 Google 日曆"
+                                                            style={{
+                                                                padding: '6px',
+                                                                color: 'var(--palette-blue-action)',
+                                                                background: 'rgba(0,0,0,0.04)',
+                                                                borderRadius: '8px',
+                                                                fontSize: '1em'
+                                                            }}
+                                                        >
+                                                            📅
+                                                        </button>
                                                     )}
                                                 </div>
                                             </div>

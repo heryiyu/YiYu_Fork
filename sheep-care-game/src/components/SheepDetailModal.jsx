@@ -12,6 +12,7 @@ import { Tag } from './ui/Tag';
 import { IconButton, IconButtonGroup } from './ui/IconButton';
 import { Tooltip } from './ui/Tooltip';
 import { Portal } from './ui/Portal';
+import { generateGoogleCalendarUrl } from '../utils/calendarHelper';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
     const [orderedIds, setOrderedIds] = useState(assignedIds);
@@ -563,7 +564,29 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                                     <span className="plan-item-location">{p.location}</span>
                                                                 )}
                                                             </div>
-                                                            <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
+                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                                {p.scheduled_time && (
+                                                                    <div
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            const url = generateGoogleCalendarUrl(p, target);
+                                                                            if (url) window.open(url, '_blank');
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '6px',
+                                                                            color: 'var(--palette-blue-action)',
+                                                                            background: 'rgba(0,0,0,0.04)',
+                                                                            borderRadius: '8px',
+                                                                            fontSize: '1em',
+                                                                            cursor: 'pointer'
+                                                                        }}
+                                                                        title="同步到 Google 日曆"
+                                                                    >
+                                                                        📅
+                                                                    </div>
+                                                                )}
+                                                                <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
+                                                            </div>
                                                         </button>
                                                     ))
                                                 )}
