@@ -167,6 +167,10 @@ const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, 
 // --- Card Component (tag design aligned with SheepListModal.tsx) ---
 const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay = 500 } = {}) => {
     const [longPressTriggered, setLongPressTriggered] = useState(false);
+    const timeout = React.useRef();
+    const target = React.useRef();
+    const isMoved = React.useRef(false); // Track if movement occurred
+    const isTouch = React.useRef(false); // Track if interaction is touch-based
     const startPos = React.useRef({ x: 0, y: 0 });
 
     const start = React.useCallback(
