@@ -488,11 +488,17 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                 </div>
                                                 {!isSleepingState && (
                                                     <div className="status-header-sub">
-                                                        <Heart size={10} fill="currentColor" color="var(--palette-orange-action)" />
-                                                        {target.careLevel || 0}
-                                                        <span style={{ color: '#ddd' }}>|</span>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <Heart size={12} fill="currentColor" color="var(--palette-orange-action)" />
+                                                            {target.careLevel || 0}
+                                                        </span>
+                                                        <span style={{ color: '#ddd', margin: '0 4px' }}>|</span>
                                                         <span style={{ color: target.health < 60 ? 'red' : 'inherit' }}>
-                                                            {Math.ceil(target.health)}%
+                                                            負擔 {Math.ceil(target.health)}%
+                                                        </span>
+                                                        <span style={{ color: '#ddd', margin: '0 4px' }}>|</span>
+                                                        <span>
+                                                            禱告 {currentCount}
                                                         </span>
                                                     </div>
                                                 )}

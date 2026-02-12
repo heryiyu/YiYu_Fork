@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
             const randomBlessing = blessings[Math.floor(Math.random() * blessings.length)];
 
             const messageLines = [
-                `🔔 靈程規劃提醒`,
+                `🔔 認領規劃提醒`,
                 `🐑 小羊姓名：${sheepName}`,
                 `📝 行動：${plan.action}`,
                 `📅 時間：${timeString}`

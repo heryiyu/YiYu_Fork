@@ -1957,7 +1957,7 @@ input[type="range"]::-moz-range-thumb:hover {
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .status-header-action {
