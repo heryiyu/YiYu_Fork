@@ -783,10 +783,11 @@ export const GameProvider = ({ children }) => {
                 }
                 const rawNewHealth = Math.min(100, s.health + 6);
 
-                // Use Centralized Helper to update Status & Type based on new Health
                 const { health, status, type } = calculateSheepState(rawNewHealth, s.status);
 
-                const newCare = s.careLevel + 10;
+                // Prayer now ONLY increases Burden (Health), NOT Care.
+                // Care is gained via completePlan.
+                const newCare = s.careLevel;
 
                 return {
                     ...s, status, health, type, careLevel: newCare,
@@ -799,6 +800,48 @@ export const GameProvider = ({ children }) => {
             return nextState;
         });
     };
+
+    const completePlan = async (planId, sheepId, feedback) => {
+        if (!lineId) return;
+
+        const now = new Date().toISOString();
+
+        // 1. Update DB
+        const { error } = await supabase
+            .from('spiritual_plans')
+            .update({
+                completed_at: now,
+                feedback: feedback // { note: "...", tags: [...] }
+            })
+            .eq('id', planId);
+
+        if (error) {
+            console.error("Failed to complete plan:", error);
+            throw error;
+        }
+
+        // 2. Update Sheep Care Level
+        setSheep(prev => {
+            const next = prev.map(s => {
+                if (s.id !== sheepId) return s;
+
+                // Increase Care Level (e.g. +10)
+                const newCare = (s.careLevel || 0) + 10;
+
+                // Show Message
+                showMessage(`🎉 ${s.name} 感受到你的關愛了！(關愛 +10)`);
+
+                return { ...s, careLevel: newCare };
+            });
+
+            // Save
+            saveToCloud({ sheep: next });
+            return next;
+        });
+
+        notifyScheduleUpdate();
+    };
+
 
     const deleteSheep = async (id) => {
         setSheep(prev => {
@@ -891,7 +934,7 @@ export const GameProvider = ({ children }) => {
             location, updateUserLocation, isInClient, // Exposed
             adoptSheep, updateSheep, updateMultipleSheep, togglePin,
             loginWithLine, loginAsAdmin, logout, // Exposed
-            prayForSheep, deleteSheep, deleteMultipleSheep,
+            prayForSheep, completePlan, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed
             notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
             updateNickname, // Exposed

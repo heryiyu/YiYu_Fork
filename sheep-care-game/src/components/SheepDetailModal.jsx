@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X } from 'lucide-react';
+import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X, Check, Megaphone, Sparkles, Users, HeartHandshake, Flame, BookOpen } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
@@ -104,7 +104,7 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
 import { useIsMobile } from '../hooks/useIsMobile';
 
 export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate } = useGame();
+    const { sheep, updateSheep, prayForSheep, completePlan, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate } = useGame();
     const confirm = useConfirm();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
@@ -121,13 +121,17 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const [tempPlan, setTempPlan] = useState({ name: '', time: '', location: '', content: '' });
     const [reminderOffset, setReminderOffset] = useState(0); // 0 = On time, 15 = 15m before, -1 = No reminder
 
+    // Check List State
+    const [completionData, setCompletionData] = useState({ note: '', tags: [] });
+    const FEEDBACK_TAGS = ['成功接觸', '反應良好', '參加聚會', '決志禱告', '願意受洗'];
+
     const [planActionLoading, setPlanActionLoading] = useState(false);
 
     // Animation State
     const [isPrayingAnim, setIsPrayingAnim] = useState(false);
 
-    // Tab State: 'BASIC' | 'PLAN'
-    const [activeTab, setActiveTab] = useState('BASIC');
+    // Tab State: 'DASHBOARD' | 'PLAN' | 'EFFECTS' | 'SETTINGS'
+    const [activeTab, setActiveTab] = useState('DASHBOARD');
     const [localMsg, setLocalMsg] = useState('');
     const [showTagManager, setShowTagManager] = useState(false);
 
@@ -156,6 +160,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
             // Fetch remote plans
             fetchPlans();
             setViewMode('LIST');
+            setActiveTab('DASHBOARD'); // Reset to Dashboard on open
         }
     }, [target?.id]);
 
@@ -339,6 +344,52 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         setViewMode('EDIT');
     };
 
+    const handlePlanClick = (plan) => {
+        if (plan.completed_at) {
+            setCompletionData({
+                note: plan.feedback?.note || '',
+                tags: plan.feedback?.tags || [],
+                completedAt: plan.completed_at
+            });
+            setViewMode('RESULT');
+        } else {
+            openEditPlan(plan);
+        }
+    };
+
+    const openCompletePlan = (plan) => {
+        setEditingPlanId(plan.id);
+        setCompletionData({ note: '', tags: [] });
+        setViewMode('COMPLETE');
+    };
+
+    const handleCompleteSubmit = async () => {
+        if (!editingPlanId) return;
+        setPlanActionLoading(true);
+        try {
+            await completePlan(editingPlanId, target.id, completionData);
+            notifyScheduleUpdate();
+            await fetchPlans();
+            setViewMode('LIST');
+            setEditingPlanId(null);
+        } catch (error) {
+            alert('提交失敗: ' + error.message);
+        } finally {
+            setPlanActionLoading(false);
+        }
+    };
+
+    const toggleFeedbackTag = (tag) => {
+        setCompletionData(prev => {
+            const current = prev.tags;
+            if (current.includes(tag)) {
+                return { ...prev, tags: current.filter(t => t !== tag) };
+            } else {
+                return { ...prev, tags: [...current, tag] };
+            }
+        });
+    };
+
     // Helper to display time
     const formatDisplayTime = (isoString) => {
         if (!isoString) return '';
@@ -355,6 +406,33 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         updateSheep(target.id, payload);
     };
 
+    // Stamp System
+    const STAMPS = [
+        { id: 'evangelism', label: '參與過佈道活動', icon: Megaphone, color: '#FF6B6B' },
+        { id: 'sunday_service', label: '參與過特會/主日', icon: Sparkles, color: '#FFD93D' },
+        { id: 'small_group', label: '參與過小組', icon: Users, color: '#4D96FF' },
+        { id: 'decision_prayer', label: '決志禱告', icon: HeartHandshake, color: '#FF4D94' },
+        { id: 'altar_rpg', label: '築壇RPG', icon: Flame, color: '#FF8C42' },
+        { id: 'stable_devotion', label: '穩定靈修', icon: BookOpen, color: '#6BCB77' },
+    ];
+
+    const handleStampToggle = (stampId) => {
+        if (!target) return;
+        const currentStamps = target.stamps || {};
+        const isStamped = !!currentStamps[stampId];
+
+        const newStamps = { ...currentStamps };
+
+        if (isStamped) {
+            delete newStamps[stampId]; // Toggle off
+        } else {
+            newStamps[stampId] = true; // Toggle on
+            // Optional: Haptic/Sound effect here
+        }
+
+        updateSheep(target.id, { stamps: newStamps });
+    };
+
     return (
         <Portal>
             <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="sheep-detail-title">
@@ -368,10 +446,10 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                     <div className="modal-form sheep-detail-modal-form">
                         <div className="modal-tabs">
                             <button
-                                className={`modal-tab ${activeTab === 'BASIC' ? 'modal-tab-active' : ''}`}
-                                onClick={() => setActiveTab('BASIC')}
+                                className={`modal-tab ${activeTab === 'DASHBOARD' ? 'modal-tab-active' : ''}`}
+                                onClick={() => setActiveTab('DASHBOARD')}
                             >
-                                基本資料
+                                總覽
                             </button>
                             <button
                                 className={`modal-tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''}`}
@@ -380,10 +458,136 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                             >
                                 認領規劃
                             </button>
+                            <button
+                                className={`modal-tab ${activeTab === 'EFFECTS' ? 'modal-tab-active' : ''}`}
+                                data-tab="effects"
+                                onClick={() => setActiveTab('EFFECTS')}
+                            >
+                                認領果效
+                            </button>
+                            <button
+                                className={`modal-tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''}`}
+                                onClick={() => setActiveTab('SETTINGS')}
+                            >
+                                自訂/資料
+                            </button>
                         </div>
 
                         <div className="sheep-detail-scroll">
-                            {activeTab === 'BASIC' && (
+                            {activeTab === 'DASHBOARD' && (
+                                <div className="dashboard-layout">
+                                    {/* 1. Compact Status Header */}
+                                    <div className="status-header-compact">
+                                        <div className="status-header-left">
+                                            <div className="status-header-avatar">
+                                                {isSleepingState ? '🪦' : (target.health >= 80 ? '💪' : (target.status === 'sick' ? '🤒' : '🐑'))}
+                                            </div>
+                                            <div className="status-header-info">
+                                                <div className="status-header-main">
+                                                    {isSleepingState ? '沉睡中' : `${getStatusText(target.status, target.health)}`}
+                                                </div>
+                                                {!isSleepingState && (
+                                                    <div className="status-header-sub">
+                                                        <Heart size={10} fill="currentColor" color="var(--palette-orange-action)" />
+                                                        {target.careLevel || 0}
+                                                        <span style={{ color: '#ddd' }}>|</span>
+                                                        <span style={{ color: target.health < 60 ? 'red' : 'inherit' }}>
+                                                            {Math.ceil(target.health)}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="status-header-action">
+                                            <Tooltip content={isSleepingState ? '喚醒禱告' : '認領禱告'} side="left">
+                                                <button
+                                                    className={`pray-btn-compact ${isPrayingAnim ? 'praying' : ''}`}
+                                                    onClick={handlePray}
+                                                    disabled={!isSleepingState && isFull && !isAdmin}
+                                                >
+                                                    {isPrayingAnim ? '🙏 禱告中...' : '🙏 為他禱告'}
+                                                </button>
+                                            </Tooltip>
+                                        </div>
+                                    </div>
+
+                                    {localMsg && (
+                                        <div className="modal-local-msg" style={{ margin: '0 8px' }}>
+                                            {localMsg}
+                                        </div>
+                                    )}
+
+                                    {/* 2. Hero Note Section */}
+                                    <div className="note-hero-container">
+                                        <div className="note-hero">
+                                            <div className="note-hero-label">
+                                                📌 牧養筆記 / 代禱事項
+                                            </div>
+                                            <textarea
+                                                className="note-hero-input"
+                                                value={note}
+                                                onChange={(e) => setNote(e.target.value)}
+                                                onBlur={() => handleBasicAutoSave('note', note)}
+                                                placeholder={isSleepingState ? "為他寫下禱告..." : "他在這，有什麼需要代禱的嗎？..."}
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Next Plan Ticket */}
+                                    <div className="plan-ticket-container">
+                                        <div className="section-label">
+                                            <Calendar size={14} /> 下一步行動
+                                        </div>
+
+                                        {plans.filter(p => !p.completed_at).length > 0 ? (
+                                            (() => {
+                                                const nextPlan = plans.filter(p => !p.completed_at)[0];
+                                                const d = nextPlan.scheduled_time ? new Date(nextPlan.scheduled_time) : null;
+                                                const dateStr = d ? `${d.getMonth() + 1}/${d.getDate()}` : '--/--';
+                                                const timeStr = d ? d.toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit' }) : '';
+
+                                                return (
+                                                    <div className="plan-ticket">
+                                                        <div className="ticket-left">
+                                                            <div className="ticket-date">{dateStr}</div>
+                                                            <div className="ticket-time">{timeStr}</div>
+                                                        </div>
+                                                        <div className="ticket-right">
+                                                            <div className="ticket-content">
+                                                                <div>
+                                                                    <div className="ticket-action">{nextPlan.action}</div>
+                                                                    {nextPlan.location && <div className="ticket-sub">📍 {nextPlan.location}</div>}
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                className="ticket-btn-complete"
+                                                                onClick={() => openCompletePlan(nextPlan)}
+                                                            >
+                                                                <Check size={14} strokeWidth={3} /> 完成
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()
+                                        ) : (
+                                            <div
+                                                className="plan-add-dashed"
+                                                onClick={() => {
+                                                    setActiveTab('PLAN');
+                                                    openAddPlan();
+                                                }}
+                                            >
+                                                <Plus size={20} />
+                                                <span>新增認領規劃</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'SETTINGS' && (
                                 <div className="sheep-detail-basic">
                                     <div className="form-group">
                                         <label>{isSleepingState ? '沉睡紀錄 (姓名)' : '姓名'}</label>
@@ -395,17 +599,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                             maxLength={10}
                                             placeholder="名字..."
                                         />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>狀態</label>
-                                        <div className="modal-status-box" style={{ color: isSleepingState ? 'var(--text-muted)' : (target.health >= 80 ? 'var(--palette-blue-action)' : (target.status === 'healthy' ? 'var(--palette-deep-green)' : 'var(--palette-danger)')) }}>
-                                            <div>
-                                                {getStatusText(target.status, target.health)}
-                                                {!isSleepingState && <span style={{ marginLeft: '10px' }}>負擔: {Math.ceil(target.health)}%</span>}
-                                                {!isSleepingState && <span style={{ marginLeft: '10px', color: 'var(--palette-orange-action)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Heart size={14} strokeWidth={2} fill="currentColor" /> 關愛: {target.careLevel || 0}</span>}
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div className="form-group">
@@ -471,46 +664,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                         </div>
                                     )}
 
-                                    <div className="form-group">
-                                        <label>備註 (狀況需要)</label>
-                                        <textarea
-                                            value={note}
-                                            onChange={(e) => setNote(e.target.value)}
-                                            onBlur={() => handleBasicAutoSave('note', note)}
-                                            rows={3}
-                                            placeholder={isSleepingState ? "寫下對他的負擔..." : "記錄這隻小羊的狀況..."}
-                                        />
-                                    </div>
-
-                                    <Tooltip content={isSleepingState ? '喚醒禱告' : '認領禱告'} side="top">
-                                        <button
-                                            className={`pray-action-btn ${isPrayingAnim ? 'praying' : ''}`}
-                                            onClick={handlePray}
-                                            disabled={!isSleepingState && isFull && !isAdmin}
-                                            style={{
-                                                opacity: (!isSleepingState && isFull && !isAdmin) ? 0.6 : 1,
-                                                cursor: (!isSleepingState && isFull && !isAdmin) ? 'not-allowed' : 'pointer',
-                                                position: 'relative', // Ensure particles position correctly
-                                                overflow: 'visible'   // Allow particles to float out
-                                            }}
-                                        >
-                                            {buttonText}
-                                            {isPrayingAnim && (
-                                                <>
-                                                    <span className="pray-particle p1">🙏</span>
-                                                    <span className="pray-particle p2">❤️</span>
-                                                    <span className="pray-particle p3">✨</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    </Tooltip>
-
-                                    {localMsg && (
-                                        <div className="modal-local-msg">
-                                            {localMsg}
-                                        </div>
-                                    )}
-
                                     <div className="modal-hint">
                                         (內容將自動儲存)
                                     </div>
@@ -519,7 +672,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
                             {activeTab === 'PLAN' && (
                                 <div className="spiritual-plan-container">
-                                    {viewMode === 'LIST' ? (
+                                    {viewMode === 'LIST' && (
                                         <>
                                             <div className="plan-list-header">
                                                 <Tooltip content="新增認領規劃" side="bottom">
@@ -551,7 +704,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                             key={p.id}
                                                             type="button"
                                                             className="plan-item"
-                                                            onClick={() => openEditPlan(p)}
+                                                            onClick={() => handlePlanClick(p)}
                                                         >
                                                             <div className="plan-item-content">
                                                                 <span className="plan-item-action">{p.action}</span>
@@ -585,6 +738,26 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                                         📅
                                                                     </div>
                                                                 )}
+                                                                {!p.completed_at && (
+                                                                    <div
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            openCompletePlan(p);
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '6px',
+                                                                            color: 'var(--palette-deep-green)',
+                                                                            background: 'rgba(0,0,0,0.04)',
+                                                                            borderRadius: '8px',
+                                                                            fontSize: '1em',
+                                                                            cursor: 'pointer'
+                                                                        }}
+                                                                        title="完成並填寫果效"
+                                                                    >
+                                                                        <Check size={18} strokeWidth={2.5} />
+                                                                    </div>
+                                                                )}
+                                                                {p.completed_at && <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>已完成</span>}
                                                                 <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
                                                             </div>
                                                         </button>
@@ -592,7 +765,9 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                 )}
                                             </div>
                                         </>
-                                    ) : (
+                                    )}
+
+                                    {viewMode === 'EDIT' && (
                                         <div className="spiritual-plan-form">
                                             <div className="form-group">
                                                 <label>📝 行動</label>
@@ -679,15 +854,166 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {viewMode === 'COMPLETE' && (
+                                        <div className="spiritual-plan-form">
+                                            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效</h3>
+
+                                            <div className="form-group">
+                                                <label>💭 心得紀錄</label>
+                                                <textarea
+                                                    value={completionData.note}
+                                                    onChange={(e) => setCompletionData({ ...completionData, note: e.target.value })}
+                                                    rows={5}
+                                                    placeholder="接觸狀況如何？小羊的反應？有無邀約或決志？"
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>🏷️ 狀況標記 (可複選)</label>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                    {FEEDBACK_TAGS.map(tag => {
+                                                        const active = completionData.tags.includes(tag);
+                                                        return (
+                                                            <button
+                                                                key={tag}
+                                                                type="button"
+                                                                onClick={() => toggleFeedbackTag(tag)}
+                                                                style={{
+                                                                    padding: '6px 12px',
+                                                                    borderRadius: '20px',
+                                                                    border: active ? '1px solid var(--palette-blue-action)' : '1px solid #ddd',
+                                                                    background: active ? 'var(--palette-blue-action)' : '#f9f9f9',
+                                                                    color: active ? '#fff' : '#666',
+                                                                    fontSize: '0.9rem',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                            >
+                                                                {tag}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            <div className="spiritual-plan-form-actions">
+                                                <button
+                                                    type="button"
+                                                    className="modal-btn-secondary"
+                                                    onClick={() => setViewMode('LIST')}
+                                                    disabled={planActionLoading}
+                                                >
+                                                    取消
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="modal-btn-primary"
+                                                    onClick={handleCompleteSubmit}
+                                                    disabled={planActionLoading}
+                                                >
+                                                    {planActionLoading ? '處理中...' : '完成紀錄'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {viewMode === 'RESULT' && (
+                                        <div className="spiritual-plan-form">
+                                            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效 (已完成)</h3>
+
+                                            <div className="form-group">
+                                                <label>📅 完成時間</label>
+                                                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '8px', color: '#666' }}>
+                                                    {formatDisplayTime(completionData.completedAt)}
+                                                </div>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>💭 心得紀錄</label>
+                                                <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', minHeight: '80px', whiteSpace: 'pre-wrap' }}>
+                                                    {completionData.note || '無心得紀錄'}
+                                                </div>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>🏷️ 狀況標記</label>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                    {completionData.tags && completionData.tags.length > 0 ? (
+                                                        completionData.tags.map(tag => (
+                                                            <span
+                                                                key={tag}
+                                                                style={{
+                                                                    padding: '4px 10px',
+                                                                    borderRadius: '20px',
+                                                                    background: 'var(--palette-blue-action)',
+                                                                    color: '#fff',
+                                                                    fontSize: '0.9rem'
+                                                                }}
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))
+                                                    ) : (
+                                                        <span style={{ color: '#999' }}>無標記</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="spiritual-plan-form-actions">
+                                                <button
+                                                    type="button"
+                                                    className="modal-btn-primary"
+                                                    onClick={() => setViewMode('LIST')}
+                                                >
+                                                    返回列表
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'EFFECTS' && (
+                                <div className="spiritual-plan-container">
+                                    <div className="stamp-grid">
+                                        {STAMPS.map(stamp => {
+                                            const isStamped = target.stamps && target.stamps[stamp.id];
+                                            const Icon = stamp.icon;
+                                            return (
+                                                <div
+                                                    key={stamp.id}
+                                                    className={`stamp-card ${isStamped ? 'stamped' : ''}`}
+                                                    onClick={() => handleStampToggle(stamp.id)}
+                                                >
+                                                    {isStamped && (
+                                                        <div className="stamp-mark">
+                                                            {stamp.id === 'decision_prayer' || stamp.id === 'stable_devotion' ? 'AMEN' : 'DONE'}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="stamp-icon-placeholder">
+                                                        <Icon size={24} strokeWidth={isStamped ? 2.5 : 2} />
+                                                    </div>
+                                                    <span className="stamp-label">{stamp.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <ModalHint>
+                                        點擊格子即可蓋章，再次點擊可取消。
+                                    </ModalHint>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
-            {showTagManager && (
-                <TagManagerModal onClose={() => setShowTagManager(false)} />
-            )}
-        </Portal>
+            {
+                showTagManager && (
+                    <TagManagerModal onClose={() => setShowTagManager(false)} />
+                )
+            }
+        </Portal >
     );
 };
