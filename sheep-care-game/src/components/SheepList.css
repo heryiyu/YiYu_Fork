@@ -49,10 +49,12 @@
     box-shadow: var(--card-inner-shadow);
     transform: scale(1);
   }
+
   40% {
     box-shadow: 0 0 0 4px var(--palette-blue-action), 0 0 16px color-mix(in srgb, var(--palette-blue-action) 50%, transparent), var(--card-inner-shadow);
     transform: scale(1.04);
   }
+
   100% {
     box-shadow: var(--card-inner-shadow);
     transform: scale(1);
@@ -60,7 +62,7 @@
 }
 
 /* Reorder: smooth position transition for card wrapper */
-.dock-scroll-area > div {
+.dock-scroll-area>div {
   transition: transform 0.25s ease;
 }
 
@@ -77,6 +79,7 @@
   from {
     width: var(--ph-width, 0);
   }
+
   to {
     width: 0;
     min-width: 0;
@@ -90,7 +93,7 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--palette-blue-action) 30%, transparent), var(--card-inner-shadow);
   }
 
-  .dock-scroll-area > div {
+  .dock-scroll-area>div {
     transition: none;
   }
 
@@ -299,10 +302,10 @@
  * Do NOT change - intentional for "follow and find" visual distinction.
  */
 .find-btn {
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -310,12 +313,35 @@
   color: var(--text-muted-light);
   flex-shrink: 0;
   transition: background 0.2s, color 0.2s, opacity 0.2s;
+  padding: 0;
+  /* Increase touch target with pseudo-element */
+  position: relative;
+}
+
+.find-btn::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
 }
 
 .find-btn:hover {
   background: var(--icon-btn-hover-bg);
   color: var(--text-muted);
   opacity: 1;
+}
+
+/* Ensure visibility on mobile */
+@media (max-width: 480px) {
+  .find-btn {
+    opacity: 1 !important;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
 }
 
 .find-btn:focus,
@@ -430,7 +456,8 @@
 .dock-toolbar-search-wrap--expanded {
   flex: 1 1 100%;
   min-width: 200px;
-  width: 40%;;
+  width: 40%;
+  ;
   max-width: 320px;
 }
 
@@ -471,6 +498,7 @@
     width: 90px;
     font-size: 16px;
   }
+
   .dock-toolbar-search-wrap--expanded {
     min-width: 85%;
   }
