@@ -448,6 +448,57 @@
   overflow-x: hidden;
 }
 
+/* Fix for Mobile Tabs Wrapping */
+.modal-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.modal-tab {
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.modal-tab:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+}
+
+.modal-tab-active {
+  background: var(--palette-orange-action) !important;
+  color: white !important;
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Mobile Specific Adjustments for Tabs */
+@media (max-width: 480px) {
+  .modal-tabs {
+    gap: 4px;
+    justify-content: space-between;
+  }
+
+  .modal-tab {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+}
+
 /* Tabs sit above the scrollable area */
 .sheep-detail-scroll {
   flex: 1;
