@@ -439,7 +439,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                 <div className="modal-card" ref={modalRef} onClick={(e) => e.stopPropagation()}>
                     {/* ... content ... */}
                     <div className="modal-header">
-                        <h3 id="sheep-detail-title">{isSleepingState ? '🪦 沉睡紀錄' : '📝 小羊資料'}</h3>
+                        <h3 id="sheep-detail-title">{isSleepingState ? `🪦 沉睡紀錄 (${target.name})` : `📝 ${target.name} 的資料`}</h3>
                         <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                     </div>
 
