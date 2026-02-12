@@ -301,23 +301,25 @@
  * 5% smaller (15px), 20deg rotation. See SheepList.jsx comment.
  * Do NOT change - intentional for "follow and find" visual distinction.
  */
+/* Find Button (Footprint) */
 .find-btn {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-icon-btn);
   color: var(--text-muted-light);
+  /* Subtle color */
   flex-shrink: 0;
   transition: background 0.2s, color 0.2s, opacity 0.2s;
   padding: 0;
-  /* Increase touch target with pseudo-element */
   position: relative;
 }
 
+/* Enlarge touch target without affecting visual layout */
 .find-btn::after {
   content: '';
   position: absolute;
@@ -333,14 +335,20 @@
   opacity: 1;
 }
 
-/* Ensure visibility on mobile */
+/* Ensure visibility on mobile but keep it small */
 @media (max-width: 480px) {
   .find-btn {
+    opacity: 0.6 !important;
+    /* Semi-transparent unless interacted */
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  .find-btn:active,
+  .find-btn:focus {
     opacity: 1 !important;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
   }
 }
 
