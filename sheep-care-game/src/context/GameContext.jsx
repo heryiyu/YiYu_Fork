@@ -244,7 +244,7 @@ export const GameProvider = ({ children }) => {
             // HEAL ON SAVE: Force merge with defaults to ensure keys like maxVisibleSheep are never lost.
             // Even if state was partial, this restores structure.
             const currentSettings = {
-                maxVisibleSheep: 20, // Default Safety Net
+                maxVisibleSheep: 15, // Default Safety Net (Consistent with initState)
                 notify: false,
                 hiddenFilters: [],
                 ...rawSettings

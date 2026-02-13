@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X, Check, Megaphone, Sparkles, Users, HeartHandshake, Flame, BookOpen } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useGame } from '../context/GameContext';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import { calculateSheepState, isSleeping, getAwakeningProgress } from '../utils/gameLogic';
@@ -134,6 +135,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const [activeTab, setActiveTab] = useState('DASHBOARD');
     const [localMsg, setLocalMsg] = useState('');
     const [showTagManager, setShowTagManager] = useState(false);
+    const [showWinningModal, setShowWinningModal] = useState(false);
 
     // Fetch Plans from DB
     const fetchPlans = async () => {
@@ -428,6 +430,15 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         } else {
             newStamps[stampId] = true; // Toggle on
             // Optional: Haptic/Sound effect here
+
+            // Trigger confetti (Enabled for ALL stamps)
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                zIndex: 9999
+            });
+            setShowWinningModal(true);
         }
 
         updateSheep(target.id, { stamps: newStamps });
@@ -1020,6 +1031,48 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                     <TagManagerModal onClose={() => setShowTagManager(false)} />
                 )
             }
+            {showWinningModal && (
+                <div
+                    className="winning-modal-overlay"
+                    onClick={() => setShowWinningModal(false)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="得獎通知"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        zIndex: 10000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        backdropFilter: 'blur(2px)'
+                    }}
+                >
+                    <div
+                        className="winning-modal-content"
+                        style={{
+                            transform: 'scale(1)',
+                            animation: 'modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            pointerEvents: 'none' // Let clicks pass through to close
+                        }}
+                    >
+                        <img
+                            src="/assets/sheep/winning_sheep.png"
+                            alt="Winning Sheep"
+                            style={{
+                                maxWidth: '80vw',
+                                maxHeight: '60vh',
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </Portal >
     );
 };
