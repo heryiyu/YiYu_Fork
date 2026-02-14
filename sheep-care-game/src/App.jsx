@@ -21,6 +21,7 @@ import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react'
 function App() {
   const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather, showIntroVideo, markIntroWatched } = useGame();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   // showList removed - permanent dock
   const [showSettings, setShowSettings] = useState(false);
@@ -30,6 +31,7 @@ function App() {
   // Reset state when user changes
   useEffect(() => {
     setSelectedSheepId(null);
+    setSelectedPlanId(null);
     setShowGuide(false);
     setShowSettings(false);
     setShowSchedule(false);
@@ -158,7 +160,11 @@ function App() {
       {selectedSheepId && (
         <SheepDetailModal
           selectedSheepId={selectedSheepId}
-          onClose={() => setSelectedSheepId(null)}
+          initialPlanId={selectedPlanId}
+          onClose={() => {
+            setSelectedSheepId(null);
+            setSelectedPlanId(null);
+          }}
         />
       )}
 
@@ -171,7 +177,13 @@ function App() {
       )}
 
       {showSchedule && (
-        <ScheduleListModal onClose={() => setShowSchedule(false)} />
+        <ScheduleListModal
+          onClose={() => setShowSchedule(false)}
+          onSelectSheep={(sheepId, planId) => {
+            setSelectedSheepId(sheepId);
+            if (planId) setSelectedPlanId(planId);
+          }}
+        />
       )}
 
       {showIntroVideo && (

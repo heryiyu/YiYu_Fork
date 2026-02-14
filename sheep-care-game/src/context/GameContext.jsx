@@ -52,8 +52,12 @@ export const GameProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null); // Line Name
     const [nickname, setNickname] = useState(null); // User Nickname
     const [userAvatarUrl, setUserAvatarUrl] = useState(null); // LINE profile picture (login-time)
-    const [lineId, setLineId] = useState(null); // Line User ID
+    const [lineId, setLineId] = useState(null); // Line User ID (Text)
+    const [userId, setUserId] = useState(null); // Internal DB User ID (UUID)
     const [isLoading, setIsLoading] = useState(true);
+
+    // ...
+
     const [isInClient, setIsInClient] = useState(false); // New state to track if in LINE Client
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -172,6 +176,7 @@ export const GameProvider = ({ children }) => {
                 const { user, sheep: loadedSheep } = data;
 
                 setSheep(loadedSheep);
+                setUserId(user.id); // Store Internal UUID
                 // Use nickname from DB; fallback to name or LINE displayName
                 const effectiveNickname = user.nickname?.trim() || user.name?.trim() || displayName;
                 setNickname(effectiveNickname);
@@ -247,6 +252,7 @@ export const GameProvider = ({ children }) => {
                 maxVisibleSheep: 15, // Default Safety Net (Consistent with initState)
                 notify: false,
                 hiddenFilters: [],
+                stampLabels: {},
                 ...rawSettings
             };
 
@@ -318,7 +324,8 @@ export const GameProvider = ({ children }) => {
             skinId: skinId || null,
             x: Math.random() * 60 + 20, y: Math.random() * 60 + 20,
             angle: Math.random() * Math.PI * 2, direction: 1,
-            user_id: lineId, // Essential for DB
+            angle: Math.random() * Math.PI * 2, direction: 1,
+            user_id: userId, // Essential for DB (UUID)
         };
 
         try {
@@ -619,7 +626,7 @@ export const GameProvider = ({ children }) => {
             };
 
             // Using KeepAlive fetch for reliable save
-            gameState.saveGameSync(lineId, currentSheep, currentProfile);
+            gameState.saveGameSync(lineId, stateRef.current.userId, currentSheep, currentProfile);
         };
 
         const handleSave = () => {
@@ -806,9 +813,9 @@ export const GameProvider = ({ children }) => {
 
         const now = new Date().toISOString();
 
-        // 1. Update DB
+        // 1. Update DB (schedule_participants)
         const { error } = await supabase
-            .from('spiritual_plans')
+            .from('schedule_participants')
             .update({
                 completed_at: now,
                 feedback: feedback // { note: "...", tags: [...] }
@@ -839,6 +846,26 @@ export const GameProvider = ({ children }) => {
             return next;
         });
 
+        notifyScheduleUpdate();
+    };
+
+    const updatePlanFeedback = async (planId, feedback) => {
+        console.log("updatePlanFeedback called with:", planId, feedback, "lineId:", lineId);
+        if (!lineId) {
+            console.error("Missing lineId in updatePlanFeedback");
+            return;
+        }
+        const { error } = await supabase
+            .from('schedule_participants')
+            .update({
+                feedback: feedback
+            })
+            .eq('id', planId);
+
+        if (error) {
+            console.error("Failed to update plan feedback:", error);
+            throw error;
+        }
         notifyScheduleUpdate();
     };
 
@@ -909,22 +936,179 @@ export const GameProvider = ({ children }) => {
         return ok;
     };
 
-    const fetchWeeklySchedules = async () => {
-        if (!lineId) return [];
+
+
+
+    // --- Schedule Management ---
+
+    const addSchedule = async (scheduleData, participantSheepIds) => {
+        if (!userId) return null;
+
         try {
+            // 1. Create Schedule
+            const { data: schedule, error: scheduleError } = await supabase
+                .from('schedules')
+                .insert([{
+                    created_by: userId,
+                    action: scheduleData.title || '未命名行動',
+                    scheduled_time: scheduleData.scheduled_time,
+                    location: scheduleData.location,
+                    content: scheduleData.content,
+                    notify_at: scheduleData.notify_at,
+                    reminder_offset: scheduleData.reminder_offset,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+
+            if (scheduleError) throw scheduleError;
+
+            // 2. Add Participants
+            if (participantSheepIds && participantSheepIds.length > 0) {
+                const participantsPayload = participantSheepIds.map(sheepId => ({
+                    schedule_id: schedule.id,
+                    sheep_id: sheepId,
+                    created_at: new Date().toISOString()
+                }));
+
+                const { error: participantsError } = await supabase
+                    .from('schedule_participants')
+                    .insert(participantsPayload);
+
+                if (participantsError) throw participantsError;
+            }
+
+            notifyScheduleUpdate();
+            return schedule;
+        } catch (error) {
+            console.error("Failed to add schedule:", error);
+            showMessage("❌ 新增行程失敗");
+            return null;
+        }
+    };
+
+    const updateSchedule = async (scheduleId, updates) => {
+        if (!userId) return false;
+        try {
+            // Extract title to map to 'action'
+            const { title, ...rest } = updates;
+
+            const validUpdates = { ...rest };
+            if (title !== undefined) {
+                validUpdates.action = title.trim() || '未命名行動';
+            }
+
+            const { error } = await supabase
+                .from('schedules')
+                .update({ ...validUpdates, created_by: userId }) // Ensure owner is set for legacy data
+                .eq('id', scheduleId);
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to update schedule:", error);
+            showMessage("❌ 更新行程失敗");
+            return false;
+        }
+    };
+
+    const deleteSchedule = async (scheduleId) => {
+        if (!lineId) return false;
+        try {
+            // Delete participants first (manual cascade for safety)
+            await supabase.from('schedule_participants').delete().eq('schedule_id', scheduleId);
+
+            const { error } = await supabase
+                .from('schedules')
+                .delete()
+                .eq('id', scheduleId);
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to delete schedule:", error);
+            showMessage("❌ 刪除行程失敗");
+            return false;
+        }
+    };
+
+    const addParticipantToSchedule = async (scheduleId, sheepId) => {
+        if (!lineId) return false;
+        try {
+            const { error } = await supabase
+                .from('schedule_participants')
+                .insert([{
+                    schedule_id: scheduleId,
+                    sheep_id: sheepId,
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to add participant:", error); // Keep this log
+            return false;
+        }
+    };
+
+    const removeParticipantFromSchedule = async (scheduleId, sheepId) => {
+        if (!lineId) return false;
+        try {
+            const { error } = await supabase
+                .from('schedule_participants')
+                .delete()
+                .match({ schedule_id: scheduleId, sheep_id: sheepId });
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to remove participant:", error); // Keep this log
+            return false;
+        }
+    };
+
+    const fetchWeeklySchedules = async () => {
+        if (!userId) return []; // Use userId
+        try {
+            // New Query: Fetch Schedules + Participants
+            // We do NOT join sheep details here because 'sheep' table schema is complex (visuals in json).
+            // Instead, we rely on the 'sheep' context state which is already loaded and parsed.
             const { data, error } = await supabase
-                .from('spiritual_plans')
-                .select('*')
-                .eq('user_id', lineId)
+                .from('schedules')
+                .select(`
+                    *,
+                    schedule_participants (
+                        *
+                    )
+                `)
+                // .eq('created_by', lineId) // Removed: created_by may be empty. Use JS filter.
                 .order('scheduled_time', { ascending: true });
 
             if (error) throw error;
-            return data || [];
+
+            // Filter: Created by me OR contains my sheep
+            // Since sheep state contains only my sheep, we can use it.
+            const mySheepIds = new Set(sheep.map(s => s.id));
+            const filtered = (data || []).filter(s => {
+                // 1. Explicit Owner (Future)
+                if (s.created_by === userId) return true; // Explicit Owner (UUID)
+                // 2. Participant Check (Legacy/Current)
+                const participants = s.schedule_participants || [];
+                return participants.some(p => mySheepIds.has(p.sheep_id));
+            });
+
+            return filtered;
         } catch (error) {
             console.error('Error fetching weekly schedules:', error);
             return [];
         }
     };
+
+
 
     return (
         <GameContext.Provider value={{
@@ -959,9 +1143,17 @@ export const GameProvider = ({ children }) => {
             notifyScheduleUpdate, // Exposed
             focusedSheepId,
             findSheep,
-            clearFocus
+            clearFocus,
+            updatePlanFeedback, // Exposed
+            addSchedule, // Exposed
+            updateSchedule, // Exposed
+            deleteSchedule, // Exposed
+            addParticipantToSchedule, // Exposed
+            removeParticipantFromSchedule // Exposed
         }}>
             {children}
         </GameContext.Provider>
     );
 };
+
+

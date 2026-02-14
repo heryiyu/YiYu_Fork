@@ -952,9 +952,16 @@
   transition: all 0.2s;
 }
 
-.plan-result-tag:hover {
-  border-color: #dccbb5;
-  background: #faf0d8;
+@media (hover: hover) {
+  .plan-result-tag:hover {
+    border-color: #dccbb5;
+    background: #faf0d8;
+  }
+}
+
+.plan-result-tag:active {
+  background: #f0e6d0;
+  transform: scale(0.95);
 }
 
 .plan-item:active {
@@ -992,9 +999,15 @@
   opacity: 0.6;
 }
 
-.plan-item:hover .plan-item-chevron {
-  color: var(--palette-blue-action);
-  opacity: 1;
+@media (hover: hover) {
+  .plan-item:hover .plan-item-chevron {
+    color: var(--palette-blue-action);
+    opacity: 1;
+  }
+}
+
+.plan-item:active {
+  background: var(--bg-snow);
 }
 
 .plan-list-empty {
@@ -2030,9 +2043,16 @@ input[type="range"]::-moz-range-thumb:hover {
   gap: 4px;
 }
 
-.pray-btn-compact:hover {
-  background: #fff0e0;
-  border-color: #ffdcb0;
+@media (hover: hover) {
+  .pray-btn-compact:hover {
+    background: #fff0e0;
+    border-color: #ffdcb0;
+  }
+}
+
+.pray-btn-compact:active {
+  background: #ffe0c0;
+  transform: scale(0.95);
 }
 
 .pray-btn-compact:disabled {
@@ -2115,9 +2135,16 @@ input[type="range"]::-moz-range-thumb:hover {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.plan-ticket:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+@media (hover: hover) {
+  .plan-ticket:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.plan-ticket:active {
+  transform: translateY(0);
+  background: #fafafa;
 }
 
 .plan-ticket::before,
@@ -2215,9 +2242,16 @@ input[type="range"]::-moz-range-thumb:hover {
   gap: 4px;
 }
 
-.ticket-btn-complete:hover {
-  background: #c8e6c9;
-  transform: scale(1.05);
+@media (hover: hover) {
+  .ticket-btn-complete:hover {
+    background: #c8e6c9;
+    transform: scale(1.05);
+  }
+}
+
+.ticket-btn-complete:active {
+  background: #a5d6a7;
+  transform: scale(0.95);
 }
 
 .plan-add-dashed {

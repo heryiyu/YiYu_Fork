@@ -1,0 +1,329 @@
+/* --- Plan Detail Modal & Mobile Optimization --- */
+
+.nested-plan-detail-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-card);
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.plan-detail-modal-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--palette-orange-action);
+    color: #fff;
+    position: relative;
+    flex-shrink: 0;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.plan-detail-header-btn {
+    color: #fff !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.plan-detail-header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.plan-detail-header-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+}
+
+.plan-detail-modal-body {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+    background: var(--bg-card);
+}
+
+.plan-detail-form-container {
+    padding: 20px;
+}
+
+.plan-detail-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+}
+
+.plan-detail-form-group {
+    margin-bottom: 16px;
+}
+
+.plan-detail-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.plan-detail-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.plan-detail-input,
+.plan-detail-select,
+.plan-detail-textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-snow);
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+/* iOS prevent auto-zoom on focus by using 16px */
+@media (max-width: 768px) {
+
+    .plan-detail-input,
+    .plan-detail-select,
+    .plan-detail-textarea {
+        font-size: 16px !important;
+    }
+}
+
+.plan-detail-input:focus,
+.plan-detail-select:focus,
+.plan-detail-textarea:focus {
+    outline: none;
+    border-color: var(--palette-blue-action);
+    background: #fff;
+}
+
+.plan-participant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.plan-participant-title {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.plan-participant-add-btn {
+    background: var(--palette-blue-action);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(77, 150, 255, 0.2);
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.plan-participant-add-btn:active {
+    transform: scale(0.95);
+}
+
+.plan-participant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plan-participant-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-snow);
+    padding: 10px 12px;
+    border-radius: 12px;
+}
+
+.plan-participant-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.plan-participant-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.plan-participant-name {
+    font-weight: 500;
+    color: var(--text-body);
+}
+
+.plan-participant-remove {
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.plan-add-panel {
+    background: #fff;
+    border: 1px solid var(--palette-blue-action);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    animation: fadeIn 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.plan-add-panel-title {
+    margin: 0 0 12px 0;
+    font-size: 0.95rem;
+    color: var(--palette-blue-action);
+    font-weight: bold;
+}
+
+.plan-sheep-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-bottom: 4px;
+}
+
+.plan-sheep-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-snow);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 36px;
+}
+
+.plan-sheep-btn.selected {
+    border: 2px solid var(--palette-blue-action) !important;
+    background: var(--palette-blue-light) !important;
+}
+
+.plan-sheep-btn:active {
+    transform: scale(0.95);
+}
+
+.plan-add-panel-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.spiritual-plan-form-actions {
+    margin-top: auto;
+    padding: 20px !important;
+    display: flex;
+    gap: 12px;
+}
+
+.modal-btn-confirm-add {
+    flex: 1;
+    padding: 10px;
+    background: var(--palette-blue-action);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #fff;
+    font-weight: bold;
+}
+
+.modal-btn-confirm-add:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Hover vs Touch protection */
+@media (hover: hover) {
+    .plan-participant-remove:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--palette-danger);
+    }
+
+    .plan-sheep-btn:hover:not(.selected) {
+        border-color: var(--palette-blue-action);
+        background: #fff;
+    }
+
+    .plan-participant-add-btn:hover {
+        opacity: 0.9;
+    }
+}
+
+/* Mobile specific overrides */
+@media (max-width: 480px) {
+    .plan-detail-form-container {
+        padding: 12px !important;
+    }
+
+    .plan-detail-card {
+        padding: 16px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+    }
+
+    .plan-participant-remove {
+        padding: 12px !important;
+        /* Larger tap target */
+    }
+
+    .spiritual-plan-form-actions {
+        padding: 16px 12px !important;
+        gap: 8px !important;
+    }
+
+    .modal-btn-primary,
+    .modal-btn-secondary {
+        padding: 12px 8px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

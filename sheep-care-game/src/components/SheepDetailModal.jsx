@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X, Check, Megaphone, Sparkles, Users, HeartHandshake, Flame, BookOpen } from 'lucide-react';
+import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X, Check, Megaphone, Sparkles, Users, HeartHandshake, Flame, BookOpen, Edit2, Save } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useGame } from '../context/GameContext';
 import { useConfirm } from '../context/ConfirmContext.jsx';
@@ -13,6 +13,7 @@ import { Tag } from './ui/Tag';
 import { IconButton, IconButtonGroup } from './ui/IconButton';
 import { Tooltip } from './ui/Tooltip';
 import { Portal } from './ui/Portal';
+import { PlanDetailModal } from './PlanDetailModal';
 import { generateGoogleCalendarUrl } from '../utils/calendarHelper';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
@@ -104,8 +105,8 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
 
 import { useIsMobile } from '../hooks/useIsMobile';
 
-export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, completePlan, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate } = useGame();
+export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) => {
+    const { sheep, updateSheep, prayForSheep, completePlan, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate, settings, updateSetting, updatePlanFeedback } = useGame();
     const confirm = useConfirm();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
@@ -118,9 +119,6 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     // Spiritual Plan State
     const [plans, setPlans] = useState([]);
     const [viewMode, setViewMode] = useState('LIST');
-    const [editingPlanId, setEditingPlanId] = useState(null);
-    const [tempPlan, setTempPlan] = useState({ name: '', time: '', location: '', content: '' });
-    const [reminderOffset, setReminderOffset] = useState(0); // 0 = On time, 15 = 15m before, -1 = No reminder
 
     // Check List State
     const [completionData, setCompletionData] = useState({ note: '', tags: [] });
@@ -136,19 +134,61 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     const [localMsg, setLocalMsg] = useState('');
     const [showTagManager, setShowTagManager] = useState(false);
     const [showWinningModal, setShowWinningModal] = useState(false);
+    const [isEditingLabels, setIsEditingLabels] = useState(false);
+    const [tempLabels, setTempLabels] = useState({});
 
-    // Fetch Plans from DB
+    // New State for PlanDetailModal
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
+    const [completionTarget, setCompletionTarget] = useState(null);
+
+    // Fetch Plans from DB (New Architecture)
     const fetchPlans = async () => {
         if (!target?.id) return;
         try {
+            // Join schedule_participants -> schedules
             const { data, error } = await supabase
-                .from('spiritual_plans')
-                .select('*')
-                .eq('sheep_id', target.id)
-                .order('scheduled_time', { ascending: true });
+                .from('schedule_participants')
+                .select(`
+                    *,
+                    schedule:schedule_id (
+                        *,
+                        schedule_participants (
+                            *,
+                            sheep_id
+                        )
+                    )
+                `)
+                .eq('sheep_id', target.id);
 
             if (error) throw error;
-            setPlans(data || []);
+
+            // Transform to flat structure for UI
+            const formattedPlans = (data || []).map(p => {
+                const s = p.schedule || {};
+                return {
+                    id: s.id, // Use schedule_id as primary ID for UI interactions
+                    participant_id: p.id,
+                    action: s.action,
+                    scheduled_time: s.scheduled_time,
+                    location: s.location,
+                    completed_at: p.completed_at,
+                    feedback: p.feedback,
+                    sheep_id: p.sheep_id,
+                    sheep_id: p.sheep_id,
+                    created_by: s.created_by,
+                    originalSchedule: s // Store full object for PlanDetailModal
+                };
+            }).sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
+
+            setPlans(formattedPlans);
+
+            // Handle Initial Plan ID (Deep Link)
+            if (initialPlanId && formattedPlans.length > 0) {
+                const targetPlan = formattedPlans.find(p => p.id === initialPlanId);
+                if (targetPlan) {
+                    handlePlanClick(targetPlan);
+                }
+            }
         } catch (error) {
             console.error('Error fetching plans:', error);
         }
@@ -220,160 +260,62 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         return '健康';
     };
 
-    // Plan Management (DB Operations)
-    const handleSavePlan = async () => {
-        if (!tempPlan.name.trim()) {
-            alert('請輸入規劃行動');
-            return;
-        }
-        if (!lineId) {
-            alert('請先登入');
-            return;
-        }
-
-        setPlanActionLoading(true);
-        // Calculate notify_at
-        let notifyAt = null;
-        let scheduledTime = null;
-
-        if (tempPlan.time) {
-            const dateObj = new Date(tempPlan.time);
-            scheduledTime = dateObj.toISOString();
-
-            if (reminderOffset !== -1) {
-                // Calculate Reminder Time: Event Time - Offset
-                const notifyTime = new Date(dateObj.getTime() - (reminderOffset * 60 * 1000));
-                notifyAt = notifyTime.toISOString();
-            }
-        }
-
-        const payload = {
-            user_id: lineId,
-            sheep_id: target.id,
-            action: tempPlan.name,
-            scheduled_time: scheduledTime,
-            notify_at: notifyAt,
-            reminder_offset: reminderOffset,
-            location: tempPlan.location,
-            content: tempPlan.content
-        };
-
-        // Reset notification ONLY if time changed or it's a new plan
-        if (editingPlanId) {
-            const originalPlan = plans.find(p => p.id === editingPlanId);
-            if (originalPlan && originalPlan.notify_at !== notifyAt) {
-                payload.is_notified = false;
-            }
-        } else {
-            payload.is_notified = false;
-        }
-
-        try {
-            if (editingPlanId) {
-                const { error } = await supabase.from('spiritual_plans').update(payload).eq('id', editingPlanId);
-                if (error) throw error;
-            } else {
-                const { error } = await supabase.from('spiritual_plans').insert([payload]);
-                if (error) throw error;
-            }
-            notifyScheduleUpdate();
-            await fetchPlans();
-            setViewMode('LIST');
-            setEditingPlanId(null);
-        } catch (error) {
-            alert('儲存失敗: ' + error.message);
-        } finally {
-            setPlanActionLoading(false);
-        }
-    };
-
-    const handleDeletePlan = async (id) => {
-        const ok = await confirm({
-            title: '刪除規劃',
-            message: '確定要刪除此認領規劃嗎？',
-            variant: 'danger',
-            confirmLabel: '刪除'
-        });
-        if (!ok) return;
-
-        setPlanActionLoading(true);
-        try {
-            const { error } = await supabase
-                .from('spiritual_plans')
-                .delete()
-                .eq('id', id);
-            if (error) throw error;
-            notifyScheduleUpdate();
-            await fetchPlans();
-            setViewMode('LIST');
-            setEditingPlanId(null);
-        } catch (error) {
-            alert('刪除失敗: ' + (error?.message || ''));
-        } finally {
-            setPlanActionLoading(false);
-        }
-    };
-
-    const handleCancelPlan = () => {
-        setViewMode('LIST');
-        setEditingPlanId(null);
-        setTempPlan({ name: '', time: '', location: '', content: '' });
-    };
-
-    const openEditPlan = (plan) => {
-        let timeStr = '';
-        if (plan.scheduled_time) {
-            const d = new Date(plan.scheduled_time);
-            const offset = d.getTimezoneOffset() * 60000;
-            timeStr = new Date(d.getTime() - offset).toISOString().slice(0, 16);
-        }
-
-        setTempPlan({
-            name: plan.action || '',
-            time: timeStr,
-            location: plan.location || '',
-            content: plan.content || ''
-        });
-        setReminderOffset(plan.reminder_offset !== undefined ? plan.reminder_offset : 0);
-        setEditingPlanId(plan.id);
-        setViewMode('EDIT');
-    };
-
     const openAddPlan = () => {
-        setTempPlan({ name: '', time: '', location: '', content: '' });
-        setReminderOffset(15); // Default to 15 mins before
-        setEditingPlanId(null);
-        setViewMode('EDIT');
+        setSelectedSchedule({
+            id: 'new',
+            action: '',
+            scheduled_time: new Date().toISOString(),
+            location: '',
+            content: '',
+            reminder_offset: 15,
+            schedule_participants: [{ sheep_id: target.id }]
+        });
     };
 
     const handlePlanClick = (plan) => {
+        setActiveTab('PLAN');
+        // fetchParticipants(plan); // Removed: Not needed in new architecture or handled differently
         if (plan.completed_at) {
             setCompletionData({
                 note: plan.feedback?.note || '',
                 tags: plan.feedback?.tags || [],
                 completedAt: plan.completed_at
             });
+            // We need the schedule ID for updatePlanFeedback/completePlan
+            // Using a local variable or separate state instead of editingPlanId
+            setCompletionTarget(plan.id);
             setViewMode('RESULT');
         } else {
-            openEditPlan(plan);
+            if (plan.originalSchedule) {
+                setSelectedSchedule(plan.originalSchedule);
+            }
         }
     };
 
     const openCompletePlan = (plan) => {
-        setEditingPlanId(plan.id);
+        setCompletionTarget(plan.id);
         setCompletionData({ note: '', tags: [] });
         setViewMode('COMPLETE');
     };
 
     const handleCompleteSubmit = async () => {
-        if (!editingPlanId) return;
+        if (!completionTarget) return;
         setPlanActionLoading(true);
         try {
-            await completePlan(editingPlanId, target.id, completionData);
+            // Check if editing an existing completed plan
+            const planToEdit = plans.find(p => p.id === completionTarget);
+            if (planToEdit && planToEdit.completed_at) {
+                // UPDATE FeedBack Only
+                await updatePlanFeedback(completionTarget, completionData);
+            } else {
+                // NEW Completion
+                await completePlan(completionTarget, target.id, completionData);
+            }
+
             notifyScheduleUpdate();
             await fetchPlans();
             setViewMode('LIST');
-            setEditingPlanId(null);
+            setCompletionTarget(null);
         } catch (error) {
             alert('提交失敗: ' + error.message);
         } finally {
@@ -409,7 +351,7 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
     };
 
     // Stamp System
-    const STAMPS = [
+    const DEFAULT_STAMPS = [
         { id: 'evangelism', label: '參與過佈道活動', icon: Megaphone, color: '#FF6B6B' },
         { id: 'sunday_service', label: '參與過特會/主日', icon: Sparkles, color: '#FFD93D' },
         { id: 'small_group', label: '參與過小組', icon: Users, color: '#4D96FF' },
@@ -418,7 +360,27 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
         { id: 'stable_devotion', label: '穩定靈修', icon: BookOpen, color: '#6BCB77' },
     ];
 
+    const STAMPS = DEFAULT_STAMPS.map(s => ({
+        ...s,
+        label: (settings.stampLabels && settings.stampLabels[s.id]) || s.label
+    }));
+
+    const handleLabelEditStart = () => {
+        const currentLabels = {};
+        STAMPS.forEach(s => {
+            currentLabels[s.id] = s.label;
+        });
+        setTempLabels(currentLabels);
+        setIsEditingLabels(true);
+    };
+
+    const handleLabelSave = () => {
+        updateSetting('stampLabels', tempLabels);
+        setIsEditingLabels(false);
+    };
+
     const handleStampToggle = (stampId) => {
+        if (isEditingLabels) return; // Disable toggling while editing
         if (!target) return;
         const currentStamps = target.stamps || {};
         const isStamped = !!currentStamps[stampId];
@@ -688,304 +650,266 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                             )}
 
                             {activeTab === 'PLAN' && (
-                                <div className="spiritual-plan-container">
-                                    {viewMode === 'LIST' && (
-                                        <>
-                                            <div className="plan-list-header">
-                                                <Tooltip content="新增認領規劃" side="bottom">
-                                                    <button
-                                                        type="button"
-                                                        className="plan-add-btn"
-                                                        onClick={openAddPlan}
-                                                        aria-label="新增認領規劃"
-                                                    >
-                                                        <Plus size={18} strokeWidth={2.5} />
-                                                        <span>新增規劃</span>
-                                                    </button>
-                                                </Tooltip>
-                                            </div>
-                                            <ModalHint className="plan-retention-hint">
-                                                系統會自動清理超過一個月的過期行程
-                                            </ModalHint>
-
-                                            <div className="plan-list">
-                                                {plans.length === 0 ? (
-                                                    <div className="plan-list-empty">
-                                                        <Calendar size={32} strokeWidth={1.5} />
-                                                        <p>目前沒有認領規劃</p>
-                                                        <p className="plan-list-empty-hint">點擊上方「新增規劃」開始安排</p>
+                                <div className="spiritual-plan-container" style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
+                                    {selectedSchedule ? (
+                                        <div className="nested-plan-detail" style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            zIndex: 10,
+                                            background: 'var(--bg-card)',
+                                            animation: 'slideIn 0.3s ease-out'
+                                        }}>
+                                            <PlanDetailModal
+                                                schedule={selectedSchedule}
+                                                onClose={() => {
+                                                    setSelectedSchedule(null);
+                                                    fetchPlans();
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="plan-list-wrapper" style={{ height: '100%', overflowY: 'auto', padding: '0 4px' }}>
+                                            {viewMode === 'LIST' && (
+                                                <>
+                                                    <div className="plan-list-header">
+                                                        <Tooltip content="新增認領規劃" side="bottom">
+                                                            <button
+                                                                type="button"
+                                                                className="plan-add-btn"
+                                                                onClick={openAddPlan}
+                                                                aria-label="新增認領規劃"
+                                                            >
+                                                                <Plus size={18} strokeWidth={2.5} />
+                                                                <span>新增規劃</span>
+                                                            </button>
+                                                        </Tooltip>
                                                     </div>
-                                                ) : (
-                                                    plans.map(p => (
+                                                    <ModalHint className="plan-retention-hint">
+                                                        系統會自動清理超過一個月的過期行程
+                                                    </ModalHint>
+
+                                                    <div className="plan-list">
+                                                        {plans.length === 0 ? (
+                                                            <div className="plan-list-empty">
+                                                                <Calendar size={32} strokeWidth={1.5} />
+                                                                <p>目前沒有認領規劃</p>
+                                                                <p className="plan-list-empty-hint">點擊上方「新增規劃」開始安排</p>
+                                                            </div>
+                                                        ) : (
+                                                            plans.map(p => (
+                                                                <button
+                                                                    key={p.id}
+                                                                    type="button"
+                                                                    className="plan-item"
+                                                                    onClick={() => handlePlanClick(p)}
+                                                                >
+                                                                    <div className="plan-item-content">
+                                                                        <span className="plan-item-action">{p.action}</span>
+                                                                        {p.scheduled_time && (
+                                                                            <span className="plan-item-time">
+                                                                                {formatDisplayTime(p.scheduled_time)}
+                                                                            </span>
+                                                                        )}
+                                                                        {p.location?.trim() && (
+                                                                            <span className="plan-item-location">{p.location}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                                        {p.scheduled_time && (
+                                                                            <div
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const url = generateGoogleCalendarUrl(p, target);
+                                                                                    if (url) window.open(url, '_blank');
+                                                                                }}
+                                                                                style={{
+                                                                                    padding: '6px',
+                                                                                    color: 'var(--palette-blue-action)',
+                                                                                    background: 'rgba(0,0,0,0.04)',
+                                                                                    borderRadius: '8px',
+                                                                                    fontSize: '1em',
+                                                                                    cursor: 'pointer'
+                                                                                }}
+                                                                                title="同步到 Google 日曆"
+                                                                            >
+                                                                                📅
+                                                                            </div>
+                                                                        )}
+                                                                        {!p.completed_at && (
+                                                                            <div
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    openCompletePlan(p);
+                                                                                }}
+                                                                                style={{
+                                                                                    padding: '6px',
+                                                                                    color: 'var(--palette-deep-green)',
+                                                                                    background: 'rgba(0,0,0,0.04)',
+                                                                                    borderRadius: '8px',
+                                                                                    fontSize: '1em',
+                                                                                    cursor: 'pointer'
+                                                                                }}
+                                                                                title="完成並填寫果效"
+                                                                            >
+                                                                                <Check size={18} strokeWidth={2.5} />
+                                                                            </div>
+                                                                        )}
+                                                                        {p.completed_at && <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>已完成</span>}
+                                                                        <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
+                                                                    </div>
+                                                                </button>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {viewMode === 'COMPLETE' && (
+                                                <div className="spiritual-plan-form">
+                                                    <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效</h3>
+
+                                                    <div className="form-group">
+                                                        <label>💭 心得紀錄</label>
+                                                        <textarea
+                                                            value={completionData.note}
+                                                            onChange={(e) => setCompletionData({ ...completionData, note: e.target.value })}
+                                                            rows={5}
+                                                            placeholder="接觸狀況如何？小羊的反應？有無邀約或決志？"
+                                                        />
+                                                    </div>
+
+                                                    <div className="form-group">
+                                                        <label>🏷️ 狀況標記 (可複選)</label>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                            {FEEDBACK_TAGS.map(tag => {
+                                                                const active = completionData.tags.includes(tag);
+                                                                return (
+                                                                    <button
+                                                                        key={tag}
+                                                                        type="button"
+                                                                        onClick={() => toggleFeedbackTag(tag)}
+                                                                        style={{
+                                                                            padding: '6px 12px',
+                                                                            borderRadius: '20px',
+                                                                            border: active ? '1px solid var(--palette-blue-action)' : '1px solid #ddd',
+                                                                            background: active ? 'var(--palette-blue-action)' : '#f9f9f9',
+                                                                            color: active ? '#fff' : '#666',
+                                                                            fontSize: '0.9rem',
+                                                                            cursor: 'pointer',
+                                                                            transition: 'all 0.2s'
+                                                                        }}
+                                                                    >
+                                                                        {tag}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="spiritual-plan-form-actions">
                                                         <button
-                                                            key={p.id}
                                                             type="button"
-                                                            className="plan-item"
-                                                            onClick={() => handlePlanClick(p)}
+                                                            className="modal-btn-secondary"
+                                                            onClick={() => setViewMode('LIST')}
+                                                            disabled={planActionLoading}
                                                         >
-                                                            <div className="plan-item-content">
-                                                                <span className="plan-item-action">{p.action}</span>
-                                                                {p.scheduled_time && (
-                                                                    <span className="plan-item-time">
-                                                                        {formatDisplayTime(p.scheduled_time)}
-                                                                    </span>
-                                                                )}
-                                                                {p.location?.trim() && (
-                                                                    <span className="plan-item-location">{p.location}</span>
-                                                                )}
-                                                            </div>
-                                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                                {p.scheduled_time && (
-                                                                    <div
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const url = generateGoogleCalendarUrl(p, target);
-                                                                            if (url) window.open(url, '_blank');
-                                                                        }}
-                                                                        style={{
-                                                                            padding: '6px',
-                                                                            color: 'var(--palette-blue-action)',
-                                                                            background: 'rgba(0,0,0,0.04)',
-                                                                            borderRadius: '8px',
-                                                                            fontSize: '1em',
-                                                                            cursor: 'pointer'
-                                                                        }}
-                                                                        title="同步到 Google 日曆"
-                                                                    >
-                                                                        📅
-                                                                    </div>
-                                                                )}
-                                                                {!p.completed_at && (
-                                                                    <div
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            openCompletePlan(p);
-                                                                        }}
-                                                                        style={{
-                                                                            padding: '6px',
-                                                                            color: 'var(--palette-deep-green)',
-                                                                            background: 'rgba(0,0,0,0.04)',
-                                                                            borderRadius: '8px',
-                                                                            fontSize: '1em',
-                                                                            cursor: 'pointer'
-                                                                        }}
-                                                                        title="完成並填寫果效"
-                                                                    >
-                                                                        <Check size={18} strokeWidth={2.5} />
-                                                                    </div>
-                                                                )}
-                                                                {p.completed_at && <span style={{ fontSize: '0.8em', color: 'var(--text-muted)' }}>已完成</span>}
-                                                                <ChevronRight size={20} strokeWidth={2} className="plan-item-chevron" />
-                                                            </div>
+                                                            取消
                                                         </button>
-                                                    ))
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {viewMode === 'EDIT' && (
-                                        <div className="spiritual-plan-form">
-                                            <div className="form-group">
-                                                <label>📝 行動</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempPlan.name}
-                                                    onChange={(e) => setTempPlan({ ...tempPlan, name: e.target.value })}
-                                                    placeholder="例如：探訪、陪讀..."
-                                                />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>📅 時間</label>
-                                                <input
-                                                    type="datetime-local"
-                                                    value={tempPlan.time}
-                                                    onChange={(e) => setTempPlan({ ...tempPlan, time: e.target.value })}
-                                                />
-                                            </div>
-
-                                            {tempPlan.time && (
-                                                <div className="form-group">
-                                                    <label>⏰ 提醒設定</label>
-                                                    <select
-                                                        value={reminderOffset}
-                                                        onChange={(e) => setReminderOffset(Number(e.target.value))}
-                                                    >
-                                                        <option value={-1}>🔕 不提醒</option>
-                                                        <option value={0}>⚡ 準時提醒</option>
-                                                        <option value={15}>🔔 提前 15 分鐘</option>
-                                                        <option value={30}>🔔 提前 30 分鐘</option>
-                                                        <option value={60}>🔔 提前 1 小時</option>
-                                                        <option value={120}>🔔 提前 2 小時</option>
-                                                        <option value={1440}>📅 提前 1 天</option>
-                                                    </select>
+                                                        <button
+                                                            type="button"
+                                                            className="modal-btn-primary"
+                                                            onClick={handleCompleteSubmit}
+                                                            disabled={planActionLoading}
+                                                        >
+                                                            {planActionLoading ? '處理中...' : '完成紀錄'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            <div className="form-group">
-                                                <label>📍 地點</label>
-                                                <input
-                                                    type="text"
-                                                    value={tempPlan.location}
-                                                    onChange={(e) => setTempPlan({ ...tempPlan, location: e.target.value })}
-                                                    placeholder="例如：教會小組室"
-                                                />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>📋 內容規劃</label>
-                                                <textarea
-                                                    value={tempPlan.content}
-                                                    onChange={(e) => setTempPlan({ ...tempPlan, content: e.target.value })}
-                                                    rows={5}
-                                                    placeholder="例如：讀經分享、生活關懷..."
-                                                />
-                                            </div>
+                                            {viewMode === 'RESULT' && (
+                                                <div className="spiritual-plan-form">
 
-                                            <div className="spiritual-plan-form-actions">
-                                                <button
-                                                    type="button"
-                                                    className="modal-btn-secondary"
-                                                    onClick={handleCancelPlan}
-                                                    disabled={planActionLoading}
-                                                >
-                                                    取消
-                                                </button>
-                                                {editingPlanId && (
-                                                    <button
-                                                        type="button"
-                                                        className="modal-btn-secondary btn-destructive"
-                                                        onClick={() => handleDeletePlan(editingPlanId)}
-                                                        disabled={planActionLoading}
-                                                    >
-                                                        刪除
-                                                    </button>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    className="modal-btn-primary"
-                                                    onClick={handleSavePlan}
-                                                    disabled={planActionLoading}
-                                                >
-                                                    {planActionLoading ? '處理中...' : '儲存'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', marginBottom: '16px' }}>
+                                                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效 (已完成)</h3>
+                                                        <button
+                                                            type="button"
+                                                            className="modal-btn-primary"
+                                                            onClick={() => setViewMode('COMPLETE')}
+                                                            style={{
+                                                                borderRadius: '50%',
+                                                                width: '24px',
+                                                                height: '24px',
+                                                                padding: 0,
+                                                                display: 'flex',
+                                                                justifyContent: 'center',
+                                                                alignItems: 'center',
+                                                                minWidth: 'unset',
+                                                                background: 'transparent',
+                                                                color: '#999',
+                                                                boxShadow: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                            title="修改紀錄"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                    </div>
 
-                                    {viewMode === 'COMPLETE' && (
-                                        <div className="spiritual-plan-form">
-                                            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效</h3>
+                                                    <div className="form-group">
+                                                        <label>📅 完成時間</label>
+                                                        <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '8px', color: '#666' }}>
+                                                            {formatDisplayTime(completionData.completedAt)}
+                                                        </div>
+                                                    </div>
 
-                                            <div className="form-group">
-                                                <label>💭 心得紀錄</label>
-                                                <textarea
-                                                    value={completionData.note}
-                                                    onChange={(e) => setCompletionData({ ...completionData, note: e.target.value })}
-                                                    rows={5}
-                                                    placeholder="接觸狀況如何？小羊的反應？有無邀約或決志？"
-                                                />
-                                            </div>
+                                                    <div className="form-group">
+                                                        <label>💭 心得紀錄</label>
+                                                        <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', minHeight: '80px', whiteSpace: 'pre-wrap' }}>
+                                                            {completionData.note || '無心得紀錄'}
+                                                        </div>
+                                                    </div>
 
-                                            <div className="form-group">
-                                                <label>🏷️ 狀況標記 (可複選)</label>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                    {FEEDBACK_TAGS.map(tag => {
-                                                        const active = completionData.tags.includes(tag);
-                                                        return (
-                                                            <button
-                                                                key={tag}
-                                                                type="button"
-                                                                onClick={() => toggleFeedbackTag(tag)}
-                                                                style={{
-                                                                    padding: '6px 12px',
-                                                                    borderRadius: '20px',
-                                                                    border: active ? '1px solid var(--palette-blue-action)' : '1px solid #ddd',
-                                                                    background: active ? 'var(--palette-blue-action)' : '#f9f9f9',
-                                                                    color: active ? '#fff' : '#666',
-                                                                    fontSize: '0.9rem',
-                                                                    cursor: 'pointer',
-                                                                    transition: 'all 0.2s'
-                                                                }}
-                                                            >
-                                                                {tag}
-                                                            </button>
-                                                        );
-                                                    })}
+                                                    <div className="form-group">
+                                                        <label>🏷️ 狀況標記</label>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                            {completionData.tags && completionData.tags.length > 0 ? (
+                                                                completionData.tags.map(tag => (
+                                                                    <span
+                                                                        key={tag}
+                                                                        style={{
+                                                                            padding: '4px 10px',
+                                                                            borderRadius: '20px',
+                                                                            background: 'var(--palette-blue-action)',
+                                                                            color: '#fff',
+                                                                            fontSize: '0.9rem'
+                                                                        }}
+                                                                    >
+                                                                        {tag}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span style={{ color: '#999' }}>無標記</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="spiritual-plan-form-actions">
+                                                        <button
+                                                            type="button"
+                                                            className="modal-btn-secondary"
+                                                            onClick={() => setViewMode('LIST')}
+                                                            style={{ width: '100%' }}
+                                                        >
+                                                            返回列表
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-
-                                            <div className="spiritual-plan-form-actions">
-                                                <button
-                                                    type="button"
-                                                    className="modal-btn-secondary"
-                                                    onClick={() => setViewMode('LIST')}
-                                                    disabled={planActionLoading}
-                                                >
-                                                    取消
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="modal-btn-primary"
-                                                    onClick={handleCompleteSubmit}
-                                                    disabled={planActionLoading}
-                                                >
-                                                    {planActionLoading ? '處理中...' : '完成紀錄'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {viewMode === 'RESULT' && (
-                                        <div className="spiritual-plan-form">
-                                            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效 (已完成)</h3>
-
-                                            <div className="form-group">
-                                                <label>📅 完成時間</label>
-                                                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '8px', color: '#666' }}>
-                                                    {formatDisplayTime(completionData.completedAt)}
-                                                </div>
-                                            </div>
-
-                                            <div className="form-group">
-                                                <label>💭 心得紀錄</label>
-                                                <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', minHeight: '80px', whiteSpace: 'pre-wrap' }}>
-                                                    {completionData.note || '無心得紀錄'}
-                                                </div>
-                                            </div>
-
-                                            <div className="form-group">
-                                                <label>🏷️ 狀況標記</label>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                    {completionData.tags && completionData.tags.length > 0 ? (
-                                                        completionData.tags.map(tag => (
-                                                            <span
-                                                                key={tag}
-                                                                style={{
-                                                                    padding: '4px 10px',
-                                                                    borderRadius: '20px',
-                                                                    background: 'var(--palette-blue-action)',
-                                                                    color: '#fff',
-                                                                    fontSize: '0.9rem'
-                                                                }}
-                                                            >
-                                                                {tag}
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <span style={{ color: '#999' }}>無標記</span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="spiritual-plan-form-actions">
-                                                <button
-                                                    type="button"
-                                                    className="modal-btn-primary"
-                                                    onClick={() => setViewMode('LIST')}
-                                                >
-                                                    返回列表
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -993,6 +917,38 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
 
                             {activeTab === 'EFFECTS' && (
                                 <div className="spiritual-plan-container">
+                                    <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>🏆 認領果效 (點擊蓋章)</span>
+                                        {isAdmin && (
+                                            !isEditingLabels ? (
+                                                <button
+                                                    className="icon-btn"
+                                                    onClick={handleLabelEditStart}
+                                                    style={{ padding: '4px', height: 'auto', width: 'auto', background: 'transparent', border: 'none', color: 'var(--text-muted)' }}
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                            ) : (
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        className="icon-btn"
+                                                        onClick={() => setIsEditingLabels(false)}
+                                                        style={{ padding: '4px', height: 'auto', width: 'auto', background: 'transparent', border: 'none', color: 'var(--text-muted)' }}
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                    <button
+                                                        className="icon-btn"
+                                                        onClick={handleLabelSave}
+                                                        style={{ padding: '4px', height: 'auto', width: 'auto', background: 'transparent', border: 'none', color: 'var(--palette-blue-action)' }}
+                                                    >
+                                                        <Save size={16} />
+                                                    </button>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+
                                     <div className="stamp-grid">
                                         {STAMPS.map(stamp => {
                                             const isStamped = target.stamps && target.stamps[stamp.id];
@@ -1000,10 +956,11 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                             return (
                                                 <div
                                                     key={stamp.id}
-                                                    className={`stamp-card ${isStamped ? 'stamped' : ''}`}
+                                                    className={`stamp-card ${isStamped ? 'stamped' : ''} ${isEditingLabels ? 'editing' : ''}`}
                                                     onClick={() => handleStampToggle(stamp.id)}
+                                                    style={{ position: 'relative' }}
                                                 >
-                                                    {isStamped && (
+                                                    {isStamped && !isEditingLabels && (
                                                         <div className="stamp-mark">
                                                             {stamp.id === 'decision_prayer' || stamp.id === 'stable_devotion' ? 'AMEN' : 'DONE'}
                                                         </div>
@@ -1012,13 +969,32 @@ export const SheepDetailModal = ({ selectedSheepId, onClose }) => {
                                                     <div className="stamp-icon-placeholder">
                                                         <Icon size={24} strokeWidth={isStamped ? 2.5 : 2} />
                                                     </div>
-                                                    <span className="stamp-label">{stamp.label}</span>
+
+                                                    {isEditingLabels ? (
+                                                        <input
+                                                            type="text"
+                                                            value={tempLabels[stamp.id] || ''}
+                                                            onChange={(e) => setTempLabels({ ...tempLabels, [stamp.id]: e.target.value })}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            style={{
+                                                                width: '100%',
+                                                                fontSize: '0.8rem',
+                                                                textAlign: 'center',
+                                                                border: '1px solid var(--border-main)',
+                                                                borderRadius: '4px',
+                                                                padding: '2px',
+                                                                marginTop: '4px'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <span className="stamp-label">{stamp.label}</span>
+                                                    )}
                                                 </div>
                                             );
                                         })}
                                     </div>
                                     <ModalHint>
-                                        點擊格子即可蓋章，再次點擊可取消。
+                                        {isEditingLabels ? '修改後點擊上方儲存' : '點擊格子即可蓋章，再次點擊可取消。'}
                                     </ModalHint>
                                 </div>
                             )}
