@@ -936,11 +936,17 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                                     </div>
                                     <div className="stamp-grid">
                                         {Object.values(STAMPS).map(stamp => {
-                                            const isStamped = (target.stamps || []).includes(stamp.id);
+                                            const currentStamps = target.stamps || {};
+                                            // Support both Array (legacy) and Object (new) format for safety
+                                            const isStamped = Array.isArray(currentStamps)
+                                                ? currentStamps.includes(stamp.id)
+                                                : !!currentStamps[stamp.id];
+
+                                            const Icon = stamp.icon;
                                             return (
                                                 <div
                                                     key={stamp.id}
-                                                    className={`stamp-cell ${isStamped ? 'stamped' : ''} ${isEditingLabels ? 'editing' : ''}`}
+                                                    className={`stamp-card ${isStamped ? 'stamped' : ''} ${isEditingLabels ? 'editing' : ''}`}
                                                     onClick={() => handleStampToggle(stamp.id)}
                                                     style={{ position: 'relative' }}
                                                 >
