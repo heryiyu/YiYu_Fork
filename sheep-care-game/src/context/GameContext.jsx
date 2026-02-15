@@ -945,37 +945,70 @@ export const GameProvider = ({ children }) => {
         if (!userId) return null;
 
         try {
-            // 1. Create Schedule
-            const { data: schedule, error: scheduleError } = await supabase
+            // 0. Check for existing schedule (deduplication)
+            // We check for same action + time + creator
+            const { data: existingSchedules } = await supabase
                 .from('schedules')
-                .insert([{
-                    created_by: userId,
-                    action: scheduleData.title || '未命名行動',
-                    scheduled_time: scheduleData.scheduled_time,
-                    location: scheduleData.location,
-                    content: scheduleData.content,
-                    notify_at: scheduleData.notify_at,
-                    reminder_offset: scheduleData.reminder_offset,
-                    created_at: new Date().toISOString()
-                }])
-                .select()
-                .single();
+                .select('id')
+                .eq('created_by', userId)
+                .eq('action', scheduleData.title || '未命名行動')
+                .eq('scheduled_time', scheduleData.scheduled_time);
 
-            if (scheduleError) throw scheduleError;
+            let scheduleId;
+            let schedule;
 
-            // 2. Add Participants
+            if (existingSchedules && existingSchedules.length > 0) {
+                console.log("Found existing schedule, reusing ID:", existingSchedules[0].id);
+                scheduleId = existingSchedules[0].id;
+                schedule = existingSchedules[0]; // partial
+            } else {
+                // 1. Create Schedule
+                const { data: newSchedule, error: scheduleError } = await supabase
+                    .from('schedules')
+                    .insert([{
+                        created_by: userId,
+                        action: scheduleData.title || '未命名行動',
+                        scheduled_time: scheduleData.scheduled_time,
+                        location: scheduleData.location,
+                        content: scheduleData.content,
+                        notify_at: scheduleData.notify_at,
+                        reminder_offset: scheduleData.reminder_offset,
+                        created_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (scheduleError) throw scheduleError;
+                scheduleId = newSchedule.id;
+                schedule = newSchedule;
+            }
+
+            // 2. Add Participants (Avoid Duplicates)
             if (participantSheepIds && participantSheepIds.length > 0) {
-                const participantsPayload = participantSheepIds.map(sheepId => ({
-                    schedule_id: schedule.id,
-                    sheep_id: sheepId,
-                    created_at: new Date().toISOString()
-                }));
-
-                const { error: participantsError } = await supabase
+                // Fetch existing participants for this schedule
+                const { data: existingParticipants } = await supabase
                     .from('schedule_participants')
-                    .insert(participantsPayload);
+                    .select('sheep_id')
+                    .eq('schedule_id', scheduleId);
 
-                if (participantsError) throw participantsError;
+                const existingSheepIds = new Set((existingParticipants || []).map(p => p.sheep_id));
+
+                // Filter out sheep that are already in the schedule
+                const newParticipantsPayload = participantSheepIds
+                    .filter(sheepId => !existingSheepIds.has(sheepId))
+                    .map(sheepId => ({
+                        schedule_id: scheduleId,
+                        sheep_id: sheepId,
+                        created_at: new Date().toISOString()
+                    }));
+
+                if (newParticipantsPayload.length > 0) {
+                    const { error: participantsError } = await supabase
+                        .from('schedule_participants')
+                        .insert(newParticipantsPayload);
+
+                    if (participantsError) throw participantsError;
+                }
             }
 
             notifyScheduleUpdate();
@@ -1071,6 +1104,87 @@ export const GameProvider = ({ children }) => {
         }
     };
 
+    const cleanupDuplicateSchedules = async () => {
+        if (!userId) return;
+        showMessage("🧹 正在清理重複行程...");
+
+        try {
+            // 1. Fetch all schedules for this user
+            const { data: schedules, error } = await supabase
+                .from('schedules')
+                .select('id, action, scheduled_time, created_at')
+                .eq('created_by', userId)
+                .order('scheduled_time', { ascending: true });
+
+            if (error) throw error;
+
+            // 2. Group by action + time
+            const groups = {};
+            schedules.forEach(s => {
+                const key = `${s.action}|${s.scheduled_time}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(s);
+            });
+
+            let deletedCount = 0;
+
+            // 3. Process duplicates
+            for (const key in groups) {
+                const group = groups[key];
+                if (group.length > 1) {
+                    // Sort by created_at (keep oldest)
+                    group.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    const master = group[0];
+                    const duplicates = group.slice(1);
+
+                    for (const dup of duplicates) {
+                        // Move participants to master
+                        // First fetch participants of duplicate
+                        const { data: parts } = await supabase
+                            .from('schedule_participants')
+                            .select('*')
+                            .eq('schedule_id', dup.id);
+
+                        if (parts && parts.length > 0) {
+                            for (const p of parts) {
+                                // Check if master already has this sheep
+                                const { data: existing } = await supabase
+                                    .from('schedule_participants')
+                                    .select('id')
+                                    .eq('schedule_id', master.id)
+                                    .eq('sheep_id', p.sheep_id);
+
+                                if (!existing || existing.length === 0) {
+                                    // Move (Update schedule_id)
+                                    await supabase
+                                        .from('schedule_participants')
+                                        .update({ schedule_id: master.id })
+                                        .eq('id', p.id);
+                                } else {
+                                    // Already exists in master, delete redundancy
+                                    await supabase
+                                        .from('schedule_participants')
+                                        .delete()
+                                        .eq('id', p.id);
+                                }
+                            }
+                        }
+
+                        // Delete duplicate schedule
+                        await supabase.from('schedules').delete().eq('id', dup.id);
+                        deletedCount++;
+                    }
+                }
+            }
+
+            showMessage(deletedCount > 0 ? `✅ 清理完成，移除了 ${deletedCount} 個重複行程` : "✅ 行程檢查完畢，沒有發現重複項");
+            notifyScheduleUpdate();
+        } catch (e) {
+            console.error("Cleanup failed:", e);
+            showMessage("❌ 清理失敗");
+        }
+    };
+
     const fetchWeeklySchedules = async () => {
         if (!userId) return []; // Use userId
         try {
@@ -1149,7 +1263,8 @@ export const GameProvider = ({ children }) => {
             updateSchedule, // Exposed
             deleteSchedule, // Exposed
             addParticipantToSchedule, // Exposed
-            removeParticipantFromSchedule // Exposed
+            removeParticipantFromSchedule, // Exposed
+            cleanupDuplicateSchedules // Exposed
         }}>
             {children}
         </GameContext.Provider>

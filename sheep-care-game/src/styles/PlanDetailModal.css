@@ -327,3 +327,28 @@
         transform: translateY(0);
     }
 }
+
+/* --- Embedded Mode Overrides --- */
+.nested-plan-detail-wrapper.embedded {
+    background: transparent;
+    border-radius: 0;
+}
+
+.plan-detail-modal-body.embedded-body {
+    background: transparent;
+}
+
+.plan-detail-card.embedded-card {
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin-bottom: 24px;
+}
+
+.plan-detail-card.embedded-card .plan-detail-input,
+.plan-detail-card.embedded-card .plan-detail-select,
+.plan-detail-card.embedded-card .plan-detail-textarea {
+    background: #fff;
+    border: 1px solid var(--border-subtle);
+}

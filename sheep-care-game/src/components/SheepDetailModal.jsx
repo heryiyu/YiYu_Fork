@@ -106,7 +106,7 @@ const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
 import { useIsMobile } from '../hooks/useIsMobile';
 
 export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, completePlan, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate, settings, updateSetting, updatePlanFeedback } = useGame();
+    const { sheep, updateSheep, prayForSheep, completePlan, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate, settings, updateSetting, updatePlanFeedback, fetchWeeklySchedules } = useGame();
     const confirm = useConfirm();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);
@@ -141,49 +141,50 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [completionTarget, setCompletionTarget] = useState(null);
 
-    // Fetch Plans from DB (New Architecture)
+    // Fetch Plans from DB (Refactored to use Shared Fetcher)
     const fetchPlans = async () => {
         if (!target?.id) return;
         try {
-            // Join schedule_participants -> schedules
-            const { data, error } = await supabase
-                .from('schedule_participants')
-                .select(`
-                    *,
-                    schedule:schedule_id (
-                        *,
-                        schedule_participants (
-                            *,
-                            sheep_id
-                        )
-                    )
-                `)
-                .eq('sheep_id', target.id);
+            // Use the shared fetcher to ensure consistency with Calendar
+            // This returns all schedules (that I own or my sheep are in)
+            const allSchedules = await fetchWeeklySchedules();
 
-            if (error) throw error;
+            // Filter for THIS specific sheep
+            const relevantSchedules = allSchedules.filter(s =>
+                s.schedule_participants && s.schedule_participants.some(p => p.sheep_id === target.id)
+            );
 
             // Transform to flat structure for UI
-            const formattedPlans = (data || []).map(p => {
-                const s = p.schedule || {};
+            const formattedPlans = relevantSchedules.map(s => {
+                // Find the participant entry for THIS sheep
+                const myParticipant = s.schedule_participants.find(p => p.sheep_id === target.id);
+
                 return {
                     id: s.id, // Use schedule_id as primary ID for UI interactions
-                    participant_id: p.id,
-                    action: s.action,
+                    participant_id: myParticipant?.id,
+                    action: s.action || '未命名',
                     scheduled_time: s.scheduled_time,
                     location: s.location,
-                    completed_at: p.completed_at,
-                    feedback: p.feedback,
-                    sheep_id: p.sheep_id,
-                    sheep_id: p.sheep_id,
+                    completed_at: myParticipant?.completed_at,
+                    feedback: myParticipant?.feedback,
+                    sheep_id: target.id,
                     created_by: s.created_by,
                     originalSchedule: s // Store full object for PlanDetailModal
                 };
-            }).sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
+            }).sort((a, b) => {
+                const tA = a.scheduled_time ? new Date(a.scheduled_time).getTime() : 0;
+                const tB = b.scheduled_time ? new Date(b.scheduled_time).getTime() : 0;
+                return tA - tB;
+            });
 
+
+
+            // console.log(`[SheepDetail] Loaded ${formattedPlans.length} plans for ${target.name}`);
             setPlans(formattedPlans);
 
             // Handle Initial Plan ID (Deep Link)
             if (initialPlanId && formattedPlans.length > 0) {
+                // console.log("Handling initialPlanId:", initialPlanId);
                 const targetPlan = formattedPlans.find(p => p.id === initialPlanId);
                 if (targetPlan) {
                     handlePlanClick(targetPlan);
@@ -195,6 +196,7 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     };
 
     useEffect(() => {
+        // console.log("SheepDetailModal: target changed", target?.id);
         if (target) {
             setName(target.name);
             setNote(target.note || '');
@@ -273,9 +275,11 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     };
 
     const handlePlanClick = (plan) => {
+        // console.log("handlePlanClick triggered:", plan);
         setActiveTab('PLAN');
         // fetchParticipants(plan); // Removed: Not needed in new architecture or handled differently
         if (plan.completed_at) {
+            console.log("Plan is completed. Opening result view.");
             setCompletionData({
                 note: plan.feedback?.note || '',
                 tags: plan.feedback?.tags || [],
@@ -286,6 +290,7 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
             setCompletionTarget(plan.id);
             setViewMode('RESULT');
         } else {
+            // console.log("handlePlanClick: Incomplete plan. Setting schedule.", plan.originalSchedule?.id);
             if (plan.originalSchedule) {
                 setSelectedSchedule(plan.originalSchedule);
             }
@@ -653,16 +658,16 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                                 <div className="spiritual-plan-container" style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
                                     {selectedSchedule ? (
                                         <div className="nested-plan-detail" style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
+                                            flex: 1,
                                             height: '100%',
-                                            zIndex: 10,
                                             background: 'var(--bg-card)',
-                                            animation: 'slideIn 0.3s ease-out'
+                                            animation: 'slideIn 0.3s ease-out',
+                                            display: 'flex',
+                                            flexDirection: 'column'
                                         }}>
                                             <PlanDetailModal
+                                                key={selectedSchedule.id}
+                                                embedded={true}
                                                 schedule={selectedSchedule}
                                                 onClose={() => {
                                                     setSelectedSchedule(null);

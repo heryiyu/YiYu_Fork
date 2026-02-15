@@ -5,7 +5,7 @@ import { AssetSheep } from './AssetSheep';
 import '../styles/design-tokens.css';
 import '../styles/PlanDetailModal.css';
 
-export const PlanDetailModal = ({ schedule, onClose }) => {
+export const PlanDetailModal = ({ schedule, onClose, embedded = false }) => {
     const {
         sheep,
         currentUser,
@@ -16,6 +16,8 @@ export const PlanDetailModal = ({ schedule, onClose }) => {
         addParticipantToSchedule,
         removeParticipantFromSchedule
     } = useGame();
+
+    // console.log("PlanDetailModal rendered. Schedule:", schedule);
 
     // Form State
     const [isLoading, setIsLoading] = useState(false);
@@ -30,11 +32,18 @@ export const PlanDetailModal = ({ schedule, onClose }) => {
     // Helper to format ISO string to "YYYY-MM-DDThh:mm" for input[type="datetime-local"]
     const toLocalISOString = (isoString) => {
         if (!isoString) return '';
-        const date = new Date(isoString);
-        // Adjust to local time zone for display in input
-        const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-        const localDate = new Date(date.getTime() - offsetMs);
-        return localDate.toISOString().slice(0, 16);
+        try {
+            const date = new Date(isoString);
+            if (isNaN(date.getTime())) return ''; // Invalid Date check
+
+            // Adjust to local time zone for display in input
+            const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+            const localDate = new Date(date.getTime() - offsetMs);
+            return localDate.toISOString().slice(0, 16);
+        } catch (e) {
+            console.warn("Date parse error:", e);
+            return '';
+        }
     };
 
     // Local State for Participants (Batch Update)
@@ -44,6 +53,7 @@ export const PlanDetailModal = ({ schedule, onClose }) => {
 
     // Initialize local state when schedule opens
     useEffect(() => {
+        // console.log("PlanDetailModal: useEffect [schedule] triggered. ID:", schedule?.id);
         if (schedule) {
             setFormData({
                 title: schedule.title || schedule.action || '',
@@ -182,203 +192,212 @@ export const PlanDetailModal = ({ schedule, onClose }) => {
         }
     };
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        await handleSave();
+    };
+
     return (
-        <div className="nested-plan-detail-wrapper">
-
-            {/* Header */}
-            <div className="plan-detail-modal-header">
-                <button
-                    onClick={onClose}
-                    className="close-btn plan-detail-header-btn"
-                    aria-label="返回"
-                >
-                    <ChevronLeft size={24} />
-                </button>
-                <div className="plan-detail-header-title-wrap">
-                    <Calendar size={20} />
-                    <h3 className="plan-detail-header-title">
-                        行程詳情
-                    </h3>
+        <div className={`nested-plan-detail-wrapper ${embedded ? 'embedded' : ''}`}>
+            {/* Header: Only show if NOT embedded */}
+            {!embedded && (
+                <div className="plan-detail-modal-header">
+                    <div className="plan-detail-header-title-wrap">
+                        <button type="button" className="plan-detail-header-btn" onClick={onClose}>
+                            <ChevronLeft size={24} />
+                        </button>
+                        <h3 className="plan-detail-header-title">行程詳情</h3>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            <div className="plan-detail-modal-body">
-                {/* Edit Mode (Default) */}
+            <div className={`plan-detail-modal-body ${embedded ? 'embedded-body' : ''}`}>
                 <div className="plan-detail-form-container">
-                    <div className="plan-detail-card">
-                        <div className="plan-detail-form-group">
-                            <label className="plan-detail-label">標題</label>
-                            <input
-                                type="text"
-                                className="plan-detail-input"
-                                value={formData.title}
-                                onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                placeholder="例如：小組聚會"
-                            />
-                        </div>
-                        <div className="plan-detail-form-group">
-                            <label className="plan-detail-label">時間</label>
-                            <input
-                                type="datetime-local"
-                                className="plan-detail-input"
-                                value={formData.scheduled_time}
-                                onChange={e => setFormData({ ...formData, scheduled_time: e.target.value })}
-                            />
-                        </div>
-                        <div className="plan-detail-form-group">
-                            <label className="plan-detail-label">提醒</label>
-                            <select
-                                className="plan-detail-select"
-                                value={formData.reminderOffset}
-                                onChange={e => setFormData({ ...formData, reminderOffset: Number(e.target.value) })}
-                            >
-                                <option value={-1}>🔕 不提醒</option>
-                                <option value={0}>⚡ 準時提醒</option>
-                                <option value={15}>🔔 提前 15 分鐘</option>
-                                <option value={30}>🔔 提前 30 分鐘</option>
-                                <option value={60}>🔔 提前 1 小時</option>
-                            </select>
-                        </div>
-                        <div className="plan-detail-form-group">
-                            <label className="plan-detail-label">地點</label>
-                            <input
-                                type="text"
-                                className="plan-detail-input"
-                                value={formData.location}
-                                onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                placeholder="地點"
-                            />
-                        </div>
-                        <div className="plan-detail-form-group">
-                            <label className="plan-detail-label">內容規劃</label>
-                            <textarea
-                                className="plan-detail-textarea"
-                                value={formData.content}
-                                onChange={e => setFormData({ ...formData, content: e.target.value })}
-                                rows={3}
-                                style={{ resize: 'none' }}
-                            />
-                        </div>
-                    </div>
 
-                    <div className="plan-detail-card">
-                        <label className="plan-participant-header">
-                            <span className="plan-participant-title">夥伴名單</span>
-                            <button
-                                type="button"
-                                className="plan-participant-add-btn"
-                                onClick={() => setShowAddParticipant(true)}
-                            >
-                                <Plus size={14} /> 新增
-                            </button>
-                        </label>
-                        <div className="plan-participant-list">
-                            {localParticipants.map((participant, index) => {
-                                const sheepData = sheep.find(s => s.id === participant.sheep_id);
-                                const key = participant.id || `new-${participant.sheep_id}-${index}`;
-                                return (
-                                    <div key={key} className="plan-participant-item">
-                                        <div className="plan-participant-info">
-                                            <div className="plan-participant-avatar">
-                                                {sheepData && <AssetSheep visual={sheepData.visual} centered animated={false} />}
-                                            </div>
-                                            <span className="plan-participant-name">{sheepData ? sheepData.name : 'Unknown'}</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="plan-participant-remove"
-                                            onClick={() => handleRemoveParticipant(participant.sheep_id)}
-                                            aria-label="移除夥伴"
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                            {localParticipants.length === 0 && (
-                                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '16px', background: 'var(--bg-snow)', borderRadius: '12px', fontSize: '0.9rem' }}>
-                                    暫無夥伴，請新增
-                                </div>
-                            )}
+                    <form className="plan-detail-form" onSubmit={handleSubmit}>
+                        {/* Title and Time - Card 1 */}
+                        <div className={`plan-detail-card ${embedded ? 'embedded-card' : ''}`}>
+                            <div className="plan-detail-form-group">
+                                <label className="plan-detail-label">標題</label>
+                                <input
+                                    type="text"
+                                    className="plan-detail-input"
+                                    value={formData.title}
+                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                    placeholder="例如：小組聚會"
+                                />
+                            </div>
+                            <div className="plan-detail-form-group">
+                                <label className="plan-detail-label">時間</label>
+                                <input
+                                    type="datetime-local"
+                                    className="plan-detail-input"
+                                    value={formData.scheduled_time}
+                                    onChange={e => setFormData({ ...formData, scheduled_time: e.target.value })}
+                                />
+                            </div>
+                            <div className="plan-detail-form-group">
+                                <label className="plan-detail-label">提醒</label>
+                                <select
+                                    className="plan-detail-select"
+                                    value={formData.reminderOffset}
+                                    onChange={e => setFormData({ ...formData, reminderOffset: Number(e.target.value) })}
+                                >
+                                    <option value={-1}>🔕 不提醒</option>
+                                    <option value={0}>⚡ 準時提醒</option>
+                                    <option value={15}>🔔 提前 15 分鐘</option>
+                                    <option value={30}>🔔 提前 30 分鐘</option>
+                                    <option value={60}>🔔 提前 1 小時</option>
+                                </select>
+                            </div>
+                            <div className="plan-detail-form-group">
+                                <label className="plan-detail-label">地點</label>
+                                <input
+                                    type="text"
+                                    className="plan-detail-input"
+                                    value={formData.location}
+                                    onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                    placeholder="地點"
+                                />
+                            </div>
+                            <div className="plan-detail-form-group">
+                                <label className="plan-detail-label">內容規劃</label>
+                                <textarea
+                                    className="plan-detail-textarea"
+                                    value={formData.content}
+                                    onChange={e => setFormData({ ...formData, content: e.target.value })}
+                                    rows={3}
+                                    style={{ resize: 'none' }}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    {showAddParticipant && (
-                        <div className="plan-add-panel">
-                            <h5 className="plan-add-panel-title">選擇要加入的小羊：</h5>
-                            <div className="plan-sheep-grid">
-                                {availableSheep.length > 0 ? availableSheep.map(s => {
-                                    const isSelected = pendingSelection.includes(s.id);
+                        <div className="plan-detail-card">
+                            <label className="plan-participant-header">
+                                <span className="plan-participant-title">夥伴名單</span>
+                                <button
+                                    type="button"
+                                    className="plan-participant-add-btn"
+                                    onClick={() => setShowAddParticipant(true)}
+                                >
+                                    <Plus size={14} /> 新增
+                                </button>
+                            </label>
+                            <div className="plan-participant-list">
+                                {/* <div style={{padding: '10px', color: 'red'}}>DEBUG: Participant List Hidden</div> */}
+                                {localParticipants.map((participant, index) => {
+                                    const sheepData = sheep.find(s => s.id === participant.sheep_id);
+                                    const key = participant.id || `new-${participant.sheep_id}-${index}`;
                                     return (
-                                        <button
-                                            key={s.id}
-                                            type="button"
-                                            className={`plan-sheep-btn ${isSelected ? 'selected' : ''}`}
-                                            onClick={() => togglePendingSelection(s.id)}
-                                        >
-                                            <div style={{ width: '24px', height: '24px', overflow: 'hidden', borderRadius: '50%', background: '#fff' }}>
-                                                <AssetSheep visual={s.visual} centered animated={false} />
+                                        <div key={key} className="plan-participant-item">
+                                            <div className="plan-participant-info">
+                                                {/* Temporarily disable AssetSheep to check for crash */}
+                                                <div className="plan-participant-avatar">
+                                                    {sheepData && <AssetSheep visual={sheepData.visual} centered animated={false} />}
+                                                </div>
+                                                <span className="plan-participant-name">{sheepData ? sheepData.name : 'Unknown'}</span>
                                             </div>
-                                            <span style={{ fontSize: '0.9rem', color: 'var(--text-body)', fontWeight: isSelected ? 'bold' : 'normal' }}>{s.name}</span>
-                                        </button>
+                                            <button
+                                                type="button"
+                                                className="plan-participant-remove"
+                                                onClick={() => handleRemoveParticipant(participant.sheep_id)}
+                                                aria-label="移除夥伴"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
                                     );
-                                }) : (
-                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', padding: '8px' }}>沒有其他小羊可選了</div>
+                                })}
+                                {localParticipants.length === 0 && (
+                                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '16px', background: 'var(--bg-snow)', borderRadius: '12px', fontSize: '0.9rem' }}>
+                                        暫無夥伴，請新增
+                                    </div>
                                 )}
                             </div>
-                            <div className="plan-add-panel-footer">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAddParticipant(false);
-                                        setPendingSelection([]);
-                                    }}
-                                    className="modal-btn-secondary"
-                                    style={{ flex: 1, padding: '10px', borderRadius: '12px' }}
-                                >
-                                    取消
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={confirmAddParticipants}
-                                    className="modal-btn-confirm-add"
-                                    disabled={pendingSelection.length === 0}
-                                >
-                                    確認加入 ({pendingSelection.length})
-                                </button>
+                        </div>
+
+                        {showAddParticipant && (
+                            <div className="plan-add-panel">
+                                <h5 className="plan-add-panel-title">選擇要加入的小羊：</h5>
+                                <div className="plan-sheep-grid">
+                                    {availableSheep.length > 0 ? availableSheep.map(s => {
+                                        const isSelected = pendingSelection.includes(s.id);
+                                        return (
+                                            <button
+                                                key={s.id}
+                                                type="button"
+                                                className={`plan-sheep-btn ${isSelected ? 'selected' : ''}`}
+                                                onClick={() => togglePendingSelection(s.id)}
+                                            >
+                                                <div style={{ width: '24px', height: '24px', overflow: 'hidden', borderRadius: '50%', background: '#fff' }}>
+                                                    <AssetSheep visual={s.visual} centered animated={false} />
+                                                </div>
+                                                <span style={{ fontSize: '0.9rem', color: 'var(--text-body)', fontWeight: isSelected ? 'bold' : 'normal' }}>{s.name}</span>
+                                            </button>
+                                        );
+                                    }) : (
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', padding: '8px' }}>沒有其他小羊可選了</div>
+                                    )}
+                                </div>
+                                <div className="plan-add-panel-footer">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowAddParticipant(false);
+                                            setPendingSelection([]);
+                                        }}
+                                        className="modal-btn-secondary"
+                                        style={{ flex: 1, padding: '10px', borderRadius: '12px' }}
+                                    >
+                                        取消
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={confirmAddParticipants}
+                                        className="modal-btn-confirm-add"
+                                        disabled={pendingSelection.length === 0}
+                                    >
+                                        確認加入 ({pendingSelection.length})
+                                    </button>
+                                </div>
                             </div>
+                        )}
+
+                        <div className="spiritual-plan-form-actions">
+                            <button
+                                type="submit"
+                                className="modal-btn-confirm-add"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? '處理中...' : (schedule?.id === 'new' ? '確認新增' : '儲存變更')}
+                            </button>
+                            {embedded && (
+                                <button
+                                    type="button"
+                                    className="modal-btn-secondary"
+                                    onClick={onClose}
+                                >
+                                    返回列表
+                                </button>
+                            )}
+                        </div>
+                    </form>
+
+                    {/* Delete Action - Only for existing schedules */}
+                    {schedule?.id !== 'new' && (
+                        <div className="plan-detail-actions" style={{ marginTop: '20px', textAlign: 'center' }}>
+                            <button
+                                type="button"
+                                className="btn-destructive"
+                                onClick={handleDelete}
+                                disabled={isLoading}
+                                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: 'none', fontWeight: 'bold' }}
+                            >
+                                <Trash2 size={16} style={{ marginRight: '8px' }} />
+                                刪除此規劃
+                            </button>
                         </div>
                     )}
-
-                    <div className="spiritual-plan-form-actions">
-                        <button
-                            type="button"
-                            className="modal-btn-secondary"
-                            onClick={onClose}
-                            disabled={isLoading}
-                            style={{ flex: 1, borderRadius: '16px', fontWeight: 'bold' }}
-                        >
-                            取消
-                        </button>
-                        <button
-                            type="button"
-                            className="modal-btn-secondary btn-destructive"
-                            onClick={handleDelete}
-                            disabled={isLoading}
-                            style={{ borderRadius: '16px', width: 'auto', minWidth: '56px' }}
-                        >
-                            <Trash2 size={20} />
-                        </button>
-                        <button
-                            type="button"
-                            className="modal-btn-primary"
-                            onClick={handleSave}
-                            disabled={isLoading}
-                            style={{ flex: 2, borderRadius: '16px', boxShadow: 'var(--shadow-md)', fontWeight: 'bold' }}
-                        >
-                            {isLoading ? '儲存中...' : '儲存變更'}
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

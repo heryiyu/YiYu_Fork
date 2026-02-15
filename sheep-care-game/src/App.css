@@ -540,7 +540,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 0;
+  height: 100%;
 }
 
 .spiritual-plan-form .form-group {
