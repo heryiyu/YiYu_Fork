@@ -345,7 +345,16 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                                                                     alignItems: 'center',
                                                                     gap: '6px'
                                                                 }}>
-                                                                    {schedule.action} (共{currentParticipants.length}人)
+                                                                    {schedule.action}
+                                                                    {currentParticipants.length === 1 ? (
+                                                                        (() => {
+                                                                            const p = currentParticipants[0];
+                                                                            const s = p.sheep || sheep.find(is => is.id === p.sheep_id);
+                                                                            return s ? ` - ${s.name}` : '';
+                                                                        })()
+                                                                    ) : (
+                                                                        ` (共${currentParticipants.length}人)`
+                                                                    )}
                                                                     {allCompleted && <span style={{ fontSize: '0.8rem', color: 'var(--palette-success)' }}>✓ 全員完成</span>}
                                                                     {!allCompleted && completedCount > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({completedCount}人完成)</span>}
                                                                 </span>
