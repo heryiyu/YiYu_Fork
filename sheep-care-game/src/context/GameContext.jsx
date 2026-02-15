@@ -52,8 +52,12 @@ export const GameProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null); // Line Name
     const [nickname, setNickname] = useState(null); // User Nickname
     const [userAvatarUrl, setUserAvatarUrl] = useState(null); // LINE profile picture (login-time)
-    const [lineId, setLineId] = useState(null); // Line User ID
+    const [lineId, setLineId] = useState(null); // Line User ID (Text)
+    const [userId, setUserId] = useState(null); // Internal DB User ID (UUID)
     const [isLoading, setIsLoading] = useState(true);
+
+    // ...
+
     const [isInClient, setIsInClient] = useState(false); // New state to track if in LINE Client
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -172,6 +176,7 @@ export const GameProvider = ({ children }) => {
                 const { user, sheep: loadedSheep } = data;
 
                 setSheep(loadedSheep);
+                setUserId(user.id); // Store Internal UUID
                 // Use nickname from DB; fallback to name or LINE displayName
                 const effectiveNickname = user.nickname?.trim() || user.name?.trim() || displayName;
                 setNickname(effectiveNickname);
@@ -244,9 +249,10 @@ export const GameProvider = ({ children }) => {
             // HEAL ON SAVE: Force merge with defaults to ensure keys like maxVisibleSheep are never lost.
             // Even if state was partial, this restores structure.
             const currentSettings = {
-                maxVisibleSheep: 20, // Default Safety Net
+                maxVisibleSheep: 15, // Default Safety Net (Consistent with initState)
                 notify: false,
                 hiddenFilters: [],
+                stampLabels: {},
                 ...rawSettings
             };
 
@@ -318,7 +324,8 @@ export const GameProvider = ({ children }) => {
             skinId: skinId || null,
             x: Math.random() * 60 + 20, y: Math.random() * 60 + 20,
             angle: Math.random() * Math.PI * 2, direction: 1,
-            user_id: lineId, // Essential for DB
+            angle: Math.random() * Math.PI * 2, direction: 1,
+            user_id: userId, // Essential for DB (UUID)
         };
 
         try {
@@ -619,7 +626,7 @@ export const GameProvider = ({ children }) => {
             };
 
             // Using KeepAlive fetch for reliable save
-            gameState.saveGameSync(lineId, currentSheep, currentProfile);
+            gameState.saveGameSync(lineId, stateRef.current.userId, currentSheep, currentProfile);
         };
 
         const handleSave = () => {
@@ -783,10 +790,11 @@ export const GameProvider = ({ children }) => {
                 }
                 const rawNewHealth = Math.min(100, s.health + 6);
 
-                // Use Centralized Helper to update Status & Type based on new Health
                 const { health, status, type } = calculateSheepState(rawNewHealth, s.status);
 
-                const newCare = s.careLevel + 10;
+                // Prayer now ONLY increases Burden (Health), NOT Care.
+                // Care is gained via completePlan.
+                const newCare = s.careLevel;
 
                 return {
                     ...s, status, health, type, careLevel: newCare,
@@ -799,6 +807,68 @@ export const GameProvider = ({ children }) => {
             return nextState;
         });
     };
+
+    const completePlan = async (planId, sheepId, feedback) => {
+        if (!lineId) return;
+
+        const now = new Date().toISOString();
+
+        // 1. Update DB (schedule_participants)
+        const { error } = await supabase
+            .from('schedule_participants')
+            .update({
+                completed_at: now,
+                feedback: feedback // { note: "...", tags: [...] }
+            })
+            .eq('id', planId);
+
+        if (error) {
+            console.error("Failed to complete plan:", error);
+            throw error;
+        }
+
+        // 2. Update Sheep Care Level
+        setSheep(prev => {
+            const next = prev.map(s => {
+                if (s.id !== sheepId) return s;
+
+                // Increase Care Level (e.g. +10)
+                const newCare = (s.careLevel || 0) + 10;
+
+                // Show Message
+                showMessage(`🎉 ${s.name} 感受到你的關愛了！(關愛 +10)`);
+
+                return { ...s, careLevel: newCare };
+            });
+
+            // Save
+            saveToCloud({ sheep: next });
+            return next;
+        });
+
+        notifyScheduleUpdate();
+    };
+
+    const updatePlanFeedback = async (planId, feedback) => {
+        console.log("updatePlanFeedback called with:", planId, feedback, "lineId:", lineId);
+        if (!lineId) {
+            console.error("Missing lineId in updatePlanFeedback");
+            return;
+        }
+        const { error } = await supabase
+            .from('schedule_participants')
+            .update({
+                feedback: feedback
+            })
+            .eq('id', planId);
+
+        if (error) {
+            console.error("Failed to update plan feedback:", error);
+            throw error;
+        }
+        notifyScheduleUpdate();
+    };
+
 
     const deleteSheep = async (id) => {
         setSheep(prev => {
@@ -866,22 +936,293 @@ export const GameProvider = ({ children }) => {
         return ok;
     };
 
-    const fetchWeeklySchedules = async () => {
-        if (!lineId) return [];
+
+
+
+    // --- Schedule Management ---
+
+    const addSchedule = async (scheduleData, participantSheepIds) => {
+        if (!userId) return null;
+
         try {
-            const { data, error } = await supabase
-                .from('spiritual_plans')
-                .select('*')
-                .eq('user_id', lineId)
+            // 0. Check for existing schedule (deduplication)
+            // We check for same action + time + creator
+            const { data: existingSchedules } = await supabase
+                .from('schedules')
+                .select('id')
+                .eq('created_by', userId)
+                .eq('action', scheduleData.title || '未命名行動')
+                .eq('scheduled_time', scheduleData.scheduled_time);
+
+            let scheduleId;
+            let schedule;
+
+            if (existingSchedules && existingSchedules.length > 0) {
+                console.log("Found existing schedule, reusing ID:", existingSchedules[0].id);
+                scheduleId = existingSchedules[0].id;
+                schedule = existingSchedules[0]; // partial
+            } else {
+                // 1. Create Schedule
+                const { data: newSchedule, error: scheduleError } = await supabase
+                    .from('schedules')
+                    .insert([{
+                        created_by: userId,
+                        action: scheduleData.title || '未命名行動',
+                        scheduled_time: scheduleData.scheduled_time,
+                        location: scheduleData.location,
+                        content: scheduleData.content,
+                        notify_at: scheduleData.notify_at,
+                        reminder_offset: scheduleData.reminder_offset,
+                        created_at: new Date().toISOString()
+                    }])
+                    .select()
+                    .single();
+
+                if (scheduleError) throw scheduleError;
+                scheduleId = newSchedule.id;
+                schedule = newSchedule;
+            }
+
+            // 2. Add Participants (Avoid Duplicates)
+            if (participantSheepIds && participantSheepIds.length > 0) {
+                // Fetch existing participants for this schedule
+                const { data: existingParticipants } = await supabase
+                    .from('schedule_participants')
+                    .select('sheep_id')
+                    .eq('schedule_id', scheduleId);
+
+                const existingSheepIds = new Set((existingParticipants || []).map(p => p.sheep_id));
+
+                // Filter out sheep that are already in the schedule
+                const newParticipantsPayload = participantSheepIds
+                    .filter(sheepId => !existingSheepIds.has(sheepId))
+                    .map(sheepId => ({
+                        schedule_id: scheduleId,
+                        sheep_id: sheepId,
+                        created_at: new Date().toISOString()
+                    }));
+
+                if (newParticipantsPayload.length > 0) {
+                    const { error: participantsError } = await supabase
+                        .from('schedule_participants')
+                        .insert(newParticipantsPayload);
+
+                    if (participantsError) throw participantsError;
+                }
+            }
+
+            notifyScheduleUpdate();
+            return schedule;
+        } catch (error) {
+            console.error("Failed to add schedule:", error);
+            showMessage("❌ 新增行程失敗");
+            return null;
+        }
+    };
+
+    const updateSchedule = async (scheduleId, updates) => {
+        if (!userId) return false;
+        try {
+            // Extract title to map to 'action'
+            const { title, ...rest } = updates;
+
+            const validUpdates = { ...rest };
+            if (title !== undefined) {
+                validUpdates.action = title.trim() || '未命名行動';
+            }
+
+            const { error } = await supabase
+                .from('schedules')
+                .update({ ...validUpdates, created_by: userId }) // Ensure owner is set for legacy data
+                .eq('id', scheduleId);
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to update schedule:", error);
+            showMessage("❌ 更新行程失敗");
+            return false;
+        }
+    };
+
+    const deleteSchedule = async (scheduleId) => {
+        if (!lineId) return false;
+        try {
+            // Delete participants first (manual cascade for safety)
+            await supabase.from('schedule_participants').delete().eq('schedule_id', scheduleId);
+
+            const { error } = await supabase
+                .from('schedules')
+                .delete()
+                .eq('id', scheduleId);
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to delete schedule:", error);
+            showMessage("❌ 刪除行程失敗");
+            return false;
+        }
+    };
+
+    const addParticipantToSchedule = async (scheduleId, sheepId) => {
+        if (!lineId) return false;
+        try {
+            const { error } = await supabase
+                .from('schedule_participants')
+                .insert([{
+                    schedule_id: scheduleId,
+                    sheep_id: sheepId,
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to add participant:", error); // Keep this log
+            return false;
+        }
+    };
+
+    const removeParticipantFromSchedule = async (scheduleId, sheepId) => {
+        if (!lineId) return false;
+        try {
+            const { error } = await supabase
+                .from('schedule_participants')
+                .delete()
+                .match({ schedule_id: scheduleId, sheep_id: sheepId });
+
+            if (error) throw error;
+            notifyScheduleUpdate();
+            return true;
+        } catch (error) {
+            console.error("Failed to remove participant:", error); // Keep this log
+            return false;
+        }
+    };
+
+    const cleanupDuplicateSchedules = async () => {
+        if (!userId) return;
+        showMessage("🧹 正在清理重複行程...");
+
+        try {
+            // 1. Fetch all schedules for this user
+            const { data: schedules, error } = await supabase
+                .from('schedules')
+                .select('id, action, scheduled_time, created_at')
+                .eq('created_by', userId)
                 .order('scheduled_time', { ascending: true });
 
             if (error) throw error;
-            return data || [];
+
+            // 2. Group by action + time
+            const groups = {};
+            schedules.forEach(s => {
+                const key = `${s.action}|${s.scheduled_time}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(s);
+            });
+
+            let deletedCount = 0;
+
+            // 3. Process duplicates
+            for (const key in groups) {
+                const group = groups[key];
+                if (group.length > 1) {
+                    // Sort by created_at (keep oldest)
+                    group.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    const master = group[0];
+                    const duplicates = group.slice(1);
+
+                    for (const dup of duplicates) {
+                        // Move participants to master
+                        // First fetch participants of duplicate
+                        const { data: parts } = await supabase
+                            .from('schedule_participants')
+                            .select('*')
+                            .eq('schedule_id', dup.id);
+
+                        if (parts && parts.length > 0) {
+                            for (const p of parts) {
+                                // Check if master already has this sheep
+                                const { data: existing } = await supabase
+                                    .from('schedule_participants')
+                                    .select('id')
+                                    .eq('schedule_id', master.id)
+                                    .eq('sheep_id', p.sheep_id);
+
+                                if (!existing || existing.length === 0) {
+                                    // Move (Update schedule_id)
+                                    await supabase
+                                        .from('schedule_participants')
+                                        .update({ schedule_id: master.id })
+                                        .eq('id', p.id);
+                                } else {
+                                    // Already exists in master, delete redundancy
+                                    await supabase
+                                        .from('schedule_participants')
+                                        .delete()
+                                        .eq('id', p.id);
+                                }
+                            }
+                        }
+
+                        // Delete duplicate schedule
+                        await supabase.from('schedules').delete().eq('id', dup.id);
+                        deletedCount++;
+                    }
+                }
+            }
+
+            showMessage(deletedCount > 0 ? `✅ 清理完成，移除了 ${deletedCount} 個重複行程` : "✅ 行程檢查完畢，沒有發現重複項");
+            notifyScheduleUpdate();
+        } catch (e) {
+            console.error("Cleanup failed:", e);
+            showMessage("❌ 清理失敗");
+        }
+    };
+
+    const fetchWeeklySchedules = async () => {
+        if (!userId) return []; // Use userId
+        try {
+            // New Query: Fetch Schedules + Participants
+            // We do NOT join sheep details here because 'sheep' table schema is complex (visuals in json).
+            // Instead, we rely on the 'sheep' context state which is already loaded and parsed.
+            const { data, error } = await supabase
+                .from('schedules')
+                .select(`
+                    *,
+                    schedule_participants (
+                        *
+                    )
+                `)
+                // .eq('created_by', lineId) // Removed: created_by may be empty. Use JS filter.
+                .order('scheduled_time', { ascending: true });
+
+            if (error) throw error;
+
+            // Filter: Created by me OR contains my sheep
+            // Since sheep state contains only my sheep, we can use it.
+            const mySheepIds = new Set(sheep.map(s => s.id));
+            const filtered = (data || []).filter(s => {
+                // 1. Explicit Owner (Future)
+                if (s.created_by === userId) return true; // Explicit Owner (UUID)
+                // 2. Participant Check (Legacy/Current)
+                const participants = s.schedule_participants || [];
+                return participants.some(p => mySheepIds.has(p.sheep_id));
+            });
+
+            return filtered;
         } catch (error) {
             console.error('Error fetching weekly schedules:', error);
             return [];
         }
     };
+
+
 
     return (
         <GameContext.Provider value={{
@@ -891,7 +1232,7 @@ export const GameProvider = ({ children }) => {
             location, updateUserLocation, isInClient, // Exposed
             adoptSheep, updateSheep, updateMultipleSheep, togglePin,
             loginWithLine, loginAsAdmin, logout, // Exposed
-            prayForSheep, deleteSheep, deleteMultipleSheep,
+            prayForSheep, completePlan, deleteSheep, deleteMultipleSheep,
             saveToCloud, forceLoadFromCloud, // Exposed
             notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
             updateNickname, // Exposed
@@ -916,9 +1257,18 @@ export const GameProvider = ({ children }) => {
             notifyScheduleUpdate, // Exposed
             focusedSheepId,
             findSheep,
-            clearFocus
+            clearFocus,
+            updatePlanFeedback, // Exposed
+            addSchedule, // Exposed
+            updateSchedule, // Exposed
+            deleteSchedule, // Exposed
+            addParticipantToSchedule, // Exposed
+            removeParticipantFromSchedule, // Exposed
+            cleanupDuplicateSchedules // Exposed
         }}>
             {children}
         </GameContext.Provider>
     );
 };
+
+

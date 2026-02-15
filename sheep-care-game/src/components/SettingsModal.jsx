@@ -8,7 +8,7 @@ import { Tag } from './ui/Tag';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 export const SettingsModal = ({ onClose }) => {
-    const { settings, updateSetting, tags } = useGame();
+    const { settings, updateSetting, tags, cleanupDuplicateSchedules } = useGame();
     const closeBtnRef = useRef(null);
     const isMobile = useIsMobile();
 
@@ -193,6 +193,20 @@ export const SettingsModal = ({ onClose }) => {
                                     >
                                         <span>🔄</span>
                                         <span>強制重新載入 (Clear Cache)</span>
+                                    </button>
+
+                                    <div style={{ height: '8px' }}></div>
+                                    <button
+                                        className="modal-btn-secondary"
+                                        style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-muted)' }}
+                                        onClick={() => {
+                                            if (window.confirm('確定要執行重複行程檢查嗎？這將會合併相同時間與名稱的行程。')) {
+                                                cleanupDuplicateSchedules();
+                                            }
+                                        }}
+                                    >
+                                        <span>🧹</span>
+                                        <span>檢查併清理重複行程</span>
                                     </button>
                                 </div>
 

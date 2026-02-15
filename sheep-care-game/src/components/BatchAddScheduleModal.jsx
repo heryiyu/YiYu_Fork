@@ -51,6 +51,8 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
     };
 
     // Step 2: Submit
+    const { addSchedule } = useGame();
+
     const handleSubmit = async () => {
         if (!formData.action || !formData.time) {
             alert('請輸入行動名稱與時間');
@@ -68,23 +70,23 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
                 notifyAt = notifyTime.toISOString();
             }
 
-            // Create payloads for all selected sheep
-            const payloads = Array.from(selectedSheepIds).map(sheepId => ({
-                user_id: lineId,
-                sheep_id: sheepId,
-                action: formData.action,
+            const scheduleData = {
+                title: formData.action,
                 scheduled_time: scheduledTime,
-                notify_at: notifyAt,
-                reminder_offset: formData.reminderOffset,
                 location: formData.location,
                 content: formData.content,
-                is_notified: false
-            }));
+                notify_at: notifyAt,
+                reminder_offset: formData.reminderOffset
+            };
 
-            const { error } = await supabase.from('spiritual_plans').insert(payloads);
-            if (error) throw error;
+            const participantIds = Array.from(selectedSheepIds);
+            const result = await addSchedule(scheduleData, participantIds);
 
-            onSaved(); // Callback to refresh parent list
+            if (result) {
+                onSaved(); // Callback to refresh parent list
+            } else {
+                alert('儲存失敗，請稍後再試');
+            }
         } catch (error) {
             console.error('Batch add failed:', error);
             alert('儲存失敗，請稍後再試');

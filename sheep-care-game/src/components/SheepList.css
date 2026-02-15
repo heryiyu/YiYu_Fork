@@ -49,10 +49,12 @@
     box-shadow: var(--card-inner-shadow);
     transform: scale(1);
   }
+
   40% {
     box-shadow: 0 0 0 4px var(--palette-blue-action), 0 0 16px color-mix(in srgb, var(--palette-blue-action) 50%, transparent), var(--card-inner-shadow);
     transform: scale(1.04);
   }
+
   100% {
     box-shadow: var(--card-inner-shadow);
     transform: scale(1);
@@ -60,7 +62,7 @@
 }
 
 /* Reorder: smooth position transition for card wrapper */
-.dock-scroll-area > div {
+.dock-scroll-area>div {
   transition: transform 0.25s ease;
 }
 
@@ -77,6 +79,7 @@
   from {
     width: var(--ph-width, 0);
   }
+
   to {
     width: 0;
     min-width: 0;
@@ -90,7 +93,7 @@
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--palette-blue-action) 30%, transparent), var(--card-inner-shadow);
   }
 
-  .dock-scroll-area > div {
+  .dock-scroll-area>div {
     transition: none;
   }
 
@@ -298,6 +301,7 @@
  * 5% smaller (15px), 20deg rotation. See SheepList.jsx comment.
  * Do NOT change - intentional for "follow and find" visual distinction.
  */
+/* Find Button (Footprint) */
 .find-btn {
   width: 24px;
   height: 24px;
@@ -308,14 +312,44 @@
   justify-content: center;
   border-radius: var(--radius-icon-btn);
   color: var(--text-muted-light);
+  /* Subtle color */
   flex-shrink: 0;
   transition: background 0.2s, color 0.2s, opacity 0.2s;
+  padding: 0;
+  position: relative;
+}
+
+/* Enlarge touch target without affecting visual layout */
+.find-btn::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
 }
 
 .find-btn:hover {
   background: var(--icon-btn-hover-bg);
   color: var(--text-muted);
   opacity: 1;
+}
+
+/* Ensure visibility on mobile but keep it small */
+@media (max-width: 480px) {
+  .find-btn {
+    opacity: 0.6 !important;
+    /* Semi-transparent unless interacted */
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  .find-btn:active,
+  .find-btn:focus {
+    opacity: 1 !important;
+  }
 }
 
 .find-btn:focus,
@@ -430,7 +464,8 @@
 .dock-toolbar-search-wrap--expanded {
   flex: 1 1 100%;
   min-width: 200px;
-  width: 40%;;
+  width: 40%;
+  ;
   max-width: 320px;
 }
 
@@ -471,6 +506,7 @@
     width: 90px;
     font-size: 16px;
   }
+
   .dock-toolbar-search-wrap--expanded {
     min-width: 85%;
   }
