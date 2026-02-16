@@ -13,6 +13,8 @@ import { IconButton, IconButtonGroup } from './ui/IconButton';
 import { Tooltip } from './ui/Tooltip';
 import { Portal } from './ui/Portal';
 import { PlanDetailModal } from './PlanDetailModal';
+import { FeedbackForm } from './FeedbackForm';
+import { FeedbackResult } from './FeedbackResult';
 import { generateGoogleCalendarUrl } from '../utils/calendarHelper';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -191,14 +193,19 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
         }
     };
 
+    const lastFetchedRef = useRef(null);
+
     useEffect(() => {
         // console.log("SheepDetailModal: target changed", target?.id);
         if (target) {
             setName(target.name);
             setNote(target.note || '');
             setLocalMsg('');
-            // Fetch remote plans
-            fetchPlans();
+            // Fetch remote plans only if target changed or plans haven't been fetched
+            if (lastFetchedRef.current !== target.id) {
+                fetchPlans();
+                lastFetchedRef.current = target.id;
+            }
             setViewMode('LIST');
             setActiveTab('DASHBOARD'); // Reset to Dashboard on open
         }
@@ -281,9 +288,9 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                 tags: plan.feedback?.tags || [],
                 completedAt: plan.completed_at
             });
-            // We need the schedule ID for updatePlanFeedback/completePlan
+            // We need the PARTICIPANT ID for updatePlanFeedback/completePlan
             // Using a local variable or separate state instead of editingPlanId
-            setCompletionTarget(plan.id);
+            setCompletionTarget(plan.participant_id);
             setViewMode('RESULT');
         } else {
             // console.log("handlePlanClick: Incomplete plan. Setting schedule.", plan.originalSchedule?.id);
@@ -294,23 +301,49 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     };
 
     const openCompletePlan = (plan) => {
-        setCompletionTarget(plan.id);
+        // Use participant_id if available (from formatted plan), otherwise we might need to find it
+        // If 'plan' is a raw schedule object (from openAddPlan or PlanDetailModal return), it might not have participant_id directly attached in the same way.
+        // But openCompletePlan is usually called from Layout or Detail.
+        // Let's assume plan has participant_id if it came from the list.
+        // If it comes from PlanDetailModal (schedule object), we need to find the participant id for THIS sheep.
+
+        let targetId = plan.participant_id;
+        if (!targetId && plan.schedule_participants) {
+            const p = plan.schedule_participants.find(sp => sp.sheep_id === target.id);
+            if (p) targetId = p.id;
+        }
+
+        setCompletionTarget(targetId);
         setCompletionData({ note: '', tags: [] });
         setViewMode('COMPLETE');
     };
 
-    const handleCompleteSubmit = async () => {
+    const handleCompleteSubmit = async (dataOverride) => {
         if (!completionTarget) return;
         setPlanActionLoading(true);
+        // Use override if provided, else state
+        const finalData = dataOverride || completionData;
         try {
             // Check if editing an existing completed plan
-            const planToEdit = plans.find(p => p.id === completionTarget);
+            // Check if editing an existing completed plan
+            // We use completionTarget which is now the participant_id
+            // We need to know if it's already completed to decide update vs complete? 
+            // completePlan in context handles the DB update. 
+            // context.completePlan does: update schedule_participants set completed_at=NOW, feedback=... where id=planId (arg 1)
+            // context.updatePlanFeedback does: update schedule_participants set feedback=... where id=planId
+
+            // The logic here relied on 'plans' list to check 'completed_at'.
+            // But 'completionTarget' is now a Participant ID, not a Schedule ID (which 'plans' uses as key 'id').
+            // We need to find the plan in 'plans' that matches this participant_id.
+
+            const planToEdit = plans.find(p => p.participant_id === completionTarget);
+
             if (planToEdit && planToEdit.completed_at) {
                 // UPDATE FeedBack Only
-                await updatePlanFeedback(completionTarget, completionData);
+                await updatePlanFeedback(completionTarget, finalData);
             } else {
                 // NEW Completion
-                await completePlan(completionTarget, target.id, completionData);
+                await completePlan(completionTarget, target.id, finalData);
             }
 
             notifyScheduleUpdate();
@@ -652,252 +685,148 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
 
                             {activeTab === 'PLAN' && (
                                 <div className="spiritual-plan-container" style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-                                    {selectedSchedule ? (
-                                        <div className="nested-plan-detail" style={{
-                                            flex: 1,
-                                            height: '100%',
-                                            background: 'var(--bg-card)',
-                                            animation: 'slideIn 0.3s ease-out',
-                                            display: 'flex',
-                                            flexDirection: 'column'
-                                        }}>
-                                            <PlanDetailModal
-                                                key={selectedSchedule.id}
-                                                embedded={true}
-                                                schedule={selectedSchedule}
-                                                onClose={() => {
-                                                    setSelectedSchedule(null);
-                                                    fetchPlans();
-                                                }}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="plan-list-wrapper" style={{ height: '100%', overflowY: 'auto', padding: '0 4px' }}>
-                                            {/* View Toggle & Add Button Header */}
-                                            <div className="plan-list-header" style={{
+                                    {viewMode === 'LIST' && (
+                                        selectedSchedule ? (
+                                            <div className="nested-plan-detail" style={{
+                                                flex: 1,
+                                                height: '100%',
+                                                background: 'var(--bg-card)',
+                                                animation: 'slideIn 0.3s ease-out',
                                                 display: 'flex',
-                                                justifyContent: 'flex-end',
-                                                alignItems: 'center',
-                                                paddingBottom: '10px',
-                                                position: 'sticky',
-                                                top: 0,
-                                                zIndex: 10,
-                                                background: 'linear-gradient(to bottom, var(--bg-card) 85%, rgba(255, 255, 255, 0) 100%)'
+                                                flexDirection: 'column'
                                             }}>
-                                                <Tooltip content="新增認領規劃" side="bottom">
-                                                    <button
-                                                        type="button"
-                                                        className="plan-add-btn"
-                                                        onClick={openAddPlan}
-                                                        aria-label="新增認領規劃"
-                                                    >
-                                                        <Plus size={18} strokeWidth={2.5} />
-                                                        <span>新增規劃</span>
-                                                    </button>
-                                                </Tooltip>
+                                                <PlanDetailModal
+                                                    key={selectedSchedule.id}
+                                                    embedded={true}
+                                                    schedule={selectedSchedule}
+                                                    onClose={() => {
+                                                        setSelectedSchedule(null);
+                                                        fetchPlans();
+                                                    }}
+                                                    onComplete={() => {
+                                                        // Pass the formatted plan structure if possible, or the schedule
+                                                        // We need to ensure openCompletePlan can handle the schedule object
+                                                        openCompletePlan(selectedSchedule);
+                                                    }}
+                                                />
                                             </div>
+                                        ) : (
+                                            <div className="plan-list-wrapper" style={{ height: '100%', overflowY: 'auto', padding: '0 4px' }}>
+                                                <div className="plan-list-header" style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'flex-end',
+                                                    alignItems: 'center',
+                                                    paddingBottom: '10px',
+                                                    position: 'sticky',
+                                                    top: 0,
+                                                    zIndex: 10,
+                                                    background: 'linear-gradient(to bottom, var(--bg-card) 85%, rgba(255, 255, 255, 0) 100%)'
+                                                }}>
+                                                    {plans.length > 0 && (
+                                                        <Tooltip content="新增認領規劃" side="bottom">
+                                                            <button
+                                                                type="button"
+                                                                className="plan-add-btn"
+                                                                onClick={openAddPlan}
+                                                                aria-label="新增認領規劃"
+                                                            >
+                                                                <Plus size={18} strokeWidth={2.5} />
+                                                                <span>新增規劃</span>
+                                                            </button>
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
 
-                                            <ModalHint className="plan-retention-hint">
-                                                系統會自動清理超過一個月的過期行程
-                                            </ModalHint>
+                                                <ModalHint className="plan-retention-hint">
+                                                    系統會自動清理超過一個月的過期行程
+                                                </ModalHint>
 
-                                            <div className="plan-list">
-                                                {plans.length === 0 ? (
-                                                    <div className="empty-plan-state">
-                                                        <div className="empty-icon">📅</div>
-                                                        <div className="empty-text">尚無認領規劃</div>
-                                                        <button className="empty-btn" onClick={openAddPlan}>
-                                                            立即新增
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    plans.map(p => (
-                                                        <div
-                                                            key={p.id}
-                                                            className={`plan-item ${p.completed_at ? 'completed' : ''}`}
-                                                            onClick={() => handlePlanClick(p)}
-                                                        >
-                                                            <div className="plan-item-left">
-                                                                <div className="plan-date-box">
-                                                                    <span className="plan-date-month">
-                                                                        {p.scheduled_time ? new Date(p.scheduled_time).getMonth() + 1 : '--'}月
-                                                                    </span>
-                                                                    <span className="plan-date-day">
-                                                                        {p.scheduled_time ? new Date(p.scheduled_time).getDate() : '--'}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="plan-info">
-                                                                    <div className="plan-action">{p.action}</div>
-                                                                    <div className="plan-meta">
-                                                                        {p.scheduled_time && (
-                                                                            <span className="plan-time">
-                                                                                <Clock size={12} />
-                                                                                {new Date(p.scheduled_time).toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit' })}
-                                                                            </span>
-                                                                        )}
+                                                <div className="plan-list">
+                                                    {plans.length === 0 ? (
+                                                        <div className="plan-list-empty">
+                                                            <Calendar size={48} strokeWidth={1} style={{ opacity: 0.3 }} />
+                                                            <p>尚無認領規劃</p>
+                                                            <button className="modal-btn-primary" onClick={openAddPlan} style={{ marginTop: '8px', maxWidth: '160px' }}>
+                                                                立即新增
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        plans.map(p => (
+                                                            <div
+                                                                key={p.id}
+                                                                className={`plan-item ${p.completed_at ? 'completed' : ''}`}
+                                                                onClick={() => handlePlanClick(p)}
+                                                            >
+                                                                <div className="plan-item-left">
+                                                                    <div className="plan-date-box">
+                                                                        <span className="plan-date-month">
+                                                                            {p.scheduled_time ? new Date(p.scheduled_time).getMonth() + 1 : '--'}月
+                                                                        </span>
+                                                                        <span className="plan-date-day">
+                                                                            {p.scheduled_time ? new Date(p.scheduled_time).getDate() : '--'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="plan-info">
+                                                                        <div className="plan-action">{p.action}</div>
+                                                                        <div className="plan-meta">
+                                                                            {p.scheduled_time && (
+                                                                                <span className="plan-time">
+                                                                                    <Clock size={12} />
+                                                                                    {new Date(p.scheduled_time).toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit' })}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
+                                                                <div className="plan-item-right">
+                                                                    {p.completed_at ? (
+                                                                        <span className="status-badge completed">
+                                                                            <Check size={12} strokeWidth={3} />
+                                                                            已完成
+                                                                        </span>
+                                                                    ) : (
+                                                                        <ChevronRight size={16} className="arrow-icon" />
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div className="plan-item-right">
-                                                                {p.completed_at ? (
-                                                                    <span className="status-badge completed">
-                                                                        <Check size={12} strokeWidth={3} />
-                                                                        已完成
-                                                                    </span>
-                                                                ) : (
-                                                                    <ChevronRight size={16} className="arrow-icon" />
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                )}
+                                                        ))
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )
                                     )}
-                                </div>
-                            )}
 
-                            {activeTab === 'COMPLETE' && (
-                                <div className="spiritual-plan-form">
-                                    <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效</h3>
-
-                                    <div className="form-group">
-                                        <label>💭 心得紀錄</label>
-                                        <textarea
-                                            value={completionData.note}
-                                            onChange={(e) => setCompletionData({ ...completionData, note: e.target.value })}
-                                            rows={5}
-                                            placeholder="接觸狀況如何？小羊的反應？有無邀約或決志？"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>🏷️ 狀況標記 (可複選)</label>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            {FEEDBACK_TAGS.map(tag => {
-                                                const active = completionData.tags.includes(tag);
-                                                return (
-                                                    <button
-                                                        key={tag}
-                                                        type="button"
-                                                        onClick={() => toggleFeedbackTag(tag)}
-                                                        style={{
-                                                            padding: '6px 12px',
-                                                            borderRadius: '20px',
-                                                            border: active ? '1px solid var(--palette-blue-action)' : '1px solid #ddd',
-                                                            background: active ? 'var(--palette-blue-action)' : '#f9f9f9',
-                                                            color: active ? '#fff' : '#666',
-                                                            fontSize: '0.9rem',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s'
-                                                        }}
-                                                    >
-                                                        {tag}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    <div className="spiritual-plan-form-actions">
-                                        <button
-                                            type="button"
-                                            className="modal-btn-secondary"
-                                            onClick={() => setViewMode('LIST')}
-                                            disabled={planActionLoading}
-                                        >
-                                            取消
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="modal-btn-primary"
-                                            onClick={handleCompleteSubmit}
-                                            disabled={planActionLoading}
-                                        >
-                                            {planActionLoading ? '處理中...' : '完成紀錄'}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {viewMode === 'RESULT' && (
-                                <div className="spiritual-plan-form">
-
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', marginBottom: '16px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效 (已完成)</h3>
-                                        <button
-                                            type="button"
-                                            className="modal-btn-primary"
-                                            onClick={() => setViewMode('COMPLETE')}
-                                            style={{
-                                                borderRadius: '50%',
-                                                width: '24px',
-                                                height: '24px',
-                                                padding: 0,
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                minWidth: 'unset',
-                                                background: 'transparent',
-                                                color: '#999',
-                                                boxShadow: 'none',
-                                                border: 'none',
-                                                cursor: 'pointer'
+                                    {viewMode === 'COMPLETE' && (
+                                        <FeedbackForm
+                                            initialData={completionData}
+                                            onSubmit={(data) => {
+                                                setCompletionData(data); // Sync state just in case, but onSubmit uses arg usually
+                                                // Actually handleCompleteSubmit uses state 'completionData'. 
+                                                // Let's modify handleCompleteSubmit to accept data or update state first.
+                                                // For safety: update state then calling handler is tricky with async state.
+                                                // Better: Pass data directly to handleCompleteSubmit logic.
+                                                // Refactoring handleCompleteSubmit to accept override data.
+                                                handleCompleteSubmit(data);
                                             }}
-                                            title="修改紀錄"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                    </div>
+                                            onCancel={() => setViewMode('LIST')}
+                                            loading={planActionLoading}
+                                        />
+                                    )}
 
-                                    <div className="form-group">
-                                        <label>📅 完成時間</label>
-                                        <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '8px', color: '#666' }}>
-                                            {formatDisplayTime(completionData.completedAt)}
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>💭 心得紀錄</label>
-                                        <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', minHeight: '80px', whiteSpace: 'pre-wrap' }}>
-                                            {completionData.note || '無心得紀錄'}
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>🏷️ 狀況標記</label>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            {completionData.tags && completionData.tags.length > 0 ? (
-                                                completionData.tags.map(tag => (
-                                                    <span
-                                                        key={tag}
-                                                        style={{
-                                                            padding: '4px 10px',
-                                                            borderRadius: '20px',
-                                                            background: 'var(--palette-blue-action)',
-                                                            color: '#fff',
-                                                            fontSize: '0.9rem'
-                                                        }}
-                                                    >
-                                                        {tag}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span style={{ color: '#999' }}>無標記</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="spiritual-plan-form-actions">
-                                        <button
-                                            type="button"
-                                            className="modal-btn-secondary"
-                                            onClick={() => setViewMode('LIST')}
-                                            style={{ width: '100%' }}
-                                        >
-                                            返回列表
-                                        </button>
-                                    </div>
+                                    {viewMode === 'RESULT' && (
+                                        <FeedbackResult
+                                            data={completionData}
+                                            onEdit={() => setViewMode('COMPLETE')}
+                                            onBack={() => setViewMode('LIST')}
+                                            onViewPlan={() => {
+                                                const p = plans.find(plan => plan.participant_id === completionTarget);
+                                                if (p && p.originalSchedule) {
+                                                    setSelectedSchedule(p.originalSchedule);
+                                                    setViewMode('LIST'); // Reset view mode so when modal closes we see list
+                                                }
+                                            }}
+                                        />
+                                    )}
                                 </div>
                             )}
 
@@ -994,52 +923,56 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                 </div>
             </div>
 
-            {showTagManager && (
-                <TagManagerModal onClose={() => setShowTagManager(false)} />
-            )}
+            {
+                showTagManager && (
+                    <TagManagerModal onClose={() => setShowTagManager(false)} />
+                )
+            }
 
-            {showWinningModal && (
-                <div
-                    className="winning-modal-overlay"
-                    onClick={() => setShowWinningModal(false)}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="得獎通知"
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        zIndex: 10000,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        backdropFilter: 'blur(2px)'
-                    }}
-                >
+            {
+                showWinningModal && (
                     <div
-                        className="winning-modal-content"
+                        className="winning-modal-overlay"
+                        onClick={() => setShowWinningModal(false)}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="得獎通知"
                         style={{
-                            transform: 'scale(1)',
-                            animation: 'modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                            pointerEvents: 'none' // Let clicks pass through to close
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            zIndex: 10000,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            backdropFilter: 'blur(2px)'
                         }}
                     >
-                        <img
-                            src="/assets/sheep/winning_sheep.png"
-                            alt="Winning Sheep"
+                        <div
+                            className="winning-modal-content"
                             style={{
-                                maxWidth: '80vw',
-                                maxHeight: '60vh',
-                                objectFit: 'contain',
-                                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
+                                transform: 'scale(1)',
+                                animation: 'modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                pointerEvents: 'none' // Let clicks pass through to close
                             }}
-                        />
+                        >
+                            <img
+                                src="/assets/sheep/winning_sheep.png"
+                                alt="Winning Sheep"
+                                style={{
+                                    maxWidth: '80vw',
+                                    maxHeight: '60vh',
+                                    objectFit: 'contain',
+                                    filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
+                                }}
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
-        </Portal>
+                )
+            }
+        </Portal >
     );
 };

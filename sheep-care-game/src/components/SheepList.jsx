@@ -249,7 +249,7 @@ const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true, delay
     };
 };
 
-const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onFind, onLongPress, tags = [], tagAssignmentsBySheep = {}, pinFlashId }) => {
+const SheepCard = React.memo(({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, isSleepingState, isSick, isPinned, onTogglePin, onFind, onLongPress, tags = [], tagAssignmentsBySheep = {}, pinFlashId }) => {
     const assigned = (tagAssignmentsBySheep[s.id] || []);
     const firstTagId = assigned.length > 0 ? assigned[0].tagId : null;
     const firstTag = firstTagId ? tags.find(t => t.id === firstTagId) : null;
@@ -384,7 +384,35 @@ const SheepCard = ({ s, isSelectionMode, isSelected, onSelect, onToggleSelect, i
             </div>
         </div >
     );
-};
+}, (prev, next) => {
+    // Optimization: Only re-render if visual data or selection/pin state changes
+    if (prev.isSelectionMode !== next.isSelectionMode) return false;
+    if (prev.isSelected !== next.isSelected) return false;
+    if (prev.isPinned !== next.isPinned) return false;
+    if (prev.pinFlashId !== next.pinFlashId) return false;
+
+    const ps = prev.s;
+    const ns = next.s;
+
+    if (ps.id !== ns.id) return false;
+    if (ps.name !== ns.name) return false;
+    if (ps.status !== ns.status) return false;
+    if (ps.prayedCount !== ns.prayedCount) return false;
+    if (ps.awakeningProgress !== ns.awakeningProgress) return false;
+    if (ps.resurrectionProgress !== ns.resurrectionProgress) return false;
+
+    // Ignore minor health decay unless it changes the integer display
+    if (Math.ceil(ps.health || 0) !== Math.ceil(ns.health || 0)) return false;
+
+    // Deep check visual for variant changes
+    if (JSON.stringify(ps.visual) !== JSON.stringify(ns.visual)) return false;
+
+    // Check tags (cheap reference check since they come from context and are usually stable)
+    if (prev.tagAssignmentsBySheep !== next.tagAssignmentsBySheep) return false;
+    if (prev.tags !== next.tags) return false;
+
+    return true;
+});
 
 // --- Main List Component ---
 export const SheepList = ({ onSelect }) => {

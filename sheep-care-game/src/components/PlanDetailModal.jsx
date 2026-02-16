@@ -5,7 +5,7 @@ import { AssetSheep } from './AssetSheep';
 import '../styles/design-tokens.css';
 import '../styles/PlanDetailModal.css';
 
-export const PlanDetailModal = ({ schedule, onClose, embedded = false }) => {
+export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplete }) => {
     const {
         sheep,
         currentUser,
@@ -378,6 +378,16 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false }) => {
                                     onClick={onClose}
                                 >
                                     返回列表
+                                </button>
+                            )}
+                            {schedule?.id !== 'new' && onComplete && (
+                                <button
+                                    type="button"
+                                    className="modal-btn-primary"
+                                    onClick={onComplete}
+                                    style={{ marginLeft: '8px', background: 'var(--palette-orange)', borderColor: 'var(--palette-orange)' }}
+                                >
+                                    <Edit2 size={16} /> 填寫回饋
                                 </button>
                             )}
                         </div>

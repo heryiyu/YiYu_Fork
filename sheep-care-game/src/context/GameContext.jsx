@@ -451,9 +451,11 @@ export const GameProvider = ({ children }) => {
     // --- LIFF & Login Logic ---
     useEffect(() => {
         const initLiff = async () => {
+            if (window.__liffInitialized) return;
             try {
                 if (window.liff) {
                     await window.liff.init({ liffId: LIFF_ID });
+                    window.__liffInitialized = true;
                     console.log("LIFF Init Success");
                     setIsInClient(window.liff.isInClient());
 
@@ -572,7 +574,7 @@ export const GameProvider = ({ children }) => {
         }
         setIsLoading(true);
         try {
-            const { data, error } = await supabase.from('users').select('*').eq('id', lineId).single();
+            const { data, error } = await supabase.from('users').select('*').eq('line_id', lineId).single();
             if (error) throw error;
             if (data && data.game_data) {
                 applyLoadedData(data.game_data, lineId);
@@ -651,7 +653,7 @@ export const GameProvider = ({ children }) => {
                 const { data, error } = await supabase
                     .from('users')
                     .select('game_data')
-                    .eq('id', lineId)
+                    .eq('line_id', lineId)
                     .single();
 
                 if (data && data.game_data) {
@@ -713,14 +715,19 @@ export const GameProvider = ({ children }) => {
     useEffect(() => {
         if (!lineId) return;
         const tick = setInterval(() => {
-            setSheep(prev => prev.filter(s => s).map(s => {
-                const updated = calculateTick(s, prev); // Pass 'prev' (all sheep) for flocking
-                if (isSleeping(updated) && !isSleeping(s)) {
-                    showMessage(`🕊️ ${s.name} 進入沉睡了...`);
-                }
-                return updated;
-            }));
-        }, 500); // Optimized to 500ms (2 FPS) for low power mode
+            setSheep(prev => {
+                let hasNewSleepers = false;
+                const next = prev.filter(s => s).map(s => {
+                    const updated = calculateTick(s, prev);
+                    if (isSleeping(updated) && !isSleeping(s)) {
+                        showMessage(`🕊️ ${s.name} 進入沉睡了...`);
+                        hasNewSleepers = true;
+                    }
+                    return updated;
+                });
+                return next;
+            });
+        }, 1000); // Optimized to 1000ms (1 FPS) for performance
         return () => clearInterval(tick);
     }, [lineId]);
 
@@ -814,11 +821,17 @@ export const GameProvider = ({ children }) => {
         const now = new Date().toISOString();
 
         // 1. Update DB (schedule_participants)
+        // Fix: Column is TEXT, so we must stringify JSON
+        let feedbackPayload = feedback;
+        if (typeof feedback === 'object') {
+            feedbackPayload = JSON.stringify(feedback);
+        }
+
         const { error } = await supabase
             .from('schedule_participants')
             .update({
                 completed_at: now,
-                feedback: feedback // { note: "...", tags: [...] }
+                feedback: feedbackPayload // { note: "...", tags: [...] } as String
             })
             .eq('id', planId);
 
@@ -855,10 +868,16 @@ export const GameProvider = ({ children }) => {
             console.error("Missing lineId in updatePlanFeedback");
             return;
         }
+        // Fix: Column is TEXT, so we must stringify JSON
+        let feedbackPayload = feedback;
+        if (typeof feedback === 'object') {
+            feedbackPayload = JSON.stringify(feedback);
+        }
+
         const { error } = await supabase
             .from('schedule_participants')
             .update({
-                feedback: feedback
+                feedback: feedbackPayload
             })
             .eq('id', planId);
 
@@ -1207,7 +1226,26 @@ export const GameProvider = ({ children }) => {
             // Filter: Created by me OR contains my sheep
             // Since sheep state contains only my sheep, we can use it.
             const mySheepIds = new Set(sheep.map(s => s.id));
-            const filtered = (data || []).filter(s => {
+            const filtered = (data || []).map(s => {
+                // Fix: Parse feedback JSON string if column is TEXT
+                if (s.schedule_participants) {
+                    s.schedule_participants = s.schedule_participants.map(p => {
+                        if (p.feedback && typeof p.feedback === 'string') {
+                            try {
+                                p.feedback = JSON.parse(p.feedback);
+                            } catch (e) {
+                                // console.warn("Failed to parse feedback JSON", e);
+                                // p.feedback = {}; // Keep as is or default? 
+                                // Taking no action might leave it as string, causing UI issues.
+                                // Best to ensure it is object.
+                                p.feedback = { note: p.feedback }; // Fallback: treat string as note
+                            }
+                        }
+                        return p;
+                    });
+                }
+                return s;
+            }).filter(s => {
                 // 1. Explicit Owner (Future)
                 if (s.created_by === userId) return true; // Explicit Owner (UUID)
                 // 2. Participant Check (Legacy/Current)
@@ -1224,48 +1262,72 @@ export const GameProvider = ({ children }) => {
 
 
 
+
+    const contextValue = React.useMemo(() => ({
+        currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
+        isLoading, // Exposed for App.jsx loading screen
+        sheep, inventory, message, weather,
+        location, updateUserLocation, isInClient, // Exposed
+        adoptSheep, updateSheep, updateMultipleSheep, togglePin,
+        loginWithLine, loginAsAdmin, logout, // Exposed
+        prayForSheep, completePlan, deleteSheep, deleteMultipleSheep,
+        saveToCloud, forceLoadFromCloud, // Exposed
+        notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
+        updateNickname, // Exposed
+        showIntroVideo,
+        markIntroWatched: () => {
+            setIntroWatched(true);
+            setShowIntroVideo(false);
+            saveToCloud({ introWatched: true });
+        },
+        settings, // expose settings
+        updateSetting, // expose updateSetting
+        setWeather, // Exposed for Admin Control
+        tags,
+        tagAssignmentsBySheep,
+        loadTags,
+        createTag,
+        updateTag,
+        deleteTag,
+        setSheepTags,
+        fetchWeeklySchedules, // Exposed
+        lastScheduleUpdate, // Exposed
+        notifyScheduleUpdate, // Exposed
+        focusedSheepId,
+        findSheep,
+        clearFocus,
+        updatePlanFeedback, // Exposed
+        addSchedule, // Exposed
+        updateSchedule, // Exposed
+        deleteSchedule, // Exposed
+        addParticipantToSchedule, // Exposed
+        removeParticipantFromSchedule, // Exposed
+        cleanupDuplicateSchedules // Exposed
+    }), [
+        currentUser, nickname, userAvatarUrl, lineId, isAdmin,
+        isLoading,
+        sheep, inventory, message, weather,
+        location, isInClient,
+        settings,
+        tags,
+        tagAssignmentsBySheep,
+        lastScheduleUpdate,
+        focusedSheepId,
+        // Stable overrides
+        adoptSheep, updateSheep, updateMultipleSheep,
+        loginWithLine, loginAsAdmin, logout,
+        prayForSheep, completePlan, deleteSheep, deleteMultipleSheep,
+        saveToCloud, forceLoadFromCloud,
+        toggleNotification, updateNickname,
+        updateSetting, setWeather,
+        loadTags, createTag, updateTag, deleteTag, setSheepTags,
+        fetchWeeklySchedules, notifyScheduleUpdate, findSheep, clearFocus,
+        updatePlanFeedback, addSchedule, updateSchedule, deleteSchedule,
+        addParticipantToSchedule, removeParticipantFromSchedule, cleanupDuplicateSchedules
+    ]);
+
     return (
-        <GameContext.Provider value={{
-            currentUser, nickname, setNickname, userAvatarUrl, lineId, isAdmin,
-            isLoading, // Exposed for App.jsx loading screen
-            sheep, inventory, message, weather,
-            location, updateUserLocation, isInClient, // Exposed
-            adoptSheep, updateSheep, updateMultipleSheep, togglePin,
-            loginWithLine, loginAsAdmin, logout, // Exposed
-            prayForSheep, completePlan, deleteSheep, deleteMultipleSheep,
-            saveToCloud, forceLoadFromCloud, // Exposed
-            notificationEnabled: settings.notify, toggleNotification, // Exposed (Mapped)
-            updateNickname, // Exposed
-            showIntroVideo,
-            markIntroWatched: () => {
-                setIntroWatched(true);
-                setShowIntroVideo(false);
-                saveToCloud({ introWatched: true });
-            },
-            settings, // expose settings
-            updateSetting, // expose updateSetting
-            setWeather, // Exposed for Admin Control
-            tags,
-            tagAssignmentsBySheep,
-            loadTags,
-            createTag,
-            updateTag,
-            deleteTag,
-            setSheepTags,
-            fetchWeeklySchedules, // Exposed
-            lastScheduleUpdate, // Exposed
-            notifyScheduleUpdate, // Exposed
-            focusedSheepId,
-            findSheep,
-            clearFocus,
-            updatePlanFeedback, // Exposed
-            addSchedule, // Exposed
-            updateSchedule, // Exposed
-            deleteSchedule, // Exposed
-            addParticipantToSchedule, // Exposed
-            removeParticipantFromSchedule, // Exposed
-            cleanupDuplicateSchedules // Exposed
-        }}>
+        <GameContext.Provider value={contextValue}>
             {children}
         </GameContext.Provider>
     );
