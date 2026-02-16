@@ -380,16 +380,20 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
                                     返回列表
                                 </button>
                             )}
-                            {schedule?.id !== 'new' && onComplete && (
-                                <button
-                                    type="button"
-                                    className="modal-btn-primary"
-                                    onClick={onComplete}
-                                    style={{ marginLeft: '8px', background: 'var(--palette-orange)', borderColor: 'var(--palette-orange)' }}
-                                >
-                                    <Edit2 size={16} /> 填寫回饋
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                className="modal-btn-primary"
+                                onClick={onComplete}
+                                style={{
+                                    marginLeft: '8px',
+                                    background: 'var(--palette-orange-action)',
+                                    borderColor: 'var(--palette-orange-action)',
+                                    color: '#fff',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                <Edit2 size={16} /> 認領紀錄
+                            </button>
                         </div>
                     </form>
 

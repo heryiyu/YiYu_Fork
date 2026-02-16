@@ -115,9 +115,10 @@ export const SheepDetailDashboard = ({
                                     </div>
                                     <button
                                         className="ticket-btn-complete"
+                                        style={{ background: 'var(--palette-orange-action)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
                                         onClick={() => openCompletePlan(nextPlan)}
                                     >
-                                        <Check size={14} strokeWidth={3} /> 完成
+                                        <Edit2 size={14} /> 認領紀錄
                                     </button>
                                 </div>
                             </div>

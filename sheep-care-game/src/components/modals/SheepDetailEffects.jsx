@@ -17,7 +17,7 @@ export const SheepDetailEffects = ({
     return (
         <div className="spiritual-plan-container">
             <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>🏆 認領果效 (點擊蓋章)</span>
+                <span>🏆 認領紀錄 (點擊蓋章)</span>
                 {isAdmin && (
                     !isEditingLabels ? (
                         <button

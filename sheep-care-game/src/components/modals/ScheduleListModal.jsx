@@ -212,13 +212,13 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
     return (
         <Portal>
             <div className="debug-editor-overlay" onClick={onClose}>
-                <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '430px', padding: '0', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '80vh', overflow: 'hidden', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--shadow-card)' }}>
+                <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', width: '95vw', padding: '0', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '85vh', overflow: 'hidden', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--shadow-card)' }}>
 
                     {selectedSchedule ? (
                         <div style={{ height: '100%', overflow: 'hidden' }}>
                             {/* Render based on interactionMode */}
                             {interactionMode === 'EDIT_RESULT' && (
-                                <div style={{ padding: '16px', overflowY: 'auto' }}>
+                                <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                     <FeedbackForm
                                         initialData={completionData}
                                         onSubmit={handleCompleteSubmit}
@@ -239,7 +239,7 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                             )}
 
                             {interactionMode === 'VIEW_RESULT' && (
-                                <div style={{ padding: '16px', overflowY: 'auto' }}>
+                                <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                                     <FeedbackResult
                                         data={completionData}
                                         onEdit={handleEditFeedback}

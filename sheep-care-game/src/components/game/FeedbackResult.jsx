@@ -13,12 +13,12 @@ export const FeedbackResult = ({
     onBack,
     onViewPlan,
     editTitle = '修改紀錄',
-    title = '認領果效 (已完成)'
+    title = '認領紀錄 (已完成)'
 }) => {
     return (
-        <div className="spiritual-plan-form">
+        <div className="spiritual-plan-form" style={{ padding: '4px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px', marginBottom: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>{title}</h3>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--palette-blue-action)', fontWeight: 'bold' }}>{title}</h3>
 
                 {onEdit && (
                     <button
@@ -48,21 +48,21 @@ export const FeedbackResult = ({
             </div>
 
             <div className="form-group">
-                <label>📅 完成時間</label>
-                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '8px', color: '#666' }}>
+                <label style={{ fontWeight: 'bold', color: 'var(--text-header)', marginBottom: '6px', display: 'block' }}>📅 完成時間</label>
+                <div style={{ padding: '10px', background: 'var(--bg-card-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>
                     {formatDisplayTime(data.completedAt)}
                 </div>
             </div>
 
             <div className="form-group">
-                <label>💭 心得紀錄</label>
-                <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', minHeight: '80px', whiteSpace: 'pre-wrap' }}>
+                <label style={{ fontWeight: 'bold', color: 'var(--text-header)', marginBottom: '6px', display: 'block' }}>💭 心得紀錄</label>
+                <div style={{ padding: '12px', background: '#fff', border: '1px solid var(--border-subtle)', borderRadius: '12px', minHeight: '80px', whiteSpace: 'pre-wrap', color: 'var(--text-primary)' }}>
                     {data.note || '無心得紀錄'}
                 </div>
             </div>
 
             <div className="form-group">
-                <label>🏷️ 狀況標記</label>
+                <label style={{ fontWeight: 'bold', color: 'var(--text-header)', marginBottom: '6px', display: 'block' }}>🏷️ 狀況標記</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {data.tags && data.tags.length > 0 ? (
                         data.tags.map(tag => (

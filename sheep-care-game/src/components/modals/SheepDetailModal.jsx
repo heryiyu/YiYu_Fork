@@ -392,7 +392,7 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                                 data-tab="effects"
                                 onClick={() => setActiveTab('EFFECTS')}
                             >
-                                認領果效
+                                認領紀錄
                             </button>
                             <button
                                 className={`modal-tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''}`}

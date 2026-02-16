@@ -22,11 +22,11 @@ export const FeedbackForm = ({
     };
 
     return (
-        <div className="spiritual-plan-form">
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: 'var(--palette-deep-green)' }}>認領果效</h3>
+        <div className="spiritual-plan-form" style={{ padding: '4px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: 'var(--palette-blue-action)', fontWeight: 'bold' }}>認領紀錄</h3>
 
             <div className="form-group">
-                <label>💭 心得紀錄</label>
+                <label style={{ fontWeight: 'bold', color: 'var(--text-header)', marginBottom: '8px', display: 'block' }}>💭 心得紀錄</label>
                 <textarea
                     value={data.note}
                     onChange={(e) => setData({ ...data, note: e.target.value })}
@@ -37,7 +37,7 @@ export const FeedbackForm = ({
             </div>
 
             <div className="form-group">
-                <label>🏷️ 狀況標記 (可複選)</label>
+                <label style={{ fontWeight: 'bold', color: 'var(--text-header)', marginBottom: '8px', display: 'block' }}>🏷️ 狀況標記 (可複選)</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {FEEDBACK_TAGS.map(tag => {
                         const active = (data.tags || []).includes(tag);
@@ -80,7 +80,7 @@ export const FeedbackForm = ({
                     onClick={() => onSubmit(data)}
                     disabled={loading}
                 >
-                    {loading ? '處理中...' : '完成紀錄'}
+                    {loading ? '處理中...' : '確認儲存'}
                 </button>
             </div>
         </div>
