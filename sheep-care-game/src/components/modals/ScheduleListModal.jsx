@@ -310,13 +310,16 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
 
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
-                                    className="icon-btn"
+                                    className="icon-btn-ghost"
                                     onClick={loadSchedules}
                                     title="重新整理"
+                                    style={{ color: '#fff' }}
                                 >
-                                    🔄
+                                    <span style={{ fontSize: '1.2rem' }}>🔄</span>
                                 </button>
-                                <CloseButton onClick={onClose} />
+                                <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}>
+                                    <X size={24} />
+                                </button>
                             </div>
                         </div>
 
@@ -607,7 +610,20 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                             }}>
                                 <button
                                     className="modal-btn-primary"
-                                    style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}
+                                    style={{
+                                        width: '100%',
+                                        height: '48px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        background: 'var(--palette-blue-action)',
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}
                                     onClick={() => setShowBatchAdd(true)}
                                 >
                                     <Plus size={20} />
