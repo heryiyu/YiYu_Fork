@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ASSETS } from '../utils/AssetRegistry';
+import { ASSETS } from '../../utils/AssetRegistry';
 import { AssetSheep } from './AssetSheep';
-import '../styles/design-tokens.css';
+import '../../styles/design-tokens.css';
 
 export const AssetPreloader = ({ onLoaded }) => {
     const [progress, setProgress] = useState(0);

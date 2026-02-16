@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const ConfirmContext = createContext(null);
 const isDev = import.meta?.env?.MODE !== 'production';

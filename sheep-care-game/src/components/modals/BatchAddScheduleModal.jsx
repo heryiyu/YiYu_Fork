@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { useGame } from '../context/GameContext';
-import { supabase } from '../services/supabaseClient';
-import { CloseButton } from './ui/CloseButton';
-import { Portal } from './ui/Portal';
-import { AssetSheep } from './AssetSheep';
-import { Checkbox } from './ui/Checkbox';
+import { useGame } from '../../context/GameContext';
+import { supabase } from '../../services/supabaseClient';
+import { CloseButton } from '../ui/CloseButton';
+import { Portal } from '../ui/Portal';
+import { AssetSheep } from '../game/AssetSheep';
+import { Checkbox } from '../ui/Checkbox';
 import { Search, Calendar, MapPin, Clock } from 'lucide-react';
-import '../styles/design-tokens.css';
+import '../../styles/design-tokens.css';
 
 const STEPS = {
     SELECT_SHEEP: 0,

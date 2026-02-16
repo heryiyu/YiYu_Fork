@@ -1,7 +1,7 @@
 import React from 'react';
 import { AssetSheep } from './AssetSheep';
-import { isSleeping } from '../utils/gameLogic';
-import { SHEEP_TYPES } from '../data/sheepData';
+import { isSleeping } from '../../utils/gameLogic';
+import { SHEEP_TYPES } from '../../data/sheepData';
 
 export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, containerSize }) => {
     const isGolden = sheep.type === 'GOLDEN';

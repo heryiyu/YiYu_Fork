@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from './context/GameContext';
-import { Field } from './components/Field';
+import { Field } from './components/ui/Field';
 
-import { SheepDetailModal } from './components/SheepDetailModal';
-import { Guide } from './components/Guide';
-import { Login } from './components/Login';
-import { NicknameSetup } from './components/NicknameSetup';
-import { SheepList } from './components/SheepList';
-import { SettingsModal } from './components/SettingsModal';
-import { UserProfile } from './components/UserProfile';
+import { SheepDetailModal } from './components/modals/SheepDetailModal';
+import { Guide } from './components/game/Guide';
+import { Login } from './components/auth/Login';
+import { NicknameSetup } from './components/auth/NicknameSetup';
+import { SheepList } from './components/game/SheepList';
+import { SettingsModal } from './components/modals/SettingsModal';
+import { UserProfile } from './components/auth/UserProfile';
 import { Toast } from './components/ui/Toast';
 import { Tooltip } from './components/ui/Tooltip';
 import './App.css';
 
-import { AssetPreloader } from './components/AssetPreloader';
-import { IntroVideo } from './components/IntroVideo';
-import { ScheduleListModal } from './components/ScheduleListModal';
+import { AssetPreloader } from './components/game/AssetPreloader';
+import { IntroVideo } from './components/game/IntroVideo';
+import { ScheduleListModal } from './components/modals/ScheduleListModal';
 import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react';
 
 function App() {

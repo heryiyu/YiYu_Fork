@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Users, Edit2, Trash2, Plus, Save, ChevronLeft } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { AssetSheep } from './AssetSheep';
-import '../styles/design-tokens.css';
-import '../styles/PlanDetailModal.css';
+import { useGame } from '../../context/GameContext';
+import { AssetSheep } from '../game/AssetSheep';
+import '../../styles/design-tokens.css';
+import './PlanDetailModal.css';
 
 export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplete }) => {
     const {

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ASSETS } from '../utils/AssetRegistry';
-import { isSleeping } from '../utils/gameLogic';
-import '../styles/design-tokens.css';
+import { ASSETS } from '../../utils/AssetRegistry';
+import { isSleeping } from '../../utils/gameLogic';
+import '../../styles/design-tokens.css';
 
 // --- 2. Animations (Static Definitions) ---
 const GHOST_ANIM = {

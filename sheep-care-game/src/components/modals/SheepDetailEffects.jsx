@@ -1,0 +1,103 @@
+import React from 'react';
+import { Edit2, X, Save } from 'lucide-react';
+import { ModalHint } from './ModalHint';
+
+export const SheepDetailEffects = ({
+    target,
+    isAdmin,
+    STAMPS,
+    handleStampToggle,
+    isEditingLabels,
+    handleLabelEditStart,
+    handleLabelSave,
+    setIsEditingLabels,
+    tempLabels,
+    setTempLabels
+}) => {
+    return (
+        <div className="spiritual-plan-container">
+            <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🏆 認領果效 (點擊蓋章)</span>
+                {isAdmin && (
+                    !isEditingLabels ? (
+                        <button
+                            className="icon-btn"
+                            onClick={handleLabelEditStart}
+                            style={{ padding: '4px', height: 'auto', width: 'auto', background: 'transparent', border: 'none', color: 'var(--text-muted)' }}
+                        >
+                            <Edit2 size={16} />
+                        </button>
+                    ) : (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                className="icon-btn"
+                                onClick={() => setIsEditingLabels(false)}
+                                style={{ padding: '4px', height: 'auto', width: 'auto', background: 'transparent', border: 'none', color: 'var(--text-muted)' }}
+                            >
+                                <X size={16} />
+                            </button>
+                            <button
+                                className="icon-btn"
+                                onClick={handleLabelSave}
+                                style={{ padding: '4px', height: 'auto', width: 'auto', background: 'transparent', border: 'none', color: 'var(--palette-blue-action)' }}
+                            >
+                                <Save size={16} />
+                            </button>
+                        </div>
+                    )
+                )}
+            </div>
+            <div className="stamp-grid">
+                {Object.values(STAMPS).map(stamp => {
+                    const currentStamps = target.stamps || {};
+                    const isStamped = Array.isArray(currentStamps)
+                        ? currentStamps.includes(stamp.id)
+                        : !!currentStamps[stamp.id];
+
+                    const Icon = stamp.icon;
+                    return (
+                        <div
+                            key={stamp.id}
+                            className={`stamp-card ${isStamped ? 'stamped' : ''} ${isEditingLabels ? 'editing' : ''}`}
+                            onClick={() => handleStampToggle(stamp.id)}
+                            style={{ position: 'relative' }}
+                        >
+                            {isStamped && !isEditingLabels && (
+                                <div className="stamp-mark">
+                                    {stamp.id === 'decision_prayer' || stamp.id === 'stable_devotion' ? 'AMEN' : 'DONE'}
+                                </div>
+                            )}
+
+                            <div className="stamp-icon-placeholder">
+                                <Icon size={24} strokeWidth={isStamped ? 2.5 : 2} />
+                            </div>
+
+                            {isEditingLabels ? (
+                                <input
+                                    type="text"
+                                    value={tempLabels[stamp.id] || ''}
+                                    onChange={(e) => setTempLabels({ ...tempLabels, [stamp.id]: e.target.value })}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        width: '100%',
+                                        fontSize: '0.8rem',
+                                        textAlign: 'center',
+                                        border: '1px solid var(--border-main)',
+                                        borderRadius: '4px',
+                                        padding: '2px',
+                                        marginTop: '4px'
+                                    }}
+                                />
+                            ) : (
+                                <span className="stamp-label">{stamp.label}</span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            <ModalHint>
+                {isEditingLabels ? '修改後點擊上方儲存' : '點擊格子即可蓋章，再次點擊可取消。'}
+            </ModalHint>
+        </div>
+    );
+};

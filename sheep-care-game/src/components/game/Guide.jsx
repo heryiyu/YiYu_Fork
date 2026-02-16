@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SevenStepsMap } from './SevenStepsMap';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { useIsMobile } from '../hooks/useIsMobile';
-import { CloseButton } from './ui/CloseButton';
+import { useGame } from '../../context/GameContext';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { CloseButton } from '../ui/CloseButton';
 import { motion, useReducedMotion } from 'framer-motion';
 import './Guide.css';
 

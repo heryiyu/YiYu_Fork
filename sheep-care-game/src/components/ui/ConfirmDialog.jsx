@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { CloseButton } from './ui/CloseButton';
+import { CloseButton } from './CloseButton';
 
 export const ConfirmDialog = ({
     open,

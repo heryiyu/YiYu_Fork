@@ -1,8 +1,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { generateScene } from '../utils/SceneGenerator';
-import '../styles/design-tokens.css';
+import { generateScene } from '../../utils/SceneGenerator';
+import '../../styles/design-tokens.css';
 
 const mountainSvgCache = new Map();
 const mountainTintCache = new Map();

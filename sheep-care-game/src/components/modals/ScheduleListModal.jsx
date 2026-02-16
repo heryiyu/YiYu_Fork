@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, ChevronUp, Users } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { CloseButton } from './ui/CloseButton';
-import { AssetSheep } from './AssetSheep';
+import { useGame } from '../../context/GameContext';
+import { CloseButton } from '../ui/CloseButton';
+import { AssetSheep } from '../game/AssetSheep';
 import { BatchAddScheduleModal } from './BatchAddScheduleModal';
-import { Portal } from './ui/Portal';
-import { generateGoogleCalendarUrl } from '../utils/calendarHelper';
-import '../styles/design-tokens.css';
+import { Portal } from '../ui/Portal';
+import { generateGoogleCalendarUrl } from '../../utils/calendarHelper';
+import '../../styles/design-tokens.css';
 import { PlanDetailModal } from './PlanDetailModal';
-import { MiniCalendar } from './MiniCalendar';
-import { FeedbackForm } from './FeedbackForm';
-import { FeedbackResult } from './FeedbackResult';
+import { MiniCalendar } from '../game/MiniCalendar';
+import { FeedbackForm } from '../game/FeedbackForm';
+import { FeedbackResult } from '../game/FeedbackResult';
 
 const DAYS = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
 
