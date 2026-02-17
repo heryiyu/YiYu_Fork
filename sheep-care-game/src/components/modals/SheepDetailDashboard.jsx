@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Calendar, Plus, Check } from 'lucide-react';
+import { Heart, Calendar, Plus, Check, Edit2 } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 
 export const SheepDetailDashboard = ({
