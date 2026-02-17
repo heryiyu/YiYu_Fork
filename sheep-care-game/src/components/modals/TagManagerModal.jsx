@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useGame } from '../context/GameContext';
-import { useConfirm } from '../context/ConfirmContext.jsx';
+import { useGame } from '../../context/GameContext';
+import { useConfirm } from '../../context/ConfirmContext.jsx';
 import { Plus, Trash2, Pencil } from 'lucide-react';
-import { CloseButton } from './ui/CloseButton';
-import { Tag } from './ui/Tag';
-import { IconButton, IconButtonGroup } from './ui/IconButton';
+import { CloseButton } from '../ui/CloseButton';
+import { Tag } from '../ui/Tag';
+import { IconButton, IconButtonGroup } from '../ui/IconButton';
 
 export const TagManagerModal = ({ onClose }) => {
     const { tags, createTag, updateTag, deleteTag, tagAssignmentsBySheep } = useGame();

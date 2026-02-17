@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import '../styles/design-tokens.css';
+import '../../styles/design-tokens.css';
 
 const DAYS_SHORT = ['日', '一', '二', '三', '四', '五', '六'];
 

@@ -1,15 +1,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, ChevronUp, Users } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { CloseButton } from './ui/CloseButton';
-import { AssetSheep } from './AssetSheep';
+import { useGame } from '../../context/GameContext';
+import { CloseButton } from '../ui/CloseButton';
+import { AssetSheep } from '../game/AssetSheep';
 import { BatchAddScheduleModal } from './BatchAddScheduleModal';
-import { Portal } from './ui/Portal';
-import { generateGoogleCalendarUrl } from '../utils/calendarHelper';
-import '../styles/design-tokens.css';
+import { Portal } from '../ui/Portal';
+import { generateGoogleCalendarUrl } from '../../utils/calendarHelper';
+import '../../styles/design-tokens.css';
 import { PlanDetailModal } from './PlanDetailModal';
-import { MiniCalendar } from './MiniCalendar';
+import { MiniCalendar } from '../game/MiniCalendar';
+import { FeedbackForm } from '../game/FeedbackForm';
+import { FeedbackResult } from '../game/FeedbackResult';
 
 const DAYS = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
 
@@ -27,7 +29,7 @@ const addDays = (date, days) => {
 };
 
 export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
-    const { fetchWeeklySchedules, sheep, lastScheduleUpdate } = useGame();
+    const { fetchWeeklySchedules, sheep, lastScheduleUpdate, completePlan, updatePlanFeedback, notifyScheduleUpdate } = useGame();
 
 
     const [schedules, setSchedules] = useState([]);
@@ -36,6 +38,10 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [showBatchAdd, setShowBatchAdd] = useState(false);
     const [selectedSchedule, setSelectedSchedule] = useState(null); // Track selected schedule for detail view
+    const [interactionMode, setInteractionMode] = useState('VIEW_PLAN'); // 'VIEW_PLAN', 'VIEW_RESULT', 'EDIT_RESULT'
+    const [completionTarget, setCompletionTarget] = useState(null);
+    const [completionData, setCompletionData] = useState({ note: '', tags: [] });
+    const [planActionLoading, setPlanActionLoading] = useState(false);
 
     // Calendar View State
     const [viewFormat, setViewFormat] = useState('LIST'); // 'LIST' or 'CALENDAR'
@@ -61,6 +67,82 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
             }
         }
     }, [schedules]);
+
+    // Initial Mode Logic
+    useEffect(() => {
+        if (selectedSchedule) {
+            const parts = selectedSchedule.schedule_participants || [];
+            // Simple logic: if single participant and completed, show Result
+            if (parts.length === 1 && parts[0].completed_at) {
+                setInteractionMode('VIEW_RESULT');
+                setCompletionTarget(parts[0].id);
+                setCompletionData({
+                    note: parts[0].feedback?.note || '',
+                    tags: parts[0].feedback?.tags || [],
+                    completedAt: parts[0].completed_at
+                });
+            } else {
+                setInteractionMode('VIEW_PLAN');
+            }
+        }
+    }, [selectedSchedule]);
+
+    const handleEditFeedback = () => {
+        if (!selectedSchedule) return;
+        const parts = selectedSchedule.schedule_participants || [];
+        if (parts.length === 0) return;
+
+        // Use existing completionTarget if set, or default to first
+        let targetId = completionTarget;
+        if (!targetId) {
+            targetId = parts[0].id;
+            setCompletionTarget(targetId);
+        }
+
+        const target = parts.find(p => p.id === targetId);
+        if (target) {
+            setCompletionData({
+                note: target.feedback?.note || '',
+                tags: target.feedback?.tags || [],
+                completedAt: target.completed_at
+            });
+        }
+
+        setInteractionMode('EDIT_RESULT');
+    };
+
+    const handleCompleteSubmit = async (data) => {
+        if (!completionTarget) return;
+        setPlanActionLoading(true);
+        try {
+            const parts = selectedSchedule.schedule_participants || [];
+            const targetPart = parts.find(p => p.id === completionTarget);
+
+            // Need sheepId for completePlan
+            if (targetPart) {
+                if (targetPart.completed_at) {
+                    await updatePlanFeedback(completionTarget, data);
+                } else {
+                    await completePlan(completionTarget, targetPart.sheep_id, data);
+                }
+                notifyScheduleUpdate();
+                notifyScheduleUpdate();
+                loadSchedules(); // Refresh local list
+
+                // After save, show result
+                setInteractionMode('VIEW_RESULT');
+                // completionTarget is already set, verify data update
+                // The loadSchedules async update might take a moment to reflect in selectedSchedule
+                // But we can locally update completionData for immediate display if needed
+                setCompletionData({ ...data, completedAt: targetPart.completed_at || new Date().toISOString() });
+            }
+        } catch (error) {
+            console.error(error);
+            alert('儲存失敗');
+        } finally {
+            setPlanActionLoading(false);
+        }
+    };
 
     const prevWeek = () => {
         const newStart = new Date(currentWeekStart);
@@ -130,17 +212,56 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
     return (
         <Portal>
             <div className="debug-editor-overlay" onClick={onClose}>
-                <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '430px', padding: '0', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '80vh', overflow: 'hidden', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--shadow-card)' }}>
+                <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', width: '95vw', padding: '0', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '85vh', overflow: 'hidden', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--shadow-card)' }}>
 
                     {selectedSchedule ? (
                         <div style={{ height: '100%', overflow: 'hidden' }}>
-                            <PlanDetailModal
-                                schedule={selectedSchedule}
-                                onClose={() => {
-                                    setSelectedSchedule(null);
-                                    loadSchedules();
-                                }}
-                            />
+                            {/* Render based on interactionMode */}
+                            {interactionMode === 'EDIT_RESULT' && (
+                                <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                    <FeedbackForm
+                                        initialData={completionData}
+                                        onSubmit={handleCompleteSubmit}
+                                        onCancel={() => {
+                                            // If we have completion data (editing), go back to VIEW_RESULT
+                                            // Else go back to VIEW_PLAN
+                                            const parts = selectedSchedule.schedule_participants || [];
+                                            const target = parts.find(p => p.id === completionTarget);
+                                            if (target && target.completed_at) {
+                                                setInteractionMode('VIEW_RESULT');
+                                            } else {
+                                                setInteractionMode('VIEW_PLAN');
+                                            }
+                                        }}
+                                        loading={planActionLoading}
+                                    />
+                                </div>
+                            )}
+
+                            {interactionMode === 'VIEW_RESULT' && (
+                                <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                    <FeedbackResult
+                                        data={completionData}
+                                        onEdit={handleEditFeedback}
+                                        onBack={() => {
+                                            setSelectedSchedule(null);
+                                            loadSchedules();
+                                        }}
+                                        onViewPlan={() => setInteractionMode('VIEW_PLAN')}
+                                    />
+                                </div>
+                            )}
+
+                            {interactionMode === 'VIEW_PLAN' && (
+                                <PlanDetailModal
+                                    schedule={selectedSchedule}
+                                    onClose={() => {
+                                        setSelectedSchedule(null);
+                                        loadSchedules();
+                                    }}
+                                    onComplete={handleEditFeedback}
+                                />
+                            )}
                         </div>
                     ) : (
                         <>    <div className="modal-header">
@@ -189,13 +310,16 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
 
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
-                                    className="icon-btn"
+                                    className="icon-btn-ghost"
                                     onClick={loadSchedules}
                                     title="重新整理"
+                                    style={{ color: '#fff' }}
                                 >
-                                    🔄
+                                    <span style={{ fontSize: '1.2rem' }}>🔄</span>
                                 </button>
-                                <CloseButton onClick={onClose} />
+                                <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}>
+                                    <X size={24} />
+                                </button>
                             </div>
                         </div>
 
@@ -288,15 +412,7 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                                 {isLoading ? (
                                     <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>載入中...</div>
                                 ) : (viewFormat === 'LIST' ? daySchedules : schedules.filter(s => s.scheduled_time && new Date(s.scheduled_time).toDateString() === calendarDate.toDateString())).length === 0 ? (
-                                    <div style={{
-                                        textAlign: 'center',
-                                        color: 'var(--text-muted)',
-                                        marginTop: '40px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: '12px'
-                                    }}>
+                                    <div className="plan-list-empty">
                                         <Calendar size={48} strokeWidth={1} style={{ opacity: 0.3 }} />
                                         <p>{viewFormat === 'LIST' ? `週${DAYS[selectedDayIndex].slice(1)}沒有安排行程` : `${calendarDate.getMonth() + 1}/${calendarDate.getDate()} 沒有安排行程`}</p>
                                     </div>
@@ -494,7 +610,20 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                             }}>
                                 <button
                                     className="modal-btn-primary"
-                                    style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}
+                                    style={{
+                                        width: '100%',
+                                        height: '48px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        background: 'var(--palette-blue-action)',
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}
                                     onClick={() => setShowBatchAdd(true)}
                                 >
                                     <Plus size={20} />

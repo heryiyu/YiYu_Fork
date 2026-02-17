@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useGame } from '../context/GameContext';
-import { CloseButton } from './ui/CloseButton';
-import { Portal } from './ui/Portal';
+import { useGame } from '../../context/GameContext';
+import { CloseButton } from '../ui/CloseButton';
+import { Portal } from '../ui/Portal';
 
 export const NicknameSetup = ({ onClose }) => {
     const { updateNickname, nickname, weather, location } = useGame();

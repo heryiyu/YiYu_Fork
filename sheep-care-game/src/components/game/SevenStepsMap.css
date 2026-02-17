@@ -1,8 +1,8 @@
+@import '/src/styles/design-tokens.css';
+
 /* SevenStepsMap.css */
 
 /* Aligned with design system: flat colors, no gradients, scene-like aesthetic */
-
-@import '../styles/design-tokens.css';
 
 /* Full-viewport overlay when expanded */
 .map-overlay {

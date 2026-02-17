@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { useGame } from '../context/GameContext';
-import { supabase } from '../services/supabaseClient';
-import { CloseButton } from './ui/CloseButton';
-import { Portal } from './ui/Portal';
-import { AssetSheep } from './AssetSheep';
-import { Checkbox } from './ui/Checkbox';
+import { useGame } from '../../context/GameContext';
+import { supabase } from '../../services/supabaseClient';
+import { CloseButton } from '../ui/CloseButton';
+import { Portal } from '../ui/Portal';
+import { AssetSheep } from '../game/AssetSheep';
+import { Checkbox } from '../ui/Checkbox';
 import { Search, Calendar, MapPin, Clock } from 'lucide-react';
-import '../styles/design-tokens.css';
+import '../../styles/design-tokens.css';
 
 const STEPS = {
     SELECT_SHEEP: 0,
@@ -101,9 +101,13 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
                 <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
 
                     {/* Header */}
-                    <div className="modal-header">
-                        <h3>{step === STEPS.SELECT_SHEEP ? '選擇小羊' : '批量規劃'}</h3>
-                        <CloseButton onClick={onClose} />
+                    <div className="modal-header" style={{ padding: '12px 16px', background: 'var(--palette-orange-action)', color: '#fff', borderTopLeftRadius: '24px', borderTopRightRadius: '24px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', flex: 1, textAlign: 'center', color: '#fff' }}>
+                            {step === STEPS.SELECT_SHEEP ? '選擇小羊' : '批量規劃'}
+                        </h3>
+                        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}>
+                            <X size={24} />
+                        </button>
                     </div>
 
                     {/* Body */}
@@ -245,19 +249,19 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
                             <>
                                 <button
                                     className="modal-btn-secondary"
-                                    style={{ flex: 1 }}
+                                    style={{ flex: 1, height: '48px', borderRadius: '12px' }}
                                     onClick={() => setStep(STEPS.SELECT_SHEEP)}
                                     disabled={isSubmitting}
                                 >
-                                    回上一步
+                                    上一步
                                 </button>
                                 <button
                                     className="modal-btn-primary"
-                                    style={{ flex: 2 }}
+                                    style={{ flex: 1, height: '48px', borderRadius: '12px', background: 'var(--palette-blue-action)' }}
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
                                 >
-                                    {isSubmitting ? '建立中...' : '確認建立'}
+                                    {isSubmitting ? '建立中...' : '確認新增'}
                                 </button>
                             </>
                         )}

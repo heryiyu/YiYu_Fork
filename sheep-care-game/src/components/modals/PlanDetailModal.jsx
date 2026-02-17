@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Users, Edit2, Trash2, Plus, Save, ChevronLeft } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { AssetSheep } from './AssetSheep';
-import '../styles/design-tokens.css';
-import '../styles/PlanDetailModal.css';
+import { useGame } from '../../context/GameContext';
+import { AssetSheep } from '../game/AssetSheep';
+import '../../styles/design-tokens.css';
+import './PlanDetailModal.css';
 
-export const PlanDetailModal = ({ schedule, onClose, embedded = false }) => {
+export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplete }) => {
     const {
         sheep,
         currentUser,
@@ -201,12 +201,25 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false }) => {
         <div className={`nested-plan-detail-wrapper ${embedded ? 'embedded' : ''}`}>
             {/* Header: Only show if NOT embedded */}
             {!embedded && (
-                <div className="plan-detail-modal-header">
+                <div className="plan-detail-modal-header" style={{ padding: '8px 16px', minHeight: '56px' }}>
                     <div className="plan-detail-header-title-wrap">
-                        <button type="button" className="plan-detail-header-btn" onClick={onClose}>
-                            <ChevronLeft size={24} />
+                        {schedule?.id !== 'new' && (
+                            <button
+                                type="button"
+                                className="icon-btn-ghost"
+                                onClick={handleDelete}
+                                style={{ color: 'var(--palette-danger)', padding: '8px' }}
+                                title="刪除此規劃"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        )}
+                        <h3 className="plan-detail-header-title" style={{ textAlign: 'center', flex: 1 }}>
+                            {schedule?.id === 'new' ? '新增規劃' : '行程詳情'}
+                        </h3>
+                        <button type="button" className="icon-btn-ghost" onClick={onClose} style={{ color: '#fff', padding: '8px' }}>
+                            <X size={24} />
                         </button>
-                        <h3 className="plan-detail-header-title">行程詳情</h3>
                     </div>
                 </div>
             )}
@@ -380,24 +393,23 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false }) => {
                                     返回列表
                                 </button>
                             )}
+                            <button
+                                type="button"
+                                className="modal-btn-primary"
+                                onClick={onComplete}
+                                style={{
+                                    marginLeft: '8px',
+                                    background: 'var(--palette-orange-action)',
+                                    borderColor: 'var(--palette-orange-action)',
+                                    color: '#fff',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                <Edit2 size={16} /> 認領紀錄
+                            </button>
                         </div>
                     </form>
 
-                    {/* Delete Action - Only for existing schedules */}
-                    {schedule?.id !== 'new' && (
-                        <div className="plan-detail-actions" style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <button
-                                type="button"
-                                className="btn-destructive"
-                                onClick={handleDelete}
-                                disabled={isLoading}
-                                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: 'none', fontWeight: 'bold' }}
-                            >
-                                <Trash2 size={16} style={{ marginRight: '8px' }} />
-                                刪除此規劃
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

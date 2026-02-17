@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useGame } from '../context/GameContext';
-import { AddSheepModal } from './AddSheepModal';
+import { useGame } from '../../context/GameContext';
+import { AddSheepModal } from '../modals/AddSheepModal';
 
 export const Controls = ({ onOpenList }) => {
     const { adoptSheep } = useGame();

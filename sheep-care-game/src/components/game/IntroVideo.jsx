@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Portal } from './ui/Portal';
-import '../styles/design-tokens.css';
+import { Portal } from '../ui/Portal';
+import '../../styles/design-tokens.css';
 
 // ...
 

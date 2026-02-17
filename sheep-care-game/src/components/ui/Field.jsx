@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Eye } from 'lucide-react';
-import { useGame } from '../context/GameContext';
-import { isSleeping } from '../utils/gameLogic';
-import { Sheep } from './Sheep';
-import { AssetBackground } from './AssetBackground';
-import { AssetPreloader } from './AssetPreloader';
-import { usePanGesture } from '../hooks/usePanGesture';
+import { useGame } from '../../context/GameContext';
+import { isSleeping } from '../../utils/gameLogic';
+import { Sheep } from '../game/Sheep';
+import { AssetBackground } from '../game/AssetBackground';
+import { AssetPreloader } from '../game/AssetPreloader';
+import { usePanGesture } from '../../hooks/usePanGesture';
 
 const VISUAL_CONFIG = {
     ZOOM_SCALE: 2.5,

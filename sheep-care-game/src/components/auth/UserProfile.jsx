@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useGame } from '../context/GameContext';
-import { ASSETS } from '../utils/AssetRegistry';
+import { useGame } from '../../context/GameContext';
+import { ASSETS } from '../../utils/AssetRegistry';
 import { User } from 'lucide-react';
 
 export const UserProfile = () => {

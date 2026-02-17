@@ -248,9 +248,11 @@
 
 .spiritual-plan-form-actions {
     margin-top: auto;
-    padding: 20px !important;
+    padding: 16px !important;
     display: flex;
     gap: 12px;
+    background: var(--bg-card-secondary);
+    border-top: 1px solid var(--border-subtle);
 }
 
 .modal-btn-confirm-add {
