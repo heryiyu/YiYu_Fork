@@ -5,7 +5,7 @@ import { CloseButton } from '../ui/CloseButton';
 import { Portal } from '../ui/Portal';
 import { AssetSheep } from '../game/AssetSheep';
 import { Checkbox } from '../ui/Checkbox';
-import { Search, Calendar, MapPin, Clock } from 'lucide-react';
+import { Search, Calendar, MapPin, Clock, X } from 'lucide-react';
 import '../../styles/design-tokens.css';
 
 const STEPS = {
