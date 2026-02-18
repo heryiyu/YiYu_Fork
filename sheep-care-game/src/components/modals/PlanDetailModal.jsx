@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Users, Edit2, Trash2, Plus, Save, ChevronLeft } from 'lucide-react';
+import { sanitizeInput } from '../../utils/gameLogic';
 import { useGame } from '../../context/GameContext';
 import { AssetSheep } from '../game/AssetSheep';
 import '../../styles/design-tokens.css';
@@ -147,10 +148,10 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
             } else {
                 // NEW SCHEDULE
                 const payload = {
-                    title: (formData.title || '').trim() || '未命名行動',
+                    title: sanitizeInput(formData.title) || '未命名行動',
                     scheduled_time: null,
-                    location: (formData.location || '').trim(),
-                    content: (formData.content || '').trim(),
+                    location: sanitizeInput(formData.location),
+                    content: sanitizeInput(formData.content),
                     reminder_offset: formData.reminderOffset
                 };
 
@@ -392,7 +393,13 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
                                     isReady = now >= new Date(createdAt.getTime() + oneDayMs);
                                 }
 
-                                if (!isReady) return null;
+                                if (!isReady) {
+                                    return (
+                                        <div className="plan-btn-hero" style={{ background: '#eee', color: 'var(--text-muted)', cursor: 'default', boxShadow: 'none' }}>
+                                            <Clock size={20} /> 認領紀錄 (尚未開始)
+                                        </div>
+                                    );
+                                }
 
                                 return (
                                     <button

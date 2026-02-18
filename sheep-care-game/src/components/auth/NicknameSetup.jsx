@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { sanitizeInput } from '../../utils/gameLogic';
 import { CloseButton } from '../ui/CloseButton';
 import { Portal } from '../ui/Portal';
 
@@ -18,15 +19,16 @@ export const NicknameSetup = ({ onClose }) => {
 
     const handleSave = (e) => {
         e.preventDefault();
-        if (!name.trim()) {
+        const cleanName = sanitizeInput(name);
+        if (!cleanName) {
             setError('請輸入暱稱');
             return;
         }
-        if (name.length > 12) {
+        if (cleanName.length > 12) {
             setError('暱稱太長囉 (12字內)');
             return;
         }
-        updateNickname(name.trim());
+        updateNickname(cleanName);
         setIsEditing(false); // Exit edit mode
         if (!isProfileMode && onClose) { // If initial setup mode and onClose is provided (e.g., for a modal)
             onClose();

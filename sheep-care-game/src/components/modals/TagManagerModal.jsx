@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { sanitizeInput } from '../../utils/gameLogic';
 import { useConfirm } from '../../context/ConfirmContext.jsx';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import { CloseButton } from '../ui/CloseButton';
@@ -20,7 +21,9 @@ export const TagManagerModal = ({ onClose }) => {
         if (!newName.trim()) return;
         setLoading(true);
         try {
-            await createTag({ name: newName.trim(), color: newColor });
+            const sanitizedName = sanitizeInput(newName);
+            if (!sanitizedName) return;
+            await createTag({ name: sanitizedName, color: newColor });
             setNewName('');
             setNewColor('#6b7280');
         } finally {
@@ -32,7 +35,9 @@ export const TagManagerModal = ({ onClose }) => {
         if (!editName.trim()) return;
         setLoading(true);
         try {
-            await updateTag(tagId, { name: editName.trim(), color: editColor });
+            const sanitizedName = sanitizeInput(editName);
+            if (!sanitizedName) return;
+            await updateTag(tagId, { name: sanitizedName, color: editColor });
             setEditingId(null);
         } finally {
             setLoading(false);

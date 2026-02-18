@@ -3,7 +3,7 @@ import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, 
 import confetti from 'canvas-confetti';
 import { useGame } from '../../context/GameContext';
 import { useConfirm } from '../../context/ConfirmContext.jsx';
-import { calculateSheepState, isSleeping, getAwakeningProgress } from '../../utils/gameLogic';
+import { getAwakeningProgress, isSleeping, calculateSheepState, sanitizeInput } from '../../utils/gameLogic';
 import { TagManagerModal } from './TagManagerModal';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from '../ui/CloseButton';
@@ -100,7 +100,7 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                 return tA - tB;
             });
 
-            // console.log(`[SheepDetail] Loaded ${formattedPlans.length} plans for ${target.name}`);
+            // console.log(`[SheepDetail] Loaded ${ formattedPlans.length } plans for ${ target.name }`);
             setPlans(formattedPlans);
 
             // Handle Initial Plan ID (Deep Link)
@@ -172,12 +172,12 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
 
     let buttonText = '';
     if (isSleepingState) {
-        buttonText = `🔮 喚醒禱告 (${getAwakeningProgress(target)}/5)`;
+        buttonText = `🔮 喚醒禱告(${getAwakeningProgress(target)} / 5)`;
     } else {
         if (isAdmin) {
-            buttonText = `🙏 為他禱告 (今日: ${currentCount}/∞)`;
+            buttonText = `🙏 為他禱告(今日: ${currentCount} /∞)`;
         } else {
-            buttonText = isFull ? '🙏 今日禱告已達上限' : `🙏 為他禱告 (今日: ${currentCount}/3)`;
+            buttonText = isFull ? '🙏 今日禱告已達上限' : `🙏 為他禱告(今日: ${currentCount} / 3)`;
         }
     }
 
@@ -245,7 +245,11 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
         if (!completionTarget) return;
         setPlanActionLoading(true);
         // Use override if provided, else state
-        const finalData = dataOverride || completionData;
+        const rawData = dataOverride || completionData;
+        const finalData = {
+            ...rawData,
+            note: sanitizeInput(rawData.note)
+        };
         try {
             // Check if editing an existing completed plan
             // Check if editing an existing completed plan
@@ -369,34 +373,34 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                 <div className="modal-card" ref={modalRef} onClick={(e) => e.stopPropagation()}>
                     {/* ... content ... */}
                     <div className="modal-header">
-                        <h3 id="sheep-detail-title">{isSleepingState ? `🪦 沉睡紀錄 (${target.name})` : `📝 ${target.name} 的資料`}</h3>
+                        <h3 id="sheep-detail-title">{isSleepingState ? `🪦 沉睡紀錄(${target.name})` : `📝 ${target.name} 的資料`}</h3>
                         <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                     </div>
 
                     <div className="modal-form sheep-detail-modal-form">
                         <div className="modal-tabs">
                             <button
-                                className={`modal-tab ${activeTab === 'DASHBOARD' ? 'modal-tab-active' : ''}`}
+                                className={`modal - tab ${activeTab === 'DASHBOARD' ? 'modal-tab-active' : ''} `}
                                 onClick={() => setActiveTab('DASHBOARD')}
                             >
                                 總覽
                             </button>
                             <button
-                                className={`modal-tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''}`}
+                                className={`modal - tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''} `}
                                 data-tab="plan"
                                 onClick={() => setActiveTab('PLAN')}
                             >
                                 認領規劃
                             </button>
                             <button
-                                className={`modal-tab ${activeTab === 'EFFECTS' ? 'modal-tab-active' : ''}`}
+                                className={`modal - tab ${activeTab === 'EFFECTS' ? 'modal-tab-active' : ''} `}
                                 data-tab="effects"
                                 onClick={() => setActiveTab('EFFECTS')}
                             >
                                 認領紀錄
                             </button>
                             <button
-                                className={`modal-tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''}`}
+                                className={`modal - tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''} `}
                                 onClick={() => setActiveTab('SETTINGS')}
                             >
                                 自訂/資料
