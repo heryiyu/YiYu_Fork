@@ -22,6 +22,7 @@ BEGIN
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
         ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
+        CREATE INDEX IF NOT EXISTS idx_schedules_created_by ON public.schedules(created_by);
     ELSE
         -- Add missing columns if table exists but is incomplete
         IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'schedules' AND column_name = 'is_notified') THEN
@@ -45,6 +46,8 @@ BEGIN
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
         ALTER TABLE public.schedule_participants ENABLE ROW LEVEL SECURITY;
+        CREATE INDEX IF NOT EXISTS idx_participants_schedule_id ON public.schedule_participants(schedule_id);
+        CREATE INDEX IF NOT EXISTS idx_participants_sheep_id ON public.schedule_participants(sheep_id);
     ELSE
         -- Remove status/updated_at if they were mistakenly added in a previous draft (JSON doesn't have them)
         IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'schedule_participants' AND column_name = 'status') THEN

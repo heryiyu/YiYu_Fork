@@ -3,7 +3,7 @@ import { useGame } from '../../context/GameContext';
 import { AssetSheep } from '../game/AssetSheep';
 import { CloseButton } from '../ui/CloseButton';
 import { Button } from '../ui/Button';
-import { generateVisuals, parseMaturity } from '../../utils/gameLogic';
+import { generateVisuals, parseMaturity, sanitizeInput } from '../../utils/gameLogic';
 import { ASSETS } from '../../utils/AssetRegistry';
 // AuthContext import removed
 
@@ -60,7 +60,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
             for (const line of lines) {
                 const parts = line.split(/[ \t,，]+/).map(p => p.trim());
-                const sName = parts[0];
+                const sName = sanitizeInput(parts[0]);
 
                 if (!sName) continue;
                 if (!validNameRegex.test(sName)) {
@@ -99,7 +99,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
         onConfirm({
             name: trimmedName,
-            note: note ? note.trim() : '',
+            note: note ? sanitizeInput(note) : '',
             spiritualMaturity: finalMaturity,
             visual: {
                 variant: selectedVariant,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { sanitizeInput } from '../../utils/gameLogic';
 
 const FEEDBACK_TAGS = ['成功接觸', '反應良好', '參加聚會', '決志禱告', '願意受洗'];
 
@@ -77,7 +78,7 @@ export const FeedbackForm = ({
                 <button
                     type="button"
                     className="modal-btn-primary"
-                    onClick={() => onSubmit(data)}
+                    onClick={() => onSubmit({ ...data, note: sanitizeInput(data.note) })}
                     disabled={loading}
                 >
                     {loading ? '處理中...' : '確認儲存'}
