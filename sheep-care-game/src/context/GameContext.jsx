@@ -163,6 +163,35 @@ export const GameProvider = ({ children }) => {
         setIsLoading(true);
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
+
+        // --- Shadow Auth Step (Invisible Supabase Session) ---
+        try {
+            const shadowEmail = `${userId}@line.shadow`;
+            const shadowPass = `pass_${userId}_${supabase.supabaseUrl?.slice(-5)}`; // Deterministic pass
+
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: shadowEmail,
+                password: shadowPass
+            });
+
+            if (authError) {
+                // If not found, create the shadow account
+                if (authError.message.includes('Invalid login credentials')) {
+                    const { error: signUpError } = await supabase.auth.signUp({
+                        email: shadowEmail,
+                        password: shadowPass,
+                        options: { data: { display_name: displayName } }
+                    });
+                    if (signUpError) console.error("Shadow SignUp Error:", signUpError);
+                } else {
+                    console.error("Shadow Auth Error:", authError);
+                }
+            }
+        } catch (err) {
+            console.error("Shadow Auth Exception:", err);
+        }
+        // --- End Shadow Auth ---
+
         setCurrentUser(displayName);
         setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
         showMessage(`設定羊群中... (Hi, ${displayName})`);
