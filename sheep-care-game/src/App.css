@@ -448,33 +448,43 @@
   overflow-x: hidden;
 }
 
-/* Fix for Mobile Tabs Wrapping */
+/* UI Tabs System */
 .modal-tabs {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-bottom: 4px;
+  padding: 4px 0;
+  margin-bottom: 12px;
   width: 100%;
   flex-wrap: nowrap;
+  overflow-x: auto;
+  /* Allow horizontal scroll if tabs exceed width on tiny screens */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .modal-tab {
   white-space: nowrap;
   flex-shrink: 0;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 20px;
   background: transparent;
   border: 1px solid transparent;
-  color: var(--text-muted);
+  color: var(--text-muted-light);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.95rem;
+  line-height: 1;
 }
 
 .modal-tab:hover {
   background: rgba(0, 0, 0, 0.03);
-  color: var(--text-primary);
+  color: var(--text-muted);
 }
 
 .modal-tab-active {
@@ -491,7 +501,7 @@
   }
 
   .modal-tab {
-    padding: 6px 8px;
+    padding: 8px 10px;
     font-size: 0.85rem;
     flex: 1;
     text-align: center;
@@ -551,33 +561,6 @@
   margin-bottom: 16px;
 }
 
-.modal-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.modal-tab {
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  font-weight: 600;
-  color: var(--text-muted-light);
-  cursor: pointer;
-  transition: all 0.2s;
-  border-radius: 20px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.modal-tab:hover {
-  color: var(--text-muted);
-}
-
-.modal-tab.modal-tab-active {
-  color: var(--text-body);
-  background: var(--color-primary-cream);
-}
 
 .modal-content {
   max-height: 55vh;

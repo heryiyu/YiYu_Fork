@@ -4,7 +4,8 @@ import { SHEEP_TYPES } from '../data/sheepData';
 import { calculateTick, generateVisuals, getSheepMessage, calculateSheepState, calculateOfflineDecay, isSleeping, getAwakeningProgress, SLEEPING_STATUS } from '../utils/gameLogic';
 import { gameState } from '../services/gameState';
 import { tagService } from '../services/tagService';
-import { supabase } from '../services/supabaseClient';
+import { supabase, supabaseUrl } from '../services/supabaseClient';
+import { ASSETS } from '../utils/AssetRegistry';
 
 const defaultGameContext = {
     currentUser: null,
@@ -167,7 +168,9 @@ export const GameProvider = ({ children }) => {
         // --- Shadow Auth Step (Invisible Supabase Session) ---
         try {
             const shadowEmail = `${userId}@line.shadow`;
-            const shadowPass = `pass_${userId}_${supabase.supabaseUrl?.slice(-5)}`; // Deterministic pass
+            // Use a stable, deterministic key suffix from URL
+            const urlSuffix = (supabaseUrl || '').split('.').shift()?.slice(-4) || 'fixed';
+            const shadowPass = `p@ss_${userId}_${urlSuffix}`;
 
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: shadowEmail,
@@ -175,16 +178,19 @@ export const GameProvider = ({ children }) => {
             });
 
             if (authError) {
-                // If not found, create the shadow account
-                if (authError.message.includes('Invalid login credentials')) {
+                // Handle new user registration automatically
+                if (authError.message.includes('Invalid login credentials') || authError.status === 400) {
                     const { error: signUpError } = await supabase.auth.signUp({
                         email: shadowEmail,
                         password: shadowPass,
                         options: { data: { display_name: displayName } }
                     });
-                    if (signUpError) console.error("Shadow SignUp Error:", signUpError);
+                    if (signUpError) {
+                        console.error("Shadow SignUp Error:", signUpError);
+                        // If signup fails, we might still proceed but RLS will block queries
+                    }
                 } else {
-                    console.error("Shadow Auth Error:", authError);
+                    console.warn("Background Auth Issue:", authError.message);
                 }
             }
         } catch (err) {
