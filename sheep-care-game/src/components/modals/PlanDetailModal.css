@@ -318,6 +318,67 @@
     }
 }
 
+/* --- New Professional Button Hierarchy --- */
+.plan-actions-footer {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg-card-secondary);
+    border-top: 1px solid var(--border-subtle);
+    border-radius: 0 0 24px 24px;
+}
+
+.plan-btn-hero {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+    background: var(--palette-orange-action);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(252, 183, 81, 0.3);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.plan-btn-hero:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 6px rgba(252, 183, 81, 0.2);
+}
+
+.plan-btn-row {
+    display: flex;
+    gap: 12px;
+}
+
+.plan-btn-save {
+    flex: 1.5;
+    padding: 12px;
+    background: var(--palette-blue-action);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.plan-btn-back {
+    flex: 1;
+    padding: 12px;
+    background: #fff;
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

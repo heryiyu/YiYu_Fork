@@ -376,23 +376,7 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
                             </div>
                         )}
 
-                        <div className="spiritual-plan-form-actions">
-                            <button
-                                type="submit"
-                                className="modal-btn-confirm-add"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? '處理中...' : (schedule?.id === 'new' ? '確認新增' : '儲存變更')}
-                            </button>
-                            {embedded && (
-                                <button
-                                    type="button"
-                                    className="modal-btn-secondary"
-                                    onClick={onClose}
-                                >
-                                    返回列表
-                                </button>
-                            )}
+                        <div className="plan-actions-footer">
                             {(() => {
                                 if (schedule.id === 'new') return null;
 
@@ -413,24 +397,33 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
                                 return (
                                     <button
                                         type="button"
-                                        className="modal-btn-primary"
+                                        className="plan-btn-hero"
                                         onClick={onComplete}
-                                        style={{
-                                            marginLeft: '8px',
-                                            padding: '0 16px',
-                                            background: 'var(--palette-orange-action)',
-                                            borderColor: 'var(--palette-orange-action)',
-                                            color: '#fff',
-                                            fontWeight: 'bold',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px'
-                                        }}
                                     >
-                                        <Edit2 size={16} /> 認領紀錄
+                                        <Edit2 size={20} /> 認領紀錄
                                     </button>
                                 );
                             })()}
+
+                            <div className="plan-btn-row">
+                                <button
+                                    type="submit"
+                                    className="plan-btn-save"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? '處理中...' : (schedule?.id === 'new' ? '確認新增' : '儲存變更')}
+                                </button>
+
+                                {embedded && (
+                                    <button
+                                        type="button"
+                                        className="plan-btn-back"
+                                        onClick={onClose}
+                                    >
+                                        返回列表
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </form>
 
