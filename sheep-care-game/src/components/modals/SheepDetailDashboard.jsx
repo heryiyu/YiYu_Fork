@@ -95,31 +95,26 @@ export const SheepDetailDashboard = ({
 
                 {(() => {
                     const now = new Date();
-                    const visiblePlans = (plans || []).filter(p => {
-                        if (p.completed_at) return false;
+                    const allIncompletePlans = (plans || []).filter(p => !p.completed_at);
 
-                        // Visibility Logic:
-                        if (p.scheduled_time) {
-                            return now >= new Date(p.scheduled_time);
-                        }
+                    if (allIncompletePlans.length > 0) {
+                        const nextPlan = allIncompletePlans[0];
 
-                        // Fallback: 1 day after creation
-                        if (p.created_at) {
+                        // Check if "Ready" for completion
+                        let isReady = false;
+                        if (nextPlan.scheduled_time) {
+                            isReady = now >= new Date(nextPlan.scheduled_time);
+                        } else if (nextPlan.created_at) {
                             const oneDayMs = 24 * 60 * 60 * 1000;
-                            return now >= new Date(new Date(p.created_at).getTime() + oneDayMs);
+                            isReady = now >= new Date(new Date(nextPlan.created_at).getTime() + oneDayMs);
                         }
 
-                        return false; // Should not happen if data is consistent
-                    });
-
-                    if (visiblePlans.length > 0) {
-                        const nextPlan = visiblePlans[0];
                         const d = nextPlan.scheduled_time ? new Date(nextPlan.scheduled_time) : null;
                         const dateStr = d ? `${d.getMonth() + 1}/${d.getDate()}` : '--/--';
                         const timeStr = d ? d.toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit' }) : '';
 
                         return (
-                            <div className="plan-ticket">
+                            <div className="plan-ticket" style={{ opacity: isReady ? 1 : 0.8 }}>
                                 <div className="ticket-left">
                                     <div className="ticket-date">{dateStr}</div>
                                     <div className="ticket-time">{timeStr}</div>
@@ -131,13 +126,31 @@ export const SheepDetailDashboard = ({
                                             {nextPlan.location && <div className="ticket-sub">📍 {nextPlan.location}</div>}
                                         </div>
                                     </div>
-                                    <button
-                                        className="ticket-btn-complete"
-                                        style={{ background: 'var(--palette-orange-action)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
-                                        onClick={() => openCompletePlan(nextPlan)}
-                                    >
-                                        <Edit2 size={14} /> 認領紀錄
-                                    </button>
+                                    {isReady ? (
+                                        <button
+                                            className="ticket-btn-complete"
+                                            style={{
+                                                background: 'var(--palette-orange-action)',
+                                                color: '#fff',
+                                                border: 'none',
+                                                padding: '8px 16px',
+                                                borderRadius: '16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 2px 4px rgba(252, 183, 81, 0.2)'
+                                            }}
+                                            onClick={() => openCompletePlan(nextPlan)}
+                                        >
+                                            <Edit2 size={16} /> 認領紀錄
+                                        </button>
+                                    ) : (
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: '#eee', padding: '4px 10px', borderRadius: '10px', display: 'flex', alignItems: 'center' }}>
+                                            <Clock size={12} style={{ marginRight: '4px' }} /> 尚未開始
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

@@ -131,13 +131,26 @@ export const generateVisuals = () => {
     return { color, accessory };
 };
 
+/**
+ * Basic sanitization to prevent XSS. Strips HTML tags and trims whitespace.
+ */
+export const sanitizeInput = (text) => {
+    if (typeof text !== 'string') return '';
+    return text
+        .replace(/<[^>]*>?/gm, '') // Strip HTML tags
+        .trim();
+};
+
 // --- Core Logic ---
 
 /**
  * Ensures a sheep object has valid coordinates and visual properties.
  */
 export const sanitizeSheep = (s) => {
-    let { x, y, angle, visual } = s;
+    let { x, y, angle, visual, name } = s;
+
+    // Sanitize name
+    const safeName = sanitizeInput(name) || '小羊';
 
     // Fix Coordinates
     if (typeof x !== 'number' || isNaN(x)) x = Math.random() * (BOUNDS.maxX - BOUNDS.minX) + BOUNDS.minX;
@@ -155,7 +168,7 @@ export const sanitizeSheep = (s) => {
     // Fix Visual
     const safeVisual = visual || generateVisuals();
 
-    return { ...s, x, y, angle, visual: safeVisual };
+    return { ...s, name: safeName, x, y, angle, visual: safeVisual };
 };
 
 /**

@@ -1217,6 +1217,7 @@ export const GameProvider = ({ children }) => {
                 .from('schedules')
                 .select(`
                     *,
+                    created_at,
                     schedule_participants (
                         *
                     )
