@@ -1,8 +1,10 @@
 import React from 'react';
-import { Plus, Search, CheckSquare, Trash2, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search, CheckSquare, Trash2, RotateCcw, SlidersHorizontal, LayoutGrid, List, Maximize2, Minimize2 } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import { CloseButton } from '../ui/CloseButton';
 import { FilterSettingsMenu } from './FilterSettingsMenu';
+import { useGame } from '../../context/GameContext';
+
 
 export const SheepListToolbar = ({
     isSelectionMode,
@@ -34,6 +36,19 @@ export const SheepListToolbar = ({
     setShowTagManagerModal,
     effectiveFilterStatus
 }) => {
+    const { settings, updateSetting } = useGame();
+    const viewMode = settings.sheepListViewMode || 'card';
+
+    const toggleViewMode = () => {
+        updateSetting('sheepListViewMode', viewMode === 'card' ? 'text' : 'card');
+    };
+
+    const isExpanded = settings.isSheepListExpanded || false;
+
+    const toggleExpansion = () => {
+        updateSetting('isSheepListExpanded', !isExpanded);
+    };
+
     return (
         <div
             className={`dock-child dock-toolbar ${isSearchExpanded ? 'dock-toolbar--search-expanded' : ''}`}
@@ -147,6 +162,54 @@ export const SheepListToolbar = ({
                             </button>
                         </Tooltip>
 
+                        <div className="dock-toolbar-divider" />
+
+                        <Tooltip content={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'} side="bottom">
+                            <button
+                                type="button"
+                                className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
+                                onClick={toggleViewMode}
+                                style={{
+                                    opacity: isCollapsed ? 0.6 : 1,
+                                    minWidth: 'unset',
+                                    padding: '0 10px',
+                                    height: '36px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: 'rgba(255, 255, 255, 0.8)',
+                                    borderColor: 'var(--border-subtle)'
+                                }}
+                                aria-label={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'}
+                            >
+                                {viewMode === 'card' ? <List size={18} strokeWidth={2.5} /> : <LayoutGrid size={18} strokeWidth={2.5} />}
+                            </button>
+                        </Tooltip>
+
+                        <Tooltip content={isExpanded ? '收合列表' : '全螢幕呈現'} side="bottom">
+                            <button
+                                type="button"
+                                className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
+                                onClick={toggleExpansion}
+                                style={{
+                                    opacity: isCollapsed ? 0.6 : 1,
+                                    minWidth: 'unset',
+                                    padding: '0 10px',
+                                    height: '36px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: 'rgba(255, 255, 255, 0.8)',
+                                    borderColor: 'var(--border-subtle)'
+                                }}
+                                aria-label={isExpanded ? '收合列表' : '全螢幕呈現'}
+                            >
+                                {isExpanded ? <Minimize2 size={18} strokeWidth={2.5} /> : <Maximize2 size={18} strokeWidth={2.5} />}
+                            </button>
+                        </Tooltip>
+
+                        <div className="dock-toolbar-divider" />
+
                         <div
                             ref={searchWrapRef}
                             className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
@@ -238,6 +301,8 @@ export const SheepListToolbar = ({
                                 />
                             )}
                         </div>
+
+                        <div className="dock-toolbar-divider" />
 
                         <Tooltip content={isSelectionMode ? '取消選取模式' : '選取小羊'} side="bottom">
                             <button

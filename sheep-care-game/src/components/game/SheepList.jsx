@@ -8,6 +8,8 @@ import { SheepCard } from './SheepCard';
 import { SheepListToolbar } from './SheepListToolbar';
 import '../../styles/design-tokens.css';
 import './SheepList.css';
+import { SheepListTextView } from './SheepListTextView';
+
 
 const TAG_FILTER_PREFIX = 'TAG:';
 
@@ -286,7 +288,7 @@ export const SheepList = ({ onSelect }) => {
                 zIndex: 'var(--z-dock-layer)',
                 display: 'flex', flexDirection: 'column',
                 pointerEvents: 'none',
-                transition: 'transform 0.3s ease'
+                transition: 'transform 0.3s ease, height 0.3s ease'
             }}>
                 <style>{`
                     .sheep-dock-scroll::-webkit-scrollbar { display: none; }
@@ -329,35 +331,52 @@ export const SheepList = ({ onSelect }) => {
                     />
 
                     <div
-                        className="list-content-wrapper"
+                        className={`list-content-wrapper ${settings?.isSheepListExpanded ? 'list-content-wrapper--expanded' : ''}`}
                         style={{
-                            height: isCollapsed ? '0px' : 'clamp(180px, 25vh, 260px)',
+                            height: isCollapsed ? '0px' : (settings?.isSheepListExpanded ? 'calc(100vh - 56px)' : 'clamp(180px, 25vh, 260px)'),
                             opacity: isCollapsed ? 0 : 1,
                             display: 'flex', flexDirection: 'column',
                             pointerEvents: isCollapsed ? 'none' : 'auto'
                         }}
                     >
-                        <div
-                            ref={scrollAreaRef}
-                            className="dock-scroll-area"
-                            style={{
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'flex-end',
-                                gap: '12px',
-                                padding: '10px 16px 6px 16px',
-                                overflowX: 'auto',
-                                overflowY: 'hidden',
-                                scrollBehavior: 'smooth',
-                                pointerEvents: 'auto',
-                                height: '100%'
-                            }}
-                        >
-                            {(() => {
-                                const items = [];
-                                const ph = unpinPlaceholder;
-                                filteredSheep.forEach((s, i) => {
+                        {settings?.sheepListViewMode === 'text' ? (
+                            <SheepListTextView
+                                sheepList={filteredSheep}
+                                selectedIds={selectedIds}
+                                onSelect={(id) => {
+                                    if (isSelectionMode) {
+                                        toggleSelection(id);
+                                    } else {
+                                        const s = sheep.find(item => item.id === id);
+                                        if (onSelect && s) onSelect(s);
+                                    }
+                                }}
+                                isSelectionMode={isSelectionMode}
+                            />
+                        ) : (
+                            <div
+                                ref={scrollAreaRef}
+                                className={`dock-scroll-area ${settings?.isSheepListExpanded ? 'dock-scroll-area--grid' : ''}`}
+                                style={{
+                                    flex: 1,
+                                    display: settings?.isSheepListExpanded ? 'grid' : 'flex',
+                                    gridTemplateColumns: settings?.isSheepListExpanded ? 'repeat(auto-fill, minmax(140px, 1fr))' : 'none',
+                                    flexDirection: settings?.isSheepListExpanded ? 'unset' : 'row',
+                                    flexWrap: settings?.isSheepListExpanded ? 'unset' : 'nowrap',
+                                    alignItems: settings?.isSheepListExpanded ? 'start' : 'flex-end',
+                                    justifyContent: settings?.isSheepListExpanded ? 'center' : 'flex-start',
+                                    gap: settings?.isSheepListExpanded ? '16px' : '12px',
+                                    padding: settings?.isSheepListExpanded ? '24px 16px' : '10px 16px 6px 16px',
+                                    overflowX: settings?.isSheepListExpanded ? 'hidden' : 'auto',
+                                    overflowY: settings?.isSheepListExpanded ? 'auto' : 'hidden',
+                                    scrollBehavior: 'smooth',
+                                    pointerEvents: 'auto',
+                                    height: '100%'
+                                }}
+                            >
+                                {filteredSheep.map((s, i) => {
+                                    const items = [];
+                                    const ph = unpinPlaceholder;
                                     if (ph && ph.index === i) {
                                         items.push(
                                             <div
@@ -373,9 +392,9 @@ export const SheepList = ({ onSelect }) => {
                                             key={s.id}
                                             ref={(el) => { if (el) cardRefs.current[s.id] = el; }}
                                             style={{
-                                                width: 'max-content',
-                                                minWidth: 'max-content',
-                                                height: '100%',
+                                                width: settings?.isSheepListExpanded ? '100%' : 'max-content',
+                                                minWidth: settings?.isSheepListExpanded ? 'unset' : 'max-content',
+                                                height: settings?.isSheepListExpanded ? 'auto' : '100%',
                                                 paddingBottom: '5px',
                                                 pointerEvents: 'auto'
                                             }}
@@ -398,23 +417,21 @@ export const SheepList = ({ onSelect }) => {
                                             />
                                         </div>
                                     );
-                                });
-                                if (ph && ph.index === filteredSheep.length) {
-                                    items.push(
-                                        <div
-                                            key={`placeholder-${ph.id}`}
-                                            className="sheep-card-placeholder"
-                                            style={{ '--ph-width': `${ph.width}px` }}
-                                            aria-hidden="true"
-                                        />
-                                    );
-                                }
-                                return items;
-                            })()}
-                            {filteredSheep.length === 0 && !unpinPlaceholder && (
-                                <div style={{ color: 'rgba(0,0,0,0.5)', padding: '20px', fontWeight: 'bold' }}>沒有小羊...</div>
-                            )}
-                        </div>
+                                    return items;
+                                })}
+                                {settings?.sheepListViewMode === 'card' && unpinPlaceholder && unpinPlaceholder.index === filteredSheep.length && (
+                                    <div
+                                        key={`placeholder-${unpinPlaceholder.id}`}
+                                        className="sheep-card-placeholder"
+                                        style={{ '--ph-width': `${unpinPlaceholder.width}px` }}
+                                        aria-hidden="true"
+                                    />
+                                )}
+                                {filteredSheep.length === 0 && (
+                                    <div style={{ color: 'rgba(0,0,0,0.5)', padding: '20px', fontWeight: 'bold' }}>沒有小羊...</div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
