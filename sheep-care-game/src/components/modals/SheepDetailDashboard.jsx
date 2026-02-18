@@ -93,9 +93,27 @@ export const SheepDetailDashboard = ({
                     <Calendar size={14} /> 下一步行動
                 </div>
 
-                {plans.filter(p => !p.completed_at).length > 0 ? (
-                    (() => {
-                        const nextPlan = plans.filter(p => !p.completed_at)[0];
+                {(() => {
+                    const now = new Date();
+                    const visiblePlans = plans.filter(p => {
+                        if (p.completed_at) return false;
+
+                        // Visibility Logic:
+                        if (p.scheduled_time) {
+                            return now >= new Date(p.scheduled_time);
+                        }
+
+                        // Fallback: 1 day after creation
+                        if (p.created_at) {
+                            const oneDayMs = 24 * 60 * 60 * 1000;
+                            return now >= new Date(new Date(p.created_at).getTime() + oneDayMs);
+                        }
+
+                        return false; // Should not happen if data is consistent
+                    });
+
+                    if (visiblePlans.length > 0) {
+                        const nextPlan = visiblePlans[0];
                         const d = nextPlan.scheduled_time ? new Date(nextPlan.scheduled_time) : null;
                         const dateStr = d ? `${d.getMonth() + 1}/${d.getDate()}` : '--/--';
                         const timeStr = d ? d.toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit' }) : '';
@@ -123,19 +141,21 @@ export const SheepDetailDashboard = ({
                                 </div>
                             </div>
                         );
-                    })()
-                ) : (
-                    <div
-                        className="plan-add-dashed"
-                        onClick={() => {
-                            setActiveTab('PLAN');
-                            openAddPlan();
-                        }}
-                    >
-                        <Plus size={20} />
-                        <span>新增認領規劃</span>
-                    </div>
-                )}
+                    }
+
+                    return (
+                        <div
+                            className="plan-add-dashed"
+                            onClick={() => {
+                                setActiveTab('PLAN');
+                                openAddPlan();
+                            }}
+                        >
+                            <Plus size={20} />
+                            <span>新增認領規劃</span>
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     );
