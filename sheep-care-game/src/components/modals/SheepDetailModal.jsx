@@ -91,6 +91,7 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                     feedback: myParticipant?.feedback,
                     sheep_id: target.id,
                     created_by: s.created_by,
+                    created_at: s.created_at, // Essential for visibility fallback
                     originalSchedule: s // Store full object for PlanDetailModal
                 };
             }).sort((a, b) => {

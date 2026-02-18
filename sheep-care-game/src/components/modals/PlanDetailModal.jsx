@@ -393,20 +393,44 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
                                     返回列表
                                 </button>
                             )}
-                            <button
-                                type="button"
-                                className="modal-btn-primary"
-                                onClick={onComplete}
-                                style={{
-                                    marginLeft: '8px',
-                                    background: 'var(--palette-orange-action)',
-                                    borderColor: 'var(--palette-orange-action)',
-                                    color: '#fff',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                <Edit2 size={16} /> 認領紀錄
-                            </button>
+                            {(() => {
+                                if (schedule.id === 'new') return null;
+
+                                const now = new Date();
+                                const scheduledTime = schedule.scheduled_time ? new Date(schedule.scheduled_time) : null;
+                                const createdAt = schedule.created_at ? new Date(schedule.created_at) : null;
+
+                                let isReady = false;
+                                if (scheduledTime) {
+                                    isReady = now >= scheduledTime;
+                                } else if (createdAt) {
+                                    const oneDayMs = 24 * 60 * 60 * 1000;
+                                    isReady = now >= new Date(createdAt.getTime() + oneDayMs);
+                                }
+
+                                if (!isReady) return null;
+
+                                return (
+                                    <button
+                                        type="button"
+                                        className="modal-btn-primary"
+                                        onClick={onComplete}
+                                        style={{
+                                            marginLeft: '8px',
+                                            padding: '0 16px',
+                                            background: 'var(--palette-orange-action)',
+                                            borderColor: 'var(--palette-orange-action)',
+                                            color: '#fff',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                        }}
+                                    >
+                                        <Edit2 size={16} /> 認領紀錄
+                                    </button>
+                                );
+                            })()}
                         </div>
                     </form>
 
