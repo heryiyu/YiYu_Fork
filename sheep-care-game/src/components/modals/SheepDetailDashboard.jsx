@@ -95,7 +95,7 @@ export const SheepDetailDashboard = ({
 
                 {(() => {
                     const now = new Date();
-                    const visiblePlans = plans.filter(p => {
+                    const visiblePlans = (plans || []).filter(p => {
                         if (p.completed_at) return false;
 
                         // Visibility Logic:
