@@ -165,36 +165,59 @@ export const GameProvider = ({ children }) => {
         const { userId, displayName, pictureUrl } = profile;
         setLineId(userId);
 
-        // --- Shadow Auth Step (Invisible Supabase Session) ---
+        // --- Shadow Auth Step (Invisible Supabase Session) v2.8 ---
         try {
             const shadowEmail = `${userId}@line.shadow`;
-            // Use a stable, deterministic key suffix from URL
-            const urlSuffix = (supabaseUrl || '').split('.').shift()?.slice(-4) || 'fixed';
-            const shadowPass = `p@ss_${userId}_${urlSuffix}`;
 
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                email: shadowEmail,
-                password: shadowPass
-            });
+            // 1. Generate Stable Passwords
+            // Version C (Current): Based on cleaned URL suffix
+            const urlSuffix = (supabaseUrl || '').split('.').shift()?.slice(-4) || 'fixed';
+            const passV3 = `p@ss_${userId}_${urlSuffix}`;
+
+            // Version B (Legacy-1): Original logic had a slightly different suffix
+            const passV2 = `pass_${userId}_${supabaseUrl?.slice(-5)}`;
+
+            const trySignIn = async (email, password) => {
+                return await supabase.auth.signInWithPassword({ email, password });
+            };
+
+            let { data: authData, error: authError } = await trySignIn(shadowEmail, passV3);
+
+            // 2. Fallback to Legacy Password if needed (Handles migration overlap)
+            if (authError && authError.message.includes('Invalid login credentials')) {
+                const fallback = await trySignIn(shadowEmail, passV2);
+                if (!fallback.error) {
+                    authData = fallback.data;
+                    authError = null;
+                    console.log("Shadow Auth: Successfully used legacy fallback pass.");
+                }
+            }
 
             if (authError) {
-                // Handle new user registration automatically
+                // 3. Handle new user registration automatically
                 if (authError.message.includes('Invalid login credentials') || authError.status === 400) {
                     const { error: signUpError } = await supabase.auth.signUp({
                         email: shadowEmail,
-                        password: shadowPass,
+                        password: passV3,
                         options: { data: { display_name: displayName } }
                     });
                     if (signUpError) {
                         console.error("Shadow SignUp Error:", signUpError);
-                        // If signup fails, we might still proceed but RLS will block queries
+                        showMessage("⚠️ 背景註冊失敗，資料隔離功能受限");
+                    } else {
+                        console.log("Shadow Auth: New background registration success.");
                     }
                 } else {
                     console.warn("Background Auth Issue:", authError.message);
+                    showMessage(`⚠️ 背景認證異常: ${authError.message}`);
                 }
+            } else {
+                console.log("Shadow Auth: Secure session established.");
+                // For debug: showMessage("🔑 背景安全驗證成功");
             }
         } catch (err) {
             console.error("Shadow Auth Exception:", err);
+            showMessage("❌ 安全模組執行異常");
         }
         // --- End Shadow Auth ---
 
