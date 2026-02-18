@@ -16,7 +16,7 @@ const defaultGameContext = {
     inventory: [],
     message: null,
     weather: { type: 'sunny', isDay: true, temp: 25 },
-    settings: { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] },
+    settings: { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card' },
     notificationEnabled: false,
     toggleNotification: () => { },
     isAdmin: false,
@@ -125,10 +125,10 @@ export const GameProvider = ({ children }) => {
         try {
             const saved = localStorage.getItem('sheep_game_settings');
             // Default: maxVisibleSheep 15, notify false, pinnedSheepIds []
-            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] };
+            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card' };
             return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
         } catch {
-            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [] };
+            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card' };
         }
     });
 
@@ -253,6 +253,9 @@ export const GameProvider = ({ children }) => {
                 notify: false,
                 hiddenFilters: [],
                 stampLabels: {},
+                sheepListViewMode: 'card',
+                isSheepListExpanded: false,
+                prayedCount: 0,
                 ...rawSettings
             };
 
