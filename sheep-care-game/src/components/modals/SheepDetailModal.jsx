@@ -380,27 +380,27 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                     <div className="modal-form sheep-detail-modal-form">
                         <div className="modal-tabs">
                             <button
-                                className={`modal - tab ${activeTab === 'DASHBOARD' ? 'modal-tab-active' : ''} `}
+                                className={`modal-tab ${activeTab === 'DASHBOARD' ? 'modal-tab-active' : ''}`}
                                 onClick={() => setActiveTab('DASHBOARD')}
                             >
                                 總覽
                             </button>
                             <button
-                                className={`modal - tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''} `}
+                                className={`modal-tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''}`}
                                 data-tab="plan"
                                 onClick={() => setActiveTab('PLAN')}
                             >
                                 認領規劃
                             </button>
                             <button
-                                className={`modal - tab ${activeTab === 'EFFECTS' ? 'modal-tab-active' : ''} `}
+                                className={`modal-tab ${activeTab === 'EFFECTS' ? 'modal-tab-active' : ''}`}
                                 data-tab="effects"
                                 onClick={() => setActiveTab('EFFECTS')}
                             >
                                 認領紀錄
                             </button>
                             <button
-                                className={`modal - tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''} `}
+                                className={`modal-tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''}`}
                                 onClick={() => setActiveTab('SETTINGS')}
                             >
                                 自訂/資料
