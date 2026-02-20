@@ -100,15 +100,13 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                 return tA - tB;
             });
 
-            // console.log(`[SheepDetail] Loaded ${ formattedPlans.length } plans for ${ target.name }`);
             setPlans(formattedPlans);
 
             // Handle Initial Plan ID (Deep Link)
             if (initialPlanId && formattedPlans.length > 0) {
-                // console.log("Handling initialPlanId:", initialPlanId);
-                const targetPlan = formattedPlans.find(p => p.id === initialPlanId);
-                if (targetPlan) {
-                    handlePlanClick(targetPlan);
+                const foundPlan = formattedPlans.find(p => p.id === initialPlanId);
+                if (foundPlan) {
+                    handlePlanClick(foundPlan);
                 }
             }
         } catch (error) {
@@ -119,7 +117,6 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     const lastFetchedRef = useRef(null);
 
     useEffect(() => {
-        // console.log("SheepDetailModal: target changed", target?.id);
         if (target) {
             setName(target.name);
             setNote(target.note || '');
@@ -201,7 +198,6 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     };
 
     const handlePlanClick = (plan) => {
-        // console.log("handlePlanClick triggered:", plan);
         setActiveTab('PLAN');
         // fetchParticipants(plan); // Removed: Not needed in new architecture or handled differently
         if (plan.completed_at) {
@@ -251,25 +247,11 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
             note: sanitizeInput(rawData.note)
         };
         try {
-            // Check if editing an existing completed plan
-            // Check if editing an existing completed plan
-            // We use completionTarget which is now the participant_id
-            // We need to know if it's already completed to decide update vs complete? 
-            // completePlan in context handles the DB update. 
-            // context.completePlan does: update schedule_participants set completed_at=NOW, feedback=... where id=planId (arg 1)
-            // context.updatePlanFeedback does: update schedule_participants set feedback=... where id=planId
-
-            // The logic here relied on 'plans' list to check 'completed_at'.
-            // But 'completionTarget' is now a Participant ID, not a Schedule ID (which 'plans' uses as key 'id').
-            // We need to find the plan in 'plans' that matches this participant_id.
-
             const planToEdit = plans.find(p => p.participant_id === completionTarget);
 
             if (planToEdit && planToEdit.completed_at) {
-                // UPDATE FeedBack Only
                 await updatePlanFeedback(completionTarget, finalData);
             } else {
-                // NEW Completion
                 await completePlan(completionTarget, target.id, finalData);
             }
 

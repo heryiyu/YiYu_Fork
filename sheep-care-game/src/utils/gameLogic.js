@@ -13,7 +13,6 @@ export const isSleeping = (s) => s && (s.status === 'dead' || s.status === SLEEP
 export const getAwakeningProgress = (s) => (s?.awakeningProgress ?? s?.resurrectionProgress ?? 0);
 
 // Configuration for game balance
-// Configuration for game balance
 const SHEEP_CONFIG = {
     SPEED: { NORMAL: 1.2, SICK: 0.6, PUSH_BACK: 3.0 },
     CHANCE: {

@@ -18,7 +18,6 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
         removeParticipantFromSchedule
     } = useGame();
 
-    // console.log("PlanDetailModal rendered. Schedule:", schedule);
 
     // Form State
     const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +53,6 @@ export const PlanDetailModal = ({ schedule, onClose, embedded = false, onComplet
 
     // Initialize local state when schedule opens
     useEffect(() => {
-        // console.log("PlanDetailModal: useEffect [schedule] triggered. ID:", schedule?.id);
         if (schedule) {
             setFormData({
                 title: schedule.title || schedule.action || '',

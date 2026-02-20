@@ -103,25 +103,12 @@ export const gameState = {
             // Restore from DB format
             let sheep = this._fromDbSheep(s);
 
-            // V13: Parametric Skins Logic
-            // We have 'skins.data' (Template) and 'sheep.visual_attrs' (Attributes)
-
-            // 1. Start with Template (if any)
-            let combinedVisual = {};
-            // Legacy skins logic removed
-
-
-            // 2. Merge Instance Attributes (This overrides template defaults)
-            // Renamed from 'Spiritual_Journey_Planning' to 'sheep_data'
+            // Merge Instance Attributes
             const rawCol = s.sheep_data || s.Spiritual_Journey_Planning || s.visual_attrs || {};
             const { plan, ...instanceVisuals } = rawCol;
 
-            if (instanceVisuals) {
-                combinedVisual = { ...combinedVisual, ...instanceVisuals };
-            }
-
-            sheep.visual = combinedVisual;
-            sheep.plan = plan || {}; // Assign plan to sheep object
+            sheep.visual = instanceVisuals || {};
+            sheep.plan = plan || {};
 
             // Schema has 'last_login'
             const lastTime = new Date(sheep.updated_at || profile.last_login || now);
@@ -146,20 +133,6 @@ export const gameState = {
         return { user: profile, sheep: updatedSheepList, isNewUser: false };
     },
 
-    // Helper: Ensure a skin exists for the sheep (Programmatic)
-    // V13 Update: For Programmatic sheep, we DON'T create new skins anymore.
-    // We only create skins for IMAGES.
-    // For Programmatic, we return the Master Skin ID.
-    async _ensureSkin(sheep) {
-        if (sheep.skinId) return sheep.skinId;
-
-        // V13 Pivot: Table deleted by user.
-        // Return null as we cannot lookup templates.
-        return null;
-    },
-
-
-
     // Helper: Map Sheep to DB (camel -> snake)
     _toDbSheep(sheep) {
         const status = (sheep.status === SLEEPING_STATUS || sheep.status === 'dead') ? 'dead' : sheep.status;
@@ -172,7 +145,6 @@ export const gameState = {
             status,
             health: sheep.health,
 
-            // V13: Save attributes here
             // Consolidated visual attributes and plan into 'sheep_data'
             sheep_data: { ...sheep.visual, plan: sheep.plan },
 
@@ -297,14 +269,8 @@ export const gameState = {
             return null;
         }
 
-        // Ensure Skin Exists
-        let skinId = sheep.skinId;
-        if (!skinId) {
-            skinId = await this._ensureSkin(sheep);
-        }
-
         const payload = {
-            ...this._toDbSheep({ ...sheep, skinId }),
+            ...this._toDbSheep(sheep),
             created_at: this._getLocalISOString()
         };
         if (!payload.id) delete payload.id;

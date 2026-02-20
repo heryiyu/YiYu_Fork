@@ -26,10 +26,7 @@ export const Login = () => {
     // Wait, let's restore both to be clean.
     const [adminPass, setAdminPass] = useState('');
 
-    // Effect removed: We no longer auto-switch to Admin login if not in client.
     // Users can manually click "Admin Access" if needed.
-
-
     const handleAdminLogin = (e) => {
         e.preventDefault();
         // Check Credentials - Username only per request

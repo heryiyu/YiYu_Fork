@@ -63,17 +63,6 @@ export const GameProvider = ({ children }) => {
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-    const getLocalData = (key, fallback) => {
-        // We only load data if we have a valid session user
-        const storedUser = localStorage.getItem('sheep_current_session');
-        if (storedUser) {
-            const cache = localStorage.getItem(`sheep_game_data_${storedUser}`);
-            if (cache) {
-                try { return JSON.parse(cache)[key] || fallback; } catch (e) { }
-            }
-        }
-        return fallback;
-    };
 
     // ... (Existing state)
     const [sheep, setSheep] = useState([]);
@@ -159,7 +148,6 @@ export const GameProvider = ({ children }) => {
 
 
     // --- LIFF & Login Logic ---
-    // ...
     const handleLoginSuccess = async (profile) => {
         setIsLoading(true);
         const { userId, displayName, pictureUrl } = profile;
@@ -234,7 +222,6 @@ export const GameProvider = ({ children }) => {
                 // Load Game Data (Inventory, Settings)
                 const gameData = user.game_data || {};
                 setInventory(gameData.inventory || []);
-                // Update Settings from Cloud (Merge with local default structure)
                 // Update Settings from Cloud (Merge with local default structure)
                 if (gameData.settings) {
                     setSettings(prev => ({ ...prev, ...gameData.settings }));
@@ -373,7 +360,6 @@ export const GameProvider = ({ children }) => {
             visual: safeVisual,
             skinId: skinId || null,
             x: Math.random() * 60 + 20, y: Math.random() * 60 + 20,
-            angle: Math.random() * Math.PI * 2, direction: 1,
             angle: Math.random() * Math.PI * 2, direction: 1,
             user_id: userId, // Essential for DB (UUID)
         };
@@ -603,16 +589,6 @@ export const GameProvider = ({ children }) => {
         }
 
         lastSaveTimeRef.current = lastSave; // Update Ref with loaded time
-
-        // Cache Locally
-        if (targetUser) {
-            localStorage.setItem(`sheep_game_data_${targetUser}`, JSON.stringify({
-                sheep: decaySheep,
-                inventory: loadedData.inventory || [],
-                settings: loadedData.settings || { notify: false }, // Save setting
-                lastSave: now
-            }));
-        }
 
         return diffHours;
     };
@@ -1383,5 +1359,3 @@ export const GameProvider = ({ children }) => {
         </GameContext.Provider>
     );
 };
-
-
