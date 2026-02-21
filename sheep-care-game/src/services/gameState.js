@@ -40,8 +40,7 @@ export const gameState = {
         }
 
         if (!profile) {
-            // Create profile if missing - use LINE displayName as default nickname
-            // Leverage existing columns: line_id, nickname, name/display_name, avatar, coins
+            // ... (keep creation sequential as we need the profile)
             const insertPayload = {
                 line_id: userId,
                 nickname: defaultNickname,
@@ -62,7 +61,7 @@ export const gameState = {
             profile = newProfile;
             return { user: profile, sheep: [], isNewUser: true };
         } else {
-            // Returning user: optionally update name/nickname/avatar if stale (null in DB but we have from LINE)
+            // Returning user: Move updates to background
             const updates = {};
             if ((!profile.name || !profile.name.trim()) && displayName && String(displayName).trim()) {
                 updates.name = displayName;
@@ -73,20 +72,18 @@ export const gameState = {
             if ((!profile.nickname || !profile.nickname.trim()) && defaultNickname !== 'Shepherd') {
                 updates.nickname = defaultNickname;
             }
+
+            // DO NOT AWAIT - Run in background to speed up login
             if (Object.keys(updates).length > 0) {
-                await supabase
-                    .from('users')
-                    .update(updates)
-                    .eq('line_id', userId);
+                supabase.from('users').update(updates).eq('line_id', userId).then(() => {
+                    console.log("Profile data synchronized in background");
+                });
                 profile = { ...profile, ...updates };
             }
         }
 
-        // 2. Get Sheep (Using internal UUID 'profile.id')
-        // Join with 'sheep_skins' (User specified table name)
-        // If profile.id is available, use it. Otherwise, use LINE userId (during migration transition).
+        // 2. Get Sheep
         const queryId = profile?.id || userId;
-
         const { data: sheepList, error: sheepError } = await supabase
             .from('sheep')
             .select('*')
@@ -99,36 +96,29 @@ export const gameState = {
 
         // 3. Calculate Offline Decay
         const now = new Date();
-        const updatedSheepList = sheepList.map(s => {
-            // Restore from DB format
+        const updatedSheepList = (sheepList || []).map(s => {
             let sheep = this._fromDbSheep(s);
-
-            // Merge Instance Attributes
             const rawCol = s.sheep_data || s.Spiritual_Journey_Planning || s.visual_attrs || {};
             const { plan, ...instanceVisuals } = rawCol;
-
             sheep.visual = instanceVisuals || {};
             sheep.plan = plan || {};
 
-            // Schema has 'last_login'
             const lastTime = new Date(sheep.updated_at || profile.last_login || now);
             const diffHours = (now - lastTime) / (1000 * 60 * 60);
 
-            if (diffHours > 0.1) {
-                if (!isSleeping(sheep)) {
-                    sheep = calculateOfflineDecay(sheep, diffHours);
-                }
+            if (diffHours > 0.1 && !isSleeping(sheep)) {
+                sheep = calculateOfflineDecay(sheep, diffHours);
             }
-
-            sheep = sanitizeSheep(sheep);
-            return sheep;
+            return sanitizeSheep(sheep);
         });
 
-        // 4. Update Last Login (Schema: 'last_login')
-        await supabase
-            .from('users')
+        // 4. Update Last Login (BACKGROUND)
+        supabase.from('users')
             .update({ last_login: this._getLocalISOString() })
-            .eq('line_id', userId);
+            .eq('line_id', userId)
+            .then(() => console.log("Last login updated in background"));
+
+        return { user: profile, sheep: updatedSheepList, isNewUser: false };
 
         return { user: profile, sheep: updatedSheepList, isNewUser: false };
     },

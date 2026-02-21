@@ -11,6 +11,7 @@ import { SettingsModal } from './components/modals/SettingsModal';
 import { UserProfile } from './components/auth/UserProfile';
 import { Toast } from './components/ui/Toast';
 import { Tooltip } from './components/ui/Tooltip';
+import { ConnectionErrorOverlay } from './components/ui/ConnectionErrorOverlay';
 import './App.css';
 
 import { AssetPreloader } from './components/game/AssetPreloader';
@@ -20,7 +21,7 @@ import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react'
 
 function App() {
   // Use specialized hooks to prevent unnecessary rerenders from high-frequency game state (like sheep movement)
-  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading } = useUserAuth();
+  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus } = useUserAuth();
   const { toggleNotification, markIntroWatched } = useGameActions();
   const { message, weather, showIntroVideo } = useGameState();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
@@ -49,7 +50,11 @@ function App() {
     setSelectedSheepId(sheep.id);
   }, []);
 
-  // 0. Global Loading (Use AssetPreloader for consistency)
+  // 0. Global Loading & Error Interception
+  if (loginStatus === 'TIMEOUT' || loginStatus === 'ERROR') {
+    return <ConnectionErrorOverlay type={loginStatus} />;
+  }
+
   if (isLoading) {
     return <AssetPreloader onLoaded={() => { }} />;
   }

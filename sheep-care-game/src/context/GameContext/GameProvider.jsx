@@ -38,6 +38,7 @@ export const GameProvider = ({ children }) => {
     const [isDataLoaded, setIsDataLoaded] = useState(false);
     const [isInClient, setIsInClient] = useState(false);
     const [isAuthRestored, setIsAuthRestored] = useState(false);
+    const [loginStatus, setLoginStatus] = useState('IDLE'); // IDLE, LOADING, SUCCESS, TIMEOUT, ERROR
 
     const [sheep, setSheep] = useState([]);
     const [inventory, setInventory] = useState([]);
@@ -132,39 +133,53 @@ export const GameProvider = ({ children }) => {
     // --- 5. Auth & Login Functions ---
     const handleLoginSuccess = useCallback(async (profile) => {
         setIsLoading(true);
+        setLoginStatus('LOADING');
         const { userId: lineIdVal, displayName, pictureUrl } = profile;
         setLineId(lineIdVal);
 
+        // 1. Setup Timeout protection (12s)
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Login Timeout")), 12000)
+        );
+
         try {
+            // 2. Parallel initialization
             const shadowEmail = `${lineIdVal}@line.shadow`.toLowerCase();
             const urlSuffix = (supabaseUrl || '').split('.').shift()?.slice(-4) || 'fixed';
             const shadowPass = `p@ss_${lineIdVal}_${urlSuffix}`.toLowerCase();
 
-            const { error: authError } = await supabase.auth.signInWithPassword({
-                email: shadowEmail,
-                password: shadowPass
-            });
+            // Perform Shadow Auth, Game Data load, and Tag load in PARALLEL
+            const [authResult, gameData, tagsData, assignmentsData] = await Promise.race([
+                Promise.all([
+                    (async () => {
+                        try {
+                            const { error: authError } = await supabase.auth.signInWithPassword({
+                                email: shadowEmail,
+                                password: shadowPass
+                            });
+                            if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
+                                await supabase.auth.signUp({
+                                    email: shadowEmail, password: shadowPass,
+                                    options: { data: { display_name: displayName } }
+                                });
+                                await supabase.auth.signInWithPassword({ email: shadowEmail, password: shadowPass });
+                            }
+                            return true;
+                        } catch (e) { console.warn("Shadow Auth fail (non-critical):", e); return false; }
+                    })(),
+                    gameState.loadGame(lineIdVal, { displayName, pictureUrl }),
+                    tagService.loadTags(lineIdVal),
+                    tagService.loadTagAssignments(lineIdVal)
+                ]),
+                timeoutPromise
+            ]);
 
-            if (authError && (authError.message.includes('Invalid login credentials') || authError.status === 400)) {
-                await supabase.auth.signUp({
-                    email: shadowEmail,
-                    password: shadowPass,
-                    options: { data: { display_name: displayName } }
-                });
-                await supabase.auth.signInWithPassword({ email: shadowEmail, password: shadowPass });
-            }
-        } catch (err) {
-            console.error("Shadow Auth Exception:", err);
-        }
+            // 3. Process Results
+            setCurrentUser(displayName);
+            setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
 
-        setCurrentUser(displayName);
-        setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
-
-        try {
-            const data = await gameState.loadGame(lineIdVal, { displayName, pictureUrl });
-
-            if (data && data.user) {
-                const { user, sheep: loadedSheep } = data;
+            if (gameData && gameData.user) {
+                const { user, sheep: loadedSheep } = gameData;
                 setSheep(loadedSheep);
                 setUserId(user.id);
                 const effectiveNickname = user.nickname?.trim() || user.name?.trim() || displayName;
@@ -178,32 +193,28 @@ export const GameProvider = ({ children }) => {
                     }
                 }
 
-                if (data.isNewUser) {
-                    setShowIntroVideo(true);
-                } else {
-                    setIntroWatched(true);
-                }
-
+                setTags(tagsData || []);
+                setTagAssignmentsBySheep(assignmentsData || {});
                 setIsDataLoaded(true);
-                const [loadedTags, loadedAssignments] = await Promise.all([
-                    tagService.loadTags(lineIdVal),
-                    tagService.loadTagAssignments(lineIdVal)
-                ]);
-                setTags(loadedTags);
-                setTagAssignmentsBySheep(loadedAssignments);
+                setLoginStatus('SUCCESS');
                 showMessage(`歡迎回來，${effectiveNickname}! 👋`);
             } else {
-                const [loadedTags, loadedAssignments] = await Promise.all([
-                    tagService.loadTags(lineIdVal),
-                    tagService.loadTagAssignments(lineIdVal)
-                ]);
-                setTags(loadedTags);
-                setTagAssignmentsBySheep(loadedAssignments);
+                // Fallback for missing user data
+                setTags(tagsData || []);
+                setTagAssignmentsBySheep(assignmentsData || {});
                 setIsDataLoaded(true);
+                setLoginStatus('SUCCESS');
             }
         } catch (e) {
-            console.error(e);
-            showMessage("同步失敗");
+            console.error("Login Initialization Error:", e);
+            if (e.message === "Login Timeout") {
+                setLoginStatus('TIMEOUT');
+                showMessage("⏳ 載入超時，請檢查網路連線");
+            } else {
+                setLoginStatus('ERROR');
+                showMessage("⚠️ 同步失敗，請嘗試重新整理");
+            }
+            // Do NOT setIsDataLoaded(true) here - we want to block the game
         } finally {
             setIsLoading(false);
         }
@@ -850,8 +861,9 @@ export const GameProvider = ({ children }) => {
 
     const auth = useMemo(() => ({
         currentUser, nickname, userAvatarUrl, lineId, isAdmin: lineId === 'admin',
-        isLoading, isInClient, settings, notificationEnabled: settings.notify
-    }), [currentUser, nickname, userAvatarUrl, lineId, isLoading, isInClient, settings]);
+        isLoading, isInClient, settings, notificationEnabled: settings.notify,
+        loginStatus
+    }), [currentUser, nickname, userAvatarUrl, lineId, isLoading, isInClient, settings, loginStatus]);
 
     const state = useMemo(() => ({
         sheep, inventory, message, weather, tags, tagAssignmentsBySheep,
