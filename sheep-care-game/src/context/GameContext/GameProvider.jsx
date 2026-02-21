@@ -587,11 +587,11 @@ export const GameProvider = ({ children }) => {
 
     // --- 10. Schedule Management ---
     const addSchedule = useCallback(async (scheduleData, participantSheepIds) => {
-        const cLineId = stateRef.current.lineId;
-        if (!cLineId) return null;
+        const cUserId = stateRef.current.userId;
+        if (!cUserId) return null;
         try {
             const { data: existingSchedules } = await supabase.from('schedules').select('id')
-                .eq('created_by', cLineId).eq('action', scheduleData.title || '未命名行動').eq('scheduled_time', scheduleData.scheduled_time);
+                .eq('created_by', cUserId).eq('action', scheduleData.title || '未命名行動').eq('scheduled_time', scheduleData.scheduled_time);
 
             let scheduleId, schedule;
             if (existingSchedules && existingSchedules.length > 0) {
@@ -599,7 +599,7 @@ export const GameProvider = ({ children }) => {
                 schedule = existingSchedules[0];
             } else {
                 const { data: newSchedule, error: scheduleError } = await supabase.from('schedules').insert([{
-                    created_by: cLineId, action: scheduleData.title || '未命名行動', scheduled_time: scheduleData.scheduled_time,
+                    created_by: cUserId, action: scheduleData.title || '未命名行動', scheduled_time: scheduleData.scheduled_time,
                     location: scheduleData.location, content: scheduleData.content, notify_at: scheduleData.notify_at,
                     reminder_offset: scheduleData.reminder_offset, created_at: new Date().toISOString()
                 }]).select().single();
@@ -629,13 +629,13 @@ export const GameProvider = ({ children }) => {
     }, [showMessage, notifyScheduleUpdate]);
 
     const updateSchedule = useCallback(async (scheduleId, updates) => {
-        const cLineId = stateRef.current.lineId;
-        if (!cLineId) return false;
+        const cUserId = stateRef.current.userId;
+        if (!cUserId) return false;
         try {
             const { title, ...rest } = updates;
             const validUpdates = { ...rest };
             if (title !== undefined) validUpdates.action = title.trim() || '未命名行動';
-            const { error } = await supabase.from('schedules').update({ ...validUpdates, created_by: cLineId }).eq('id', scheduleId);
+            const { error } = await supabase.from('schedules').update({ ...validUpdates, created_by: cUserId }).eq('id', scheduleId);
             if (error) throw error;
             notifyScheduleUpdate();
             return true;
@@ -647,8 +647,8 @@ export const GameProvider = ({ children }) => {
     }, [showMessage, notifyScheduleUpdate]);
 
     const deleteSchedule = useCallback(async (scheduleId) => {
-        const cLineId = stateRef.current.lineId;
-        if (!cLineId) return false;
+        const cUserId = stateRef.current.userId;
+        if (!cUserId) return false;
         try {
             await supabase.from('schedule_participants').delete().eq('schedule_id', scheduleId);
             const { error } = await supabase.from('schedules').delete().eq('id', scheduleId);
@@ -687,12 +687,12 @@ export const GameProvider = ({ children }) => {
     }, [notifyScheduleUpdate]);
 
     const cleanupDuplicateSchedules = useCallback(async () => {
-        const cLineId = stateRef.current.lineId;
-        if (!cLineId) return;
+        const cUserId = stateRef.current.userId;
+        if (!cUserId) return;
         showMessage("🧹 正在清理重複行程...");
         try {
             const { data: schedules, error } = await supabase.from('schedules').select('id, action, scheduled_time, created_at')
-                .eq('created_by', cLineId).order('scheduled_time', { ascending: true });
+                .eq('created_by', cUserId).order('scheduled_time', { ascending: true });
             if (error) throw error;
             const groups = {};
             schedules.forEach(s => {
@@ -731,8 +731,8 @@ export const GameProvider = ({ children }) => {
     }, [showMessage, notifyScheduleUpdate]);
 
     const fetchWeeklySchedules = useCallback(async () => {
-        const cLineId = stateRef.current.lineId;
-        if (!cLineId) return [];
+        const cUserId = stateRef.current.userId;
+        if (!cUserId) return [];
         try {
             const { data, error } = await supabase.from('schedules').select('*, created_at, schedule_participants (*)')
                 .order('scheduled_time', { ascending: true });
@@ -748,7 +748,7 @@ export const GameProvider = ({ children }) => {
                     });
                 }
                 return s;
-            }).filter(s => (s.created_by === cLineId) || (s.schedule_participants || []).some(p => mySheepIds.has(p.sheep_id)));
+            }).filter(s => (s.created_by === cUserId) || (s.schedule_participants || []).some(p => mySheepIds.has(p.sheep_id)));
             return filtered;
         } catch (error) { console.error('Error fetching weekly schedules:', error); return []; }
     }, []);
