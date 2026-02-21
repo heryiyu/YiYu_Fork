@@ -42,7 +42,7 @@ export const SettingsModal = ({ onClose }) => {
 
                 <div className="modal-form">
                     {/* Tabs */}
-                    <div className="modal-tabs" style={{ gap: '4px' }}>
+                    <div className="modal-tabs">
                         <button
                             className={`modal-tab ${activeTab === 'DISPLAY' ? 'modal-tab-active' : ''}`}
                             onClick={() => setActiveTab('DISPLAY')}

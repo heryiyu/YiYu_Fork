@@ -67,7 +67,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
                 left: 0,
                 top: 0,
                 transform: `translate3d(${px}px, ${topPx}px, 0) scale(${depthScale})`,
-                transition: isSleeping(sheep) ? 'none' : 'transform 0.5s linear',
+                transition: isSleeping(sheep) ? 'none' : 'transform 1.1s linear',
             };
         } else {
             // Fallback (Layout Thrashing but reliable)
@@ -76,7 +76,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
                 left: `${sheep.x}%`,
                 bottom: `${bottomPos}%`,
                 transform: `scale(${depthScale})`,
-                transition: isSleeping(sheep) ? 'none' : 'left 0.5s linear, bottom 0.5s linear',
+                transition: isSleeping(sheep) ? 'none' : 'left 1.1s linear, bottom 1.1s linear',
             };
         }
     }, [sheep.x, bottomPos, depthScale, zIdx, containerSize, isSleeping(sheep)]);

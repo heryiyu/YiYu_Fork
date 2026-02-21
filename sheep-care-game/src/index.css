@@ -47,7 +47,14 @@ button:hover {
 
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid transparent; /* Hide default ring */
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-blue-action) 40%, transparent);
+}
+
+/* For keyboard accessibility, keep it visible but refined */
+button:focus-visible {
+  outline: 2px solid var(--palette-blue-action);
+  outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: light) {

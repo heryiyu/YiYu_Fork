@@ -315,27 +315,23 @@ export const calculateTick = (s, allSheep = []) => {
         }
 
         // --- FLOCK SEPARATION ---
-        if (state !== 'sleep' && allSheep && allSheep.length > 0) {
-            // Performance: Only check simple distance
-            const MIN_SEPARATION = 8; // % units. Approx body width.
-            const MIN_SEP_SQ = MIN_SEPARATION * MIN_SEPARATION;
+        if (state !== 'sleep' && allSheep && allSheep.length > 1) {
+            // Performance: Only check simple squared distance
+            const MIN_SEP_SQ = 64; // (8 * 8) % units.
 
-            for (let other of allSheep) {
-                if (other.id === s.id) continue;
-                if (isSleeping(other)) continue; // Don't avoid sleep area strictly here
+            for (let i = 0; i < allSheep.length; i++) {
+                const other = allSheep[i];
+                if (other.id === s.id || isSleeping(other)) continue;
 
                 const dx = x - other.x;
                 const dy = y - other.y;
                 const distSq = dx * dx + dy * dy;
 
                 if (distSq < MIN_SEP_SQ && distSq > 0.001) {
-                    const dist = Math.sqrt(distSq); // Sqrt only when collision detected
-                    const pushForce = (MIN_SEPARATION - dist) * 0.5; // Stronger push
-                    const ax = dx / dist;
-                    const ay = dy / dist;
-
-                    x += ax * pushForce;
-                    y += ay * pushForce;
+                    // Fast displacement without sqrt
+                    const force = 0.2;
+                    x += dx * force;
+                    y += dy * force;
                 }
             }
         }

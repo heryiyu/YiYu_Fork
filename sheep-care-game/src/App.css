@@ -453,12 +453,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
+  padding: 6px 16px;
+  /* 增加橫向 Padding 以容納陰影與焦點環 */
   margin-bottom: 12px;
-  width: 100%;
+  width: auto;
+  /* Allow items to define width */
+  margin-left: -16px;
+  /* Offset parent padding if necessary */
+  margin-right: -16px;
   flex-wrap: nowrap;
   overflow-x: auto;
-  /* Allow horizontal scroll if tabs exceed width on tiny screens */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -473,24 +477,28 @@
   padding: 8px 14px;
   border-radius: 20px;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
+  /* 移除透明邊框防止渲染瑕疵 */
   color: var(--text-muted-light);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.95rem;
   line-height: 1;
+  outline: none !important;
+  /* 強制移除全域焦點環 */
 }
 
 .modal-tab:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(0, 0, 0, 0.05);
   color: var(--text-muted);
 }
 
 .modal-tab-active {
   background: var(--palette-orange-action) !important;
   color: white !important;
-  box-shadow: var(--shadow-subtle);
+  box-shadow: 0 4px 12px rgba(255, 110, 64, 0.2);
+  /* 更柔和的陰影 */
 }
 
 /* Mobile Specific Adjustments for Tabs */
