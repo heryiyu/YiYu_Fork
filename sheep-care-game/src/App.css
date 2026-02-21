@@ -1,5 +1,27 @@
 * {
   -webkit-tap-highlight-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: var(--palette-taupe) transparent;
+}
+
+/* Custom Scrollbar for Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--palette-taupe);
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--palette-text-dark);
 }
 
 /* --- Z-Index Refactoring --- */
@@ -436,9 +458,13 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 8px;
+  padding-right: 4px;
+  /* Reduced for mobile */
   box-sizing: border-box;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
+  /* Avoid layout shifts */
+  position: relative;
+  display: block;
 }
 
 /* Sheep detail: structured layout with clear sections */
@@ -1052,9 +1078,11 @@
 /* Spiritual plan form actions */
 .spiritual-plan-form-actions {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+  gap: 12px;
+  flex-direction: column;
+  /* Mobile first */
+  margin-top: auto;
+  padding: 16px 0;
 }
 
 .spiritual-plan-form-actions .modal-btn-primary {

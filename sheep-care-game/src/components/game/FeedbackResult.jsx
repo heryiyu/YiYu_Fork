@@ -85,7 +85,7 @@ export const FeedbackResult = ({
                 </div>
             </div>
 
-            <div className="spiritual-plan-form-actions" style={{ flexDirection: 'column', gap: '12px' }}>
+            <div className="spiritual-plan-form-actions">
                 {onViewPlan && (
                     <button
                         type="button"

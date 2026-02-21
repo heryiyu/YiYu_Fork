@@ -218,10 +218,10 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                 <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px', width: '95vw', padding: '0', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '85vh', overflow: 'hidden', background: 'var(--bg-card)', borderRadius: '24px', boxShadow: 'var(--shadow-card)' }}>
 
                     {selectedSchedule ? (
-                        <div style={{ height: '100%', overflow: 'hidden' }}>
+                        <div className="modal-scroll" style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
                             {/* Render based on interactionMode */}
                             {interactionMode === 'EDIT_RESULT' && (
-                                <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                <div style={{ padding: '20px', minHeight: 'min-content' }}>
                                     <FeedbackForm
                                         initialData={completionData}
                                         onSubmit={handleCompleteSubmit}
@@ -242,7 +242,7 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                             )}
 
                             {interactionMode === 'VIEW_RESULT' && (
-                                <div style={{ padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                <div style={{ padding: '20px', minHeight: 'min-content' }}>
                                     <FeedbackResult
                                         data={completionData}
                                         onEdit={handleEditFeedback}
