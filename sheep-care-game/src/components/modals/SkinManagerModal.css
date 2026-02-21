@@ -1,0 +1,31 @@
+/* SkinManagerModal.css */
+/* Styles for the custom skin manager interface */
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.modal-form input[type="text"],
+.modal-form input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.modal-form input[type="file"] {
+    padding: 5px;
+}
+
+.modal-form .form-group {
+    margin-bottom: 15px;
+}

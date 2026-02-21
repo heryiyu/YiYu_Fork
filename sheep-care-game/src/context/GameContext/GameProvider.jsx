@@ -9,6 +9,7 @@ import { gameState } from '../../services/gameState';
 import { tagService } from '../../services/tagService';
 import { supabase, supabaseUrl } from '../../services/supabaseClient';
 import { sheepTickerstore } from '../../utils/sheepTickerStore';
+import { skinManagerService } from '../../services/skinManagerService';
 
 // Helper for Local ISO String
 const getLocalISOString = () => {
@@ -262,7 +263,8 @@ export const GameProvider = ({ children }) => {
                     })(),
                     gameState.loadGame(lineIdVal, { displayName, pictureUrl }),
                     tagService.loadTags(lineIdVal),
-                    tagService.loadTagAssignments(lineIdVal)
+                    tagService.loadTagAssignments(lineIdVal),
+                    skinManagerService.loadManifest()
                 ]),
                 timeoutPromise
             ]);

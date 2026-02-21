@@ -6,7 +6,7 @@ import { Button } from '../ui/Button';
 import { generateVisuals, parseMaturity, sanitizeInput } from '../../utils/gameLogic';
 import { ASSETS } from '../../utils/AssetRegistry';
 import { Portal } from '../ui/Portal';
-// AuthContext import removed
+import { SkinManagerModal } from './SkinManagerModal';
 
 const ACCESSORIES = [
     { id: 'none', label: '無' },
@@ -34,6 +34,7 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     const [selectedVariant, setSelectedVariant] = useState(
         editingSheep?.visual?.variant || ASSETS.VARIANT_OPTIONS[0].id
     );
+    const [showSkinManager, setShowSkinManager] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -133,7 +134,19 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                             {(!isBatchMode || isEditing) ? (
                                 <>
                                     <div className="form-group">
-                                        <label>外觀</label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <label>外觀</label>
+                                            {isAdmin && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowSkinManager(true)}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '0 5px' }}
+                                                    title="管理自訂外觀"
+                                                >
+                                                    ⚙️
+                                                </button>
+                                            )}
+                                        </div>
                                         <select value={selectedVariant} onChange={e => setSelectedVariant(e.target.value)}>
                                             {ASSETS.VARIANT_OPTIONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
                                         </select>
@@ -198,9 +211,13 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
                                 </div>
                             )}
                         </form>
+
                     </div>
                 </div>
             </div>
+            {showSkinManager && (
+                <SkinManagerModal onClose={() => setShowSkinManager(false)} />
+            )}
         </Portal>
     );
 };
