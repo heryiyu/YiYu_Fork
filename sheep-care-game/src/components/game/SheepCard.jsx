@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Footprints } from 'lucide-react';
 import { AssetSheep } from './AssetSheep';
 import { Tooltip } from '../ui/Tooltip';
 import { useLongPress } from '../../hooks/useLongPress';
 import { getAwakeningProgress } from '../../utils/gameLogic';
+import { sheepTickerstore } from '../../utils/sheepTickerStore';
 
 export const SheepCard = React.memo(({
     s,
@@ -21,12 +22,38 @@ export const SheepCard = React.memo(({
     tagAssignmentsBySheep = {},
     pinFlashId
 }) => {
+    // Local state for fast visual updates from TickerStore
+    const [visualState, setVisualState] = useState(s);
+
+    useEffect(() => {
+        const unsubscribe = sheepTickerstore.subscribe(s.id, (newVisualState) => {
+            setVisualState(newVisualState);
+        });
+        return unsubscribe;
+    }, [s.id]);
+
+    useEffect(() => {
+        setVisualState(prev => ({
+            ...s,
+            // Preserve the high-frequency state from the previous tick!
+            status: prev.status !== undefined ? prev.status : s.status,
+            health: prev.health !== undefined ? prev.health : s.health,
+            type: prev.type !== undefined ? prev.type : s.type,
+            visual: prev.visual !== undefined ? prev.visual : s.visual,
+        }));
+    }, [s]);
+
+    const currentStatus = visualState.status;
+    const currentHealth = visualState.health;
+    const currentIsSleeping = currentStatus === 'sleeping' || currentStatus === 'dead';
+    const currentIsSick = currentStatus === 'sick';
+
     const assigned = (tagAssignmentsBySheep[s.id] || []);
     const firstTagId = assigned.length > 0 ? assigned[0].tagId : null;
     const firstTag = firstTagId ? tags.find(t => t.id === firstTagId) : null;
-    const tagVariant = firstTag ? 'custom' : (isSleepingState ? 'dead' : (isSick ? 'sick' : 'healthy'));
-    const tagLabel = firstTag ? firstTag.name : (isSleepingState ? '已沉睡' : (isSick ? '生病' : '健康'));
-    const healthFull = Math.ceil(s.health || 0) >= 100;
+    const tagVariant = firstTag ? 'custom' : (currentIsSleeping ? 'dead' : (currentIsSick ? 'sick' : 'healthy'));
+    const tagLabel = firstTag ? firstTag.name : (currentIsSleeping ? '已沉睡' : (currentIsSick ? '生病' : '健康'));
+    const healthFull = Math.ceil(currentHealth || 0) >= 100;
 
     // Interaction Logic
     const handleCardClick = () => {
@@ -88,7 +115,7 @@ export const SheepCard = React.memo(({
             <div className="sheep-card-header">
                 <div className={`sheep-card-health ${healthFull ? 'sheep-card-health--full' : ''}`}>
                     <span className="sheep-card-health-icon">♥</span>
-                    <span>{Math.ceil(s.health || 0)}%</span>
+                    <span>{Math.ceil(currentHealth || 0)}%</span>
                 </div>
                 <div
                     className={`sheep-card-tag sheep-card-tag--${tagVariant}`}
@@ -101,10 +128,10 @@ export const SheepCard = React.memo(({
             <div className="sheep-card-avatar">
                 <div className="sheep-card-avatar-inner">
                     <AssetSheep
-                        status={s.status}
-                        visual={s.visual}
-                        health={s.health}
-                        type={s.type}
+                        status={currentStatus}
+                        visual={visualState.visual}
+                        health={currentHealth}
+                        type={visualState.type}
                         scale={0.55}
                         direction={1}
                         centered={true}
@@ -116,7 +143,7 @@ export const SheepCard = React.memo(({
             <div className="sheep-card-footer">
                 <div className="sheep-card-name-row">
                     <div className="sheep-card-name">{s.name}</div>
-                    {!isSelectionMode && onFind && !isSleepingState && (
+                    {!isSelectionMode && onFind && !currentIsSleeping && (
                         <Tooltip content="在草原上尋找此小羊" side="top">
                             <button
                                 type="button"
@@ -145,8 +172,8 @@ export const SheepCard = React.memo(({
                     )}
                 </div>
                 {!isSelectionMode && (
-                    <div className={`sheep-card-pray ${isSleepingState ? 'sheep-card-pray--dead' : ''}`}>
-                        {isSleepingState ? `🕯️ 喚醒禱告 ${getAwakeningProgress(s)}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
+                    <div className={`sheep-card-pray ${currentIsSleeping ? 'sheep-card-pray--dead' : ''}`}>
+                        {currentIsSleeping ? `🕯️ 喚醒禱告 ${getAwakeningProgress(s)}/5` : `🙏 禱告 ${s.prayedCount || 0}/3`}
                     </div>
                 )}
             </div>

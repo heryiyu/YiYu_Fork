@@ -1,26 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AssetSheep } from './AssetSheep';
 import { isSleeping } from '../../utils/gameLogic';
-import { SHEEP_TYPES } from '../../data/sheepData';
+import { sheepTickerstore } from '../../utils/sheepTickerStore';
 
-export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, containerSize }) => {
-    const isGolden = sheep.type === 'GOLDEN';
-    const [showName, setShowName] = React.useState(false);
+export const Sheep = React.memo(({ sheep: logicalSheep, onPray, onSelect, alwaysShowName, containerSize }) => {
+    // 1. Local state for fast visual updates
+    const [visualSheep, setVisualSheep] = useState(logicalSheep);
+
+    // 2. Subscribe to Ticker Store
+    useEffect(() => {
+        // Subscribe to high-frequency updates
+        const unsubscribe = sheepTickerstore.subscribe(logicalSheep.id, (newVisualState) => {
+            setVisualSheep(newVisualState);
+        });
+        return unsubscribe;
+    }, [logicalSheep.id]);
+
+    // 3. Keep visualSheep in sync with massive logical changes (like waking up, health boost)
+    useEffect(() => {
+        setVisualSheep(prev => ({
+            ...logicalSheep,
+            // Preserve the high-frequency visual coordinates and animation state from the previous visual tick!
+            x: prev.x !== undefined ? prev.x : logicalSheep.x,
+            y: prev.y !== undefined ? prev.y : logicalSheep.y,
+            angle: prev.angle !== undefined ? prev.angle : logicalSheep.angle,
+            direction: prev.direction !== undefined ? prev.direction : logicalSheep.direction,
+            state: prev.state !== undefined ? prev.state : logicalSheep.state,
+        }));
+    }, [logicalSheep]);
+
+    const isGolden = visualSheep.type === 'GOLDEN';
+    const [showName, setShowName] = useState(false);
 
     // Map y (0-100) to bottom % (25% base to shift up, max ~95%)
     // Map y (0-100) to bottom % (0% base to allow full front access, max ~95%)
-    const bottomPos = (sheep.y || 0) * 0.95;
-    // Scale down as they go "back" (higher y) -> Wait, "back" is lower Y in screen coords? 
-    // No, standard web coords: 0 is top, 100 is bottom.
-    // In this game: "Top" of screen is "Far away". "Bottom" is "Close".
-    // So Y=0 is Far, Y=100 is Close.
-    // Scale should be SMALLER at Y=0, LARGER at Y=100.
-    // The previous code: `1.0 - (y / 300)` means at y=0 scale=1, at y=100 scale=0.66.
-    // THIS IS BACKWARDS TOO! Far objects should be smaller.
-    // Fix Scale: 0.6 + (y / 200). (At 0 -> 0.6. At 100 -> 1.1)
-
-    const depthScale = 1.1 - ((sheep.y || 0) / 200);
-    const zIdx = alwaysShowName ? 10000 : (sheep.zIndex !== undefined ? sheep.zIndex : Math.floor(1000 - (sheep.y || 0)));
+    const bottomPos = (visualSheep.y || 0) * 0.95;
+    const depthScale = 1.1 - ((visualSheep.y || 0) / 200);
+    const zIdx = alwaysShowName ? 10000 : (visualSheep.zIndex !== undefined ? visualSheep.zIndex : Math.floor(1000 - (visualSheep.y || 0)));
 
     const handleInteract = (e) => {
         // Prevent ghost clicks and double tapping issues
@@ -29,7 +45,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
 
         // Trigger selection if handler exists
         if (onSelect) {
-            onSelect(sheep.id);
+            onSelect(logicalSheep.id);
         }
 
         // Toggle name visibility
@@ -44,6 +60,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
     };
 
     // Performance Optimization: Use Transform instead of Left/Bottom
+    const isSheepSleeping = isSleeping(visualSheep);
     const style = React.useMemo(() => {
         const baseStyle = {
             position: 'absolute',
@@ -57,7 +74,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
 
         if (containerSize && containerSize.width > 0) {
             // Pixel Transform Mode (GPU Friendly)
-            const px = (sheep.x / 100) * containerSize.width;
+            const px = (visualSheep.x / 100) * containerSize.width;
             const py = (bottomPos / 100) * containerSize.height;
             const topPx = containerSize.height - py - 100;
 
@@ -66,20 +83,20 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
                 left: 0,
                 top: 0,
                 transform: `translate3d(${px}px, ${topPx}px, 0) scale(${depthScale})`,
-                transition: isSleeping(sheep) ? 'none' : 'transform 1.1s linear',
+                transition: isSheepSleeping ? 'none' : 'transform 1.1s linear',
             };
         } else {
             // Fallback (Layout Thrashing but reliable)
             // Still try to use translate for the scale part to keep it on GPU
             return {
                 ...baseStyle,
-                left: `${sheep.x}%`,
+                left: `${visualSheep.x}%`,
                 bottom: `${bottomPos}%`,
                 transform: `scale(${depthScale}) translate3d(0, 0, 0)`,
-                transition: isSleeping(sheep) ? 'none' : 'left 1.1s linear, bottom 1.1s linear, transform 1.1s linear',
+                transition: isSheepSleeping ? 'none' : 'left 1.1s linear, bottom 1.1s linear, transform 1.1s linear',
             };
         }
-    }, [sheep.x, bottomPos, depthScale, zIdx, containerSize, isSleeping(sheep)]);
+    }, [visualSheep.x, bottomPos, depthScale, zIdx, containerSize, isSheepSleeping]);
 
     return (
         <div
@@ -97,15 +114,15 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
                     whiteSpace: 'nowrap',
                     pointerEvents: 'none' // Click through to sheep
                 }}>
-                    {sheep.name}
+                    {visualSheep.name}
                     {isGolden && ' 🌟'}
                 </div>
             )}
 
             {/* Speech Bubble (Emotional Blackmail) */}
-            {sheep.message && (
+            {visualSheep.message && (
                 <div className="speech-bubble">
-                    {sheep.message}
+                    {visualSheep.message}
                 </div>
             )}
 
@@ -119,12 +136,12 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
                 onClick={handleInteract}
             >
                 <AssetSheep
-                    type={sheep.type}
-                    state={sheep.state}
-                    status={sheep.status}
-                    visual={sheep.visual}
-                    health={sheep.health}
-                    direction={sheep.direction}
+                    type={visualSheep.type}
+                    state={visualSheep.state}
+                    status={visualSheep.status}
+                    visual={visualSheep.visual}
+                    health={visualSheep.health}
+                    direction={visualSheep.direction}
                     centered={true}
                     animated={true}
                 />
@@ -138,29 +155,9 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
     );
 }, (prevProps, nextProps) => {
     // Custom Comparison for Performance
-    const prev = prevProps.sheep;
-    const next = nextProps.sheep;
-
-    // Check Container Size 
-    if (prevProps.containerSize !== nextProps.containerSize) return false;
-
-    // Essential props check (Fast path)
-    if (prev.id !== next.id) return false;
-    if (prev.x !== next.x) return false;
-    if (prev.y !== next.y) return false;
-    if (prev.status !== next.status) return false;
-    if (prev.state !== next.state) return false;
-    if (prev.direction !== next.direction) return false;
-    if (prev.message !== next.message) return false;
-    if (prev.type !== next.type) return false;
-    if (prev.name !== next.name) return false;
-
-    // Visual comparison: Avoid JSON.stringify, use shallow key check
-    if (prev.visual !== next.visual) {
-        if (prev.visual?.bodyColor !== next.visual?.bodyColor ||
-            prev.visual?.hornType !== next.visual?.hornType ||
-            prev.visual?.accessory !== next.visual?.accessory) return false;
-    }
+    // Since visual changes are handled internally by subscription, 
+    // React memo only needs to care about logical data changes (like adopting, health updates)
+    // or prop changes from parents.
 
     // Health Stage Logic
     const getStage = (h) => {
@@ -170,7 +167,7 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
         return 'normal';
     };
 
-    if (getStage(prev.health) !== getStage(next.health)) return false;
+    if (getStage(prevProps.sheep.health) !== getStage(nextProps.sheep.health)) return false;
 
     return true;
 });

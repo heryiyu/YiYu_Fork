@@ -10,14 +10,16 @@ export const UserProfile = () => {
     const [isEditing, setIsEditing] = useState(false);
 
     // Sync local state with global
-    useEffect(() => {
-        if (nickname) setName(nickname);
-    }, [nickname]);
+    const [prevNickname, setPrevNickname] = useState(nickname);
+    if (nickname !== prevNickname) {
+        setPrevNickname(nickname);
+        setName(nickname || '');
+    }
 
     const wrapperRef = useRef(null);
 
     // Save on Blur or Enter
-    const handleSave = () => {
+    const handleSave = React.useCallback(() => {
         const trimmed = name.trim();
         if (trimmed && trimmed.length <= 12) {
             updateNickname(trimmed);
@@ -25,7 +27,7 @@ export const UserProfile = () => {
             setName(nickname || ''); // Revert if invalid
         }
         setIsEditing(false);
-    };
+    }, [name, nickname, updateNickname]);
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
@@ -46,7 +48,7 @@ export const UserProfile = () => {
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [expanded, isEditing, name]); // Depend on name to capture latest state for save
+    }, [expanded, isEditing, handleSave]); // Depend on handleSave which uses name
 
     const weatherMap = {
         sunny: '晴天', cloudy: '多雲', rain: '下雨', storm: '暴風雨', snow: '下雪'

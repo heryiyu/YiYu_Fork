@@ -156,13 +156,7 @@ export const sanitizeSheep = (s) => {
     if (typeof y !== 'number' || isNaN(y)) y = Math.random() * (BOUNDS.maxY - BOUNDS.minY) + BOUNDS.minY;
     if (typeof angle !== 'number' || isNaN(angle)) angle = Math.random() * Math.PI * 2;
 
-    // Ensure not spawning in sleep area or buffer zone (Radius + 20)
-    const distToSleepArea = Math.sqrt(x * x + (100 - y) * (100 - y));
-    if (!isSleeping(s) && distToSleepArea < SLEEP_AREA_RADIUS + 20) {
-        // Shift out
-        x += 20;
-        y -= 20;
-    }
+    // Removed sleep area collision buffer to allow sheep to walk anywhere
 
     // Fix Visual
     const safeVisual = visual || generateVisuals();
@@ -234,19 +228,8 @@ export const calculateTick = (s, allSheep = []) => {
     // 1. Movement Logic
     if (isSleeping(s)) {
         state = 'idle';
-        // Sleep area logic: Fan shape from Top-Left (x=0, y=100)
-        const distSq = x * x + (100 - y) * (100 - y);
-        const sleepRadiusSq = SLEEP_AREA_RADIUS * SLEEP_AREA_RADIUS;
+        // Removed teleportation to sleep area; sheep now sleep in place
 
-        if (distSq > sleepRadiusSq) {
-            // Teleport inside
-            const r = Math.random() * (SLEEP_AREA_RADIUS - 5);
-            const theta = Math.random() * (Math.PI / 2); // 0 to 90 degrees
-            x = r * Math.sin(theta);
-            y = 100 - r * Math.cos(theta);
-
-            angle = Math.PI / 2; // Face forward/down, static
-        }
     } else if (state === 'walking') {
         // Stop Chance
         let stopChance = SHEEP_CONFIG.CHANCE.STOP_NORMAL;

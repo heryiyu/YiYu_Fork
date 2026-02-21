@@ -32,14 +32,15 @@ function App() {
   const [showSchedule, setShowSchedule] = useState(false);
   const [isHudMenuOpen, setIsHudMenuOpen] = useState(false);
 
-  // Reset state when user changes
-  useEffect(() => {
+  const [prevUser, setPrevUser] = useState(currentUser);
+  if (currentUser !== prevUser) {
+    setPrevUser(currentUser);
     setSelectedSheepId(null);
     setSelectedPlanId(null);
     setShowGuide(false);
     setShowSettings(false);
     setShowSchedule(false);
-  }, [currentUser]);
+  }
 
   // Handlers (Moved up to satisfy Rules of Hooks)
   const handleSelectSheep = React.useCallback((sheep) => {

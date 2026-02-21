@@ -22,32 +22,13 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     // Basic Info
     const [name, setName] = useState(editingSheep?.name || '');
     const [note, setNote] = useState(editingSheep?.note || '');
-    const [spiritualMaturity, setSpiritualMaturity] = useState('');
-    // maturityStage removed
-
-    // Visual Info
-    // Randomize on mount if new
-    const [selectedVariant, setSelectedVariant] = useState(() => {
-        if (editingSheep?.visual?.variant) return editingSheep.visual.variant;
-        // Random pick
-        const opts = ASSETS.VARIANT_OPTIONS;
-        return opts[Math.floor(Math.random() * opts.length)].id;
-    });
-    // Accessories removed as per request
-    const selectedAccessory = 'none';
-
-    const [batchInput, setBatchInput] = useState('');
-
-    // Load initial maturity strings
-    useEffect(() => {
+    const [spiritualMaturity, setSpiritualMaturity] = useState(() => {
         if (editingSheep?.spiritualMaturity) {
-            // Simplified: just take the whole string or parse level only if needed.
-            // Since stage is gone, we assume existing data might have it but we only care about the Level part if we were separating them.
-            // But now we just want "Level".
             const { level } = parseMaturity(editingSheep.spiritualMaturity);
-            setSpiritualMaturity(level);
+            return level;
         }
-    }, [editingSheep]);
+        return '';
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -7,8 +7,13 @@ import { Slider } from '../ui/Slider';
 import { calculateSheepState } from '../../utils/gameLogic';
 
 const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
-    const [orderedIds, setOrderedIds] = useState(assignedIds);
-    useEffect(() => { setOrderedIds(assignedIds || []); }, [(assignedIds || []).join(',')]);
+    const [orderedIds, setOrderedIds] = useState(assignedIds || []);
+    const [prevAssignedIds, setPrevAssignedIds] = useState(assignedIds || []);
+
+    if ((assignedIds || []).join(',') !== prevAssignedIds.join(',')) {
+        setPrevAssignedIds(assignedIds || []);
+        setOrderedIds(assignedIds || []);
+    }
 
     const addTag = (tagId) => {
         if (orderedIds.includes(tagId)) return;
