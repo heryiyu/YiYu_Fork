@@ -154,6 +154,8 @@ export const GameProvider = ({ children }) => {
                     (async () => {
                         try {
                             // --- Robust Auth Strategy ---
+                            console.log(`[Auth] Initializing for ${shadowEmail} using suffix: ${urlSuffix}`);
+
                             // Attempt 1: New Standard (Lowercase everything)
                             let { error: authError } = await supabase.auth.signInWithPassword({
                                 email: shadowEmail,
@@ -162,7 +164,7 @@ export const GameProvider = ({ children }) => {
 
                             // Attempt 2: Compatibility Check (Try potential legacy formats if App 1 fails)
                             if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                console.log("Retrying with legacy password formats...");
+                                console.warn("[Auth] Primary login failed, trying legacy formats...");
                                 const legacyPasses = [
                                     `p@ss_${lineIdVal}_${urlSuffix}`, // No toLowerCase on the whole string
                                     `p@ss_${lineIdVal}_fixed`.toLowerCase(), // Legacy fixed suffix
@@ -175,7 +177,7 @@ export const GameProvider = ({ children }) => {
                                         password: legacyPass
                                     });
                                     if (!retryError) {
-                                        console.log("Legacy login success! Auto-migrating to new password format...");
+                                        console.log("[Auth] Legacy login success! Auto-migrating to new password format...");
                                         await supabase.auth.updateUser({ password: shadowPass });
                                         authError = null;
                                         break;
@@ -185,23 +187,25 @@ export const GameProvider = ({ children }) => {
 
                             // Attempt 3: New User Registration
                             if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                console.log("Account not found or all passwords failed. Attempting signup...");
+                                console.log("[Auth] Account match failed. Attempting signup flow...");
                                 const { error: signUpError } = await supabase.auth.signUp({
                                     email: shadowEmail, password: shadowPass,
                                     options: { data: { display_name: displayName } }
                                 });
 
                                 if (signUpError) {
-                                    // If signup fails because user exists but password mismatch persists, 
-                                    // we can't do much without a reset, but we report it.
-                                    console.error("Signup failed:", signUpError.message);
+                                    console.error("[Auth] Signup failed (User already exists?):", signUpError.message);
                                 } else {
                                     await supabase.auth.signInWithPassword({ email: shadowEmail, password: shadowPass });
                                     authError = null;
                                 }
                             }
 
-                            if (authError) throw authError;
+                            if (authError) {
+                                console.error("[Auth] Critical Failure: No valid login/signup path found.");
+                                throw authError;
+                            }
+                            console.log("[Auth] Shadow auth successful.");
                             return true;
                         } catch (e) {
                             console.error("Shadow Auth Critical Failure:", e);
