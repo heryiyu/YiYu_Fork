@@ -153,19 +153,61 @@ export const GameProvider = ({ children }) => {
                 Promise.all([
                     (async () => {
                         try {
-                            const { error: authError } = await supabase.auth.signInWithPassword({
+                            // --- Robust Auth Strategy ---
+                            // Attempt 1: New Standard (Lowercase everything)
+                            let { error: authError } = await supabase.auth.signInWithPassword({
                                 email: shadowEmail,
                                 password: shadowPass
                             });
+
+                            // Attempt 2: Compatibility Check (Try potential legacy formats if App 1 fails)
                             if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                await supabase.auth.signUp({
+                                console.log("Retrying with legacy password formats...");
+                                const legacyPasses = [
+                                    `p@ss_${lineIdVal}_${urlSuffix}`, // No toLowerCase on the whole string
+                                    `p@ss_${lineIdVal}_fixed`.toLowerCase(), // Legacy fixed suffix
+                                ];
+
+                                for (const legacyPass of legacyPasses) {
+                                    if (legacyPass === shadowPass) continue;
+                                    const { error: retryError } = await supabase.auth.signInWithPassword({
+                                        email: shadowEmail,
+                                        password: legacyPass
+                                    });
+                                    if (!retryError) {
+                                        console.log("Legacy login success! Auto-migrating to new password format...");
+                                        await supabase.auth.updateUser({ password: shadowPass });
+                                        authError = null;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Attempt 3: New User Registration
+                            if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
+                                console.log("Account not found or all passwords failed. Attempting signup...");
+                                const { error: signUpError } = await supabase.auth.signUp({
                                     email: shadowEmail, password: shadowPass,
                                     options: { data: { display_name: displayName } }
                                 });
-                                await supabase.auth.signInWithPassword({ email: shadowEmail, password: shadowPass });
+
+                                if (signUpError) {
+                                    // If signup fails because user exists but password mismatch persists, 
+                                    // we can't do much without a reset, but we report it.
+                                    console.error("Signup failed:", signUpError.message);
+                                } else {
+                                    await supabase.auth.signInWithPassword({ email: shadowEmail, password: shadowPass });
+                                    authError = null;
+                                }
                             }
+
+                            if (authError) throw authError;
                             return true;
-                        } catch (e) { console.warn("Shadow Auth fail (non-critical):", e); return false; }
+                        } catch (e) {
+                            console.error("Shadow Auth Critical Failure:", e);
+                            // Re-throw to be caught by the outer catch and set LoginStatus to ERROR
+                            throw e;
+                        }
                     })(),
                     gameState.loadGame(lineIdVal, { displayName, pictureUrl }),
                     tagService.loadTags(lineIdVal),
