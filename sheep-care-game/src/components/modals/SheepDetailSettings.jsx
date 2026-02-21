@@ -126,6 +126,20 @@ export const SheepDetailSettings = ({
             </div>
 
             <div className="form-group">
+                <label>靈程</label>
+                <select
+                    value={target?.spiritualMaturity || ''}
+                    onChange={(e) => handleBasicAutoSave('spiritualMaturity', e.target.value)}
+                    disabled={isSleepingState}
+                >
+                    <option value="">未設定</option>
+                    <option value="新朋友">新朋友</option>
+                    <option value="慕道友">慕道友</option>
+                    <option value="基督徒">基督徒</option>
+                </select>
+            </div>
+
+            <div className="form-group">
                 <label>標籤</label>
                 <TagSelect
                     sheepId={target?.id}
@@ -191,6 +205,34 @@ export const SheepDetailSettings = ({
             <div className="modal-hint">
                 (內容將自動儲存)
             </div>
+
+            {/* Edit Appearance Button Rule: Admin OR Care Level > 100 */}
+            {(isAdmin || target?.careLevel > 100) && !isSleepingState && (
+                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            window.dispatchEvent(
+                                new CustomEvent('open-edit-sheep-modal', { detail: { sheep: target } })
+                            );
+                        }}
+                        style={{
+                            padding: '12px 24px',
+                            background: '#d97706', // Darker orange
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '24px',
+                            fontWeight: 'bold',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                        }}
+                    >
+                        ✨ 編輯小羊外觀
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

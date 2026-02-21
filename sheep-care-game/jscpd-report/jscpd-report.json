@@ -1,0 +1,1849 @@
+{
+  "statistics": {
+    "detectionDate": "2026-02-21T13:56:53.496Z",
+    "formats": {
+      "javascript": {
+        "sources": {
+          "src/context/GameContext/useGame.js": {
+            "lines": 47,
+            "tokens": 320,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/context/GameContext/GameProvider.jsx": {
+            "lines": 2,
+            "tokens": 27,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Tooltip.jsx": {
+            "lines": 22,
+            "tokens": 138,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Toast.jsx": {
+            "lines": 6,
+            "tokens": 84,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Tag.jsx": {
+            "lines": 1,
+            "tokens": 21,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Slider.jsx": {
+            "lines": 7,
+            "tokens": 53,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/IconButton.jsx": {
+            "lines": 34,
+            "tokens": 308,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Field.jsx": {
+            "lines": 102,
+            "tokens": 1016,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ErrorBoundary.jsx": {
+            "lines": 8,
+            "tokens": 192,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Controls.jsx": {
+            "lines": 29,
+            "tokens": 209,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ConnectionErrorOverlay.jsx": {
+            "lines": 21,
+            "tokens": 186,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ConfirmDialog.jsx": {
+            "lines": 51,
+            "tokens": 414,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/CloseButton.jsx": {
+            "lines": 11,
+            "tokens": 114,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Checkbox.jsx": {
+            "lines": 12,
+            "tokens": 102,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Button.jsx": {
+            "lines": 2,
+            "tokens": 31,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/TagManagerModal.jsx": {
+            "lines": 116,
+            "tokens": 1074,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailSettings.jsx": {
+            "lines": 130,
+            "tokens": 1330,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailPlanFeedback.jsx": {
+            "lines": 6,
+            "tokens": 49,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailPlan.jsx": {
+            "lines": 74,
+            "tokens": 771,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailModal.jsx": {
+            "lines": 179,
+            "tokens": 1253,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailEffects.jsx": {
+            "lines": 70,
+            "tokens": 760,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailDashboard.jsx": {
+            "lines": 130,
+            "tokens": 1380,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SettingsModal.jsx": {
+            "lines": 143,
+            "tokens": 1808,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/ScheduleListModal.jsx": {
+            "lines": 427,
+            "tokens": 4343,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/PlanDetailModal.jsx": {
+            "lines": 226,
+            "tokens": 2393,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 15,
+            "duplicatedTokens": 190,
+            "percentage": 6.64,
+            "percentageTokens": 7.94,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/ModalHint.jsx": {
+            "lines": 5,
+            "tokens": 54,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/BatchAddScheduleModal.jsx": {
+            "lines": 161,
+            "tokens": 1731,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 15,
+            "duplicatedTokens": 190,
+            "percentage": 9.32,
+            "percentageTokens": 10.98,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/AddSheepModal.jsx": {
+            "lines": 93,
+            "tokens": 1083,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepListToolbar.jsx": {
+            "lines": 262,
+            "tokens": 2602,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 132,
+            "duplicatedTokens": 1290,
+            "percentage": 50.38,
+            "percentageTokens": 49.58,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepListTextView.jsx": {
+            "lines": 2,
+            "tokens": 38,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepList.jsx": {
+            "lines": 189,
+            "tokens": 1714,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepCard.jsx": {
+            "lines": 100,
+            "tokens": 1001,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/Sheep.jsx": {
+            "lines": 42,
+            "tokens": 271,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SevenStepsMap.jsx": {
+            "lines": 208,
+            "tokens": 1838,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/MiniCalendar.jsx": {
+            "lines": 71,
+            "tokens": 736,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/IntroVideo.jsx": {
+            "lines": 69,
+            "tokens": 753,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/Guide.jsx": {
+            "lines": 395,
+            "tokens": 4019,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/FilterSettingsMenu.jsx": {
+            "lines": 82,
+            "tokens": 580,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/FeedbackResult.jsx": {
+            "lines": 86,
+            "tokens": 849,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/FeedbackForm.jsx": {
+            "lines": 56,
+            "tokens": 541,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/AssetSheep.jsx": {
+            "lines": 41,
+            "tokens": 330,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/AssetPreloader.jsx": {
+            "lines": 21,
+            "tokens": 167,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/AssetBackground.jsx": {
+            "lines": 129,
+            "tokens": 1338,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/UserProfile.jsx": {
+            "lines": 70,
+            "tokens": 803,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/NicknameSetup.jsx": {
+            "lines": 127,
+            "tokens": 1443,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/Login.jsx": {
+            "lines": 89,
+            "tokens": 1043,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/weatherService.js": {
+            "lines": 100,
+            "tokens": 1111,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/sheepTickerStore.js": {
+            "lines": 147,
+            "tokens": 1383,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/SceneGenerator.js": {
+            "lines": 290,
+            "tokens": 3039,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/gameLogic.js": {
+            "lines": 427,
+            "tokens": 4518,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/db.js": {
+            "lines": 90,
+            "tokens": 956,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/calendarHelper.js": {
+            "lines": 29,
+            "tokens": 308,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/AssetRegistry.js": {
+            "lines": 90,
+            "tokens": 627,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/services/tagService.js": {
+            "lines": 105,
+            "tokens": 1240,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/services/supabaseClient.js": {
+            "lines": 10,
+            "tokens": 112,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/services/gameState.js": {
+            "lines": 330,
+            "tokens": 3531,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/hooks/usePanGesture.js": {
+            "lines": 49,
+            "tokens": 643,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/hooks/useLongPress.js": {
+            "lines": 85,
+            "tokens": 971,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/hooks/useIsMobile.js": {
+            "lines": 33,
+            "tokens": 252,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/data/sheepData.js": {
+            "lines": 25,
+            "tokens": 196,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/context/ConfirmContext.jsx": {
+            "lines": 12,
+            "tokens": 91,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/App.jsx": {
+            "lines": 145,
+            "tokens": 1114,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 6121,
+          "tokens": 61402,
+          "sources": 62,
+          "clones": 3,
+          "duplicatedLines": 81,
+          "duplicatedTokens": 835,
+          "percentage": 1.32,
+          "percentageTokens": 1.36,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "jsx": {
+        "sources": {
+          "src/context/GameContext/GameProvider.jsx": {
+            "lines": 950,
+            "tokens": 12604,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Tooltip.jsx": {
+            "lines": 125,
+            "tokens": 1311,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Toast.jsx": {
+            "lines": 46,
+            "tokens": 394,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Tag.jsx": {
+            "lines": 22,
+            "tokens": 195,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Slider.jsx": {
+            "lines": 29,
+            "tokens": 181,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/IconButton.jsx": {
+            "lines": 51,
+            "tokens": 411,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Field.jsx": {
+            "lines": 308,
+            "tokens": 3294,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ErrorBoundary.jsx": {
+            "lines": 40,
+            "tokens": 444,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Controls.jsx": {
+            "lines": 53,
+            "tokens": 443,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ConnectionErrorOverlay.jsx": {
+            "lines": 41,
+            "tokens": 381,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ConfirmDialog.jsx": {
+            "lines": 98,
+            "tokens": 808,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/CloseButton.jsx": {
+            "lines": 40,
+            "tokens": 354,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Checkbox.jsx": {
+            "lines": 33,
+            "tokens": 233,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Button.jsx": {
+            "lines": 37,
+            "tokens": 263,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/TagManagerModal.jsx": {
+            "lines": 209,
+            "tokens": 2063,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailSettings.jsx": {
+            "lines": 195,
+            "tokens": 2087,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailPlanFeedback.jsx": {
+            "lines": 47,
+            "tokens": 364,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailPlan.jsx": {
+            "lines": 95,
+            "tokens": 949,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailModal.jsx": {
+            "lines": 555,
+            "tokens": 5345,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 146,
+            "percentage": 2.52,
+            "percentageTokens": 2.73,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailEffects.jsx": {
+            "lines": 102,
+            "tokens": 1003,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SheepDetailDashboard.jsx": {
+            "lines": 174,
+            "tokens": 1782,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/SettingsModal.jsx": {
+            "lines": 191,
+            "tokens": 2339,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 146,
+            "percentage": 7.33,
+            "percentageTokens": 6.24,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/ScheduleListModal.jsx": {
+            "lines": 641,
+            "tokens": 6788,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/PlanDetailModal.jsx": {
+            "lines": 438,
+            "tokens": 4607,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/ModalHint.jsx": {
+            "lines": 15,
+            "tokens": 182,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/BatchAddScheduleModal.jsx": {
+            "lines": 273,
+            "tokens": 2910,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/AddSheepModal.jsx": {
+            "lines": 200,
+            "tokens": 2218,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepListToolbar.jsx": {
+            "lines": 325,
+            "tokens": 3080,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 56,
+            "duplicatedTokens": 400,
+            "percentage": 17.23,
+            "percentageTokens": 12.99,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepListTextView.jsx": {
+            "lines": 51,
+            "tokens": 484,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepList.jsx": {
+            "lines": 473,
+            "tokens": 5144,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepCard.jsx": {
+            "lines": 205,
+            "tokens": 2322,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/Sheep.jsx": {
+            "lines": 172,
+            "tokens": 1603,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SevenStepsMap.jsx": {
+            "lines": 334,
+            "tokens": 3239,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/MiniCalendar.jsx": {
+            "lines": 143,
+            "tokens": 1647,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/IntroVideo.jsx": {
+            "lines": 94,
+            "tokens": 955,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/Guide.jsx": {
+            "lines": 453,
+            "tokens": 4674,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/FilterSettingsMenu.jsx": {
+            "lines": 154,
+            "tokens": 1450,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/FeedbackResult.jsx": {
+            "lines": 112,
+            "tokens": 1093,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/FeedbackForm.jsx": {
+            "lines": 88,
+            "tokens": 881,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/AssetSheep.jsx": {
+            "lines": 133,
+            "tokens": 1240,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/AssetPreloader.jsx": {
+            "lines": 95,
+            "tokens": 911,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/AssetBackground.jsx": {
+            "lines": 299,
+            "tokens": 3179,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/UserProfile.jsx": {
+            "lines": 139,
+            "tokens": 1553,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/NicknameSetup.jsx": {
+            "lines": 180,
+            "tokens": 1960,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/Login.jsx": {
+            "lines": 179,
+            "tokens": 1596,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/context/ConfirmContext.jsx": {
+            "lines": 82,
+            "tokens": 846,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/main.jsx": {
+            "lines": 20,
+            "tokens": 158,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/App.jsx": {
+            "lines": 207,
+            "tokens": 1838,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 8946,
+          "tokens": 93806,
+          "sources": 48,
+          "clones": 2,
+          "duplicatedLines": 42,
+          "duplicatedTokens": 346,
+          "percentage": 0.47,
+          "percentageTokens": 0.37,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "css": {
+        "sources": {
+          "src/components/ui/Tooltip.css": {
+            "lines": 37,
+            "tokens": 256,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Toast.css": {
+            "lines": 77,
+            "tokens": 543,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Tag.css": {
+            "lines": 43,
+            "tokens": 282,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Slider.css": {
+            "lines": 52,
+            "tokens": 435,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/IconButton.css": {
+            "lines": 60,
+            "tokens": 408,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/ConnectionErrorOverlay.css": {
+            "lines": 111,
+            "tokens": 841,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/CloseButton.css": {
+            "lines": 40,
+            "tokens": 308,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Checkbox.css": {
+            "lines": 55,
+            "tokens": 456,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/Button.css": {
+            "lines": 20,
+            "tokens": 139,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/modals/PlanDetailModal.css": {
+            "lines": 416,
+            "tokens": 2783,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepVisual.css": {
+            "lines": 312,
+            "tokens": 2046,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepList.jsx": {
+            "lines": 6,
+            "tokens": 33,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SheepList.css": {
+            "lines": 809,
+            "tokens": 5512,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/SevenStepsMap.css": {
+            "lines": 525,
+            "tokens": 3606,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/game/Guide.css": {
+            "lines": 105,
+            "tokens": 707,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/NicknameSetup.jsx": {
+            "lines": 0,
+            "tokens": 59,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/auth/Login.jsx": {
+            "lines": 33,
+            "tokens": 135,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/styles/design-tokens.css": {
+            "lines": 287,
+            "tokens": 2032,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/index.css": {
+            "lines": 158,
+            "tokens": 1043,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/debug.css": {
+            "lines": 55,
+            "tokens": 373,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 3201,
+          "tokens": 21997,
+          "sources": 20,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "markdown": {
+        "sources": {
+          "src/components/ui/README.md": {
+            "lines": 156,
+            "tokens": 1459,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/components/ui/INVENTORY.md": {
+            "lines": 125,
+            "tokens": 1610,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 281,
+          "tokens": 3069,
+          "sources": 2,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 18549,
+      "tokens": 180274,
+      "sources": 132,
+      "clones": 5,
+      "duplicatedLines": 123,
+      "duplicatedTokens": 1181,
+      "percentage": 0.66,
+      "percentageTokens": 0.66,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "jsx",
+      "lines": 15,
+      "fragment": ");\r\n\r\n    useEffect(() => {\r\n        const handleKeyDown = (e) => {\r\n            if (e.key === 'Escape') onClose();\r\n        };\r\n        window.addEventListener('keydown', handleKeyDown);\r\n        return () => window.removeEventListener('keydown', handleKeyDown);\r\n    }, [onClose]);\r\n\r\n    useEffect(() => {\r\n        if (!isMobile) {\r\n            closeBtnRef.current?.focus();\r\n        }\r\n    }, [isMobile",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\modals\\SettingsModal.jsx",
+        "start": 15,
+        "end": 29,
+        "startLoc": {
+          "line": 15,
+          "column": 2,
+          "position": 209
+        },
+        "endLoc": {
+          "line": 29,
+          "column": 9,
+          "position": 355
+        }
+      },
+      "secondFile": {
+        "name": "src\\components\\modals\\SheepDetailModal.jsx",
+        "start": 137,
+        "end": 151,
+        "startLoc": {
+          "line": 137,
+          "column": 2,
+          "position": 1689
+        },
+        "endLoc": {
+          "line": 151,
+          "column": 16,
+          "position": 1835
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": "=> setFormData({ ...formData, reminderOffset: Number(e.target.value) })}\r\n                                    >\r\n                                        <option value={-1}>🔕 不提醒</option>\r\n                                        <option value={0}>⚡ 準時提醒</option>\r\n                                        <option value={15}>🔔 提前 15 分鐘</option>\r\n                                        <option value={30}>🔔 提前 30 分鐘</option>\r\n                                        <option value={60}>🔔 提前 1 小時</option>\r\n                                    </select>\r\n                                </div>\r\n\r\n                                <div className=\"form-group\">\r\n                                    <label>📍 地點</label>\r\n                                    <input\r\n                                        type=\"text\"\r\n                                        value={formData.location}\r\n                                        onChange={(",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\modals\\BatchAddScheduleModal.jsx",
+        "start": 201,
+        "end": 216,
+        "startLoc": {
+          "line": 201,
+          "column": 2,
+          "position": 2246
+        },
+        "endLoc": {
+          "line": 216,
+          "column": 2,
+          "position": 2436
+        }
+      },
+      "secondFile": {
+        "name": "src\\components\\modals\\PlanDetailModal.jsx",
+        "start": 256,
+        "end": 271,
+        "startLoc": {
+          "line": 256,
+          "column": 3,
+          "position": 2758
+        },
+        "endLoc": {
+          "line": 271,
+          "column": 3,
+          "position": 2956
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 13,
+      "fragment": "}\r\n                                style={{\r\n                                    opacity: isCollapsed ? 0.6 : 1,\r\n                                    minWidth: 'unset',\r\n                                    padding: '0 10px',\r\n                                    height: '36px',\r\n                                    display: 'flex',\r\n                                    alignItems: 'center',\r\n                                    justifyContent: 'center',\r\n                                    background: 'rgba(255, 255, 255, 0.8)',\r\n                                    borderColor: 'var(--border-subtle)'\r\n                                }}\r\n                                aria-label={isExpanded ",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\game\\SheepListToolbar.jsx",
+        "start": 193,
+        "end": 205,
+        "startLoc": {
+          "line": 193,
+          "column": 16,
+          "position": 1712
+        },
+        "endLoc": {
+          "line": 205,
+          "column": 12,
+          "position": 1775
+        }
+      },
+      "secondFile": {
+        "name": "src\\components\\game\\SheepListToolbar.jsx",
+        "start": 171,
+        "end": 183,
+        "startLoc": {
+          "line": 171,
+          "column": 15,
+          "position": 1525
+        },
+        "endLoc": {
+          "line": 183,
+          "column": 10,
+          "position": 1588
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 55,
+      "fragment": "}\r\n                        >\r\n                            <input\r\n                                ref={searchInputRef}\r\n                                type=\"text\"\r\n                                className=\"dock-toolbar-search-input\"\r\n                                placeholder=\"搜尋...\"\r\n                                value={searchTerm}\r\n                                onChange={(e) => setSearchTerm(e.target.value)}\r\n                                onFocus={() => setIsSearchExpanded(true)}\r\n                            />\r\n                            {isSearchExpanded && (\r\n                                <CloseButton\r\n                                    className=\"dock-toolbar-search-clear\"\r\n                                    ariaLabel=\"清除並收起搜尋\"\r\n                                    variant=\"sm\"\r\n                                    onClick={() => {\r\n                                        setSearchTerm('');\r\n                                        setIsSearchExpanded(false);\r\n                                        searchInputRef.current?.blur();\r\n                                    }}\r\n                                />\r\n                            )}\r\n                            <span className=\"dock-toolbar-search-icon\" aria-hidden=\"true\">\r\n                                <Search size={16} strokeWidth={2.5} />\r\n                            </span>\r\n                        </div>\r\n\r\n                        <div className=\"dock-toolbar-divider\" />\r\n\r\n                        {[\r\n                            { id: 'ALL', label: '全部' },\r\n                            { id: 'PINNED', label: '📌釘選' },\r\n                            { id: 'HEALTHY', label: '健康' },\r\n                            { id: 'SICK', label: '生病' },\r\n                            { id: 'SLEEPING', label: '沉睡' },\r\n                            ...(tags || []).map(t => ({ id: `${TAG_FILTER_PREFIX}${t.id}`, label: t.name, color: t.color }))\r\n                        ]\r\n                            .filter(f => !hiddenFilterIds.has(f.id))\r\n                            .map(f => (\r\n                                <button\r\n                                    type=\"button\"\r\n                                    key={f.id}\r\n                                    className={`dock-toolbar-chip ${effectiveFilterStatus === f.id ? 'dock-toolbar-chip--selected' : ''}`}\r\n                                    onClick={() => setFilterStatus(f.id)}\r\n                                    style={{\r\n                                        opacity: isCollapsed ? 0.6 : 1,\r\n                                        ...(f.color && effectiveFilterStatus === f.id && { borderColor: f.color, color: 'var(--text-inverse)', background: f.color })\r\n                                    }}\r\n                                >\r\n                                    {f.label} {counts[f.id] ?? 0}\r\n                                </button>\r\n                            ))}\r\n\r\n                        <div style={{",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\game\\SheepListToolbar.jsx",
+        "start": 216,
+        "end": 270,
+        "startLoc": {
+          "line": 216,
+          "column": 2,
+          "position": 1904
+        },
+        "endLoc": {
+          "line": 270,
+          "column": 2,
+          "position": 2486
+        }
+      },
+      "secondFile": {
+        "name": "src\\components\\game\\SheepListToolbar.jsx",
+        "start": 68,
+        "end": 96,
+        "startLoc": {
+          "line": 68,
+          "column": 2,
+          "position": 556
+        },
+        "endLoc": {
+          "line": 96,
+          "column": 12,
+          "position": 762
+        }
+      }
+    },
+    {
+      "format": "jsx",
+      "lines": 29,
+      "fragment": "\r\n                        >\r\n                            <input\r\n                                ref={searchInputRef}\r\n                                type=\"text\"\r\n                                className=\"dock-toolbar-search-input\"\r\n                                placeholder=\"搜尋...\"\r\n                                value={searchTerm}\r\n                                onChange={(e) => setSearchTerm(e.target.value)}\r\n                                onFocus={() => setIsSearchExpanded(true)}\r\n                            />\r\n                            {isSearchExpanded && (\r\n                                <CloseButton\r\n                                    className=\"dock-toolbar-search-clear\"\r\n                                    ariaLabel=\"清除並收起搜尋\"\r\n                                    variant=\"sm\"\r\n                                    onClick={() => {\r\n                                        setSearchTerm('');\r\n                                        setIsSearchExpanded(false);\r\n                                        searchInputRef.current?.blur();\r\n                                    }}\r\n                                />\r\n                            )}\r\n                            <span className=\"dock-toolbar-search-icon\" aria-hidden=\"true\">\r\n                                <Search size={16} strokeWidth={2.5} />\r\n                            </span>\r\n                        </div>\r\n\r\n                        <div",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\components\\game\\SheepListToolbar.jsx",
+        "start": 216,
+        "end": 244,
+        "startLoc": {
+          "line": 216,
+          "column": 2,
+          "position": 1905
+        },
+        "endLoc": {
+          "line": 244,
+          "column": 4,
+          "position": 2105
+        }
+      },
+      "secondFile": {
+        "name": "src\\components\\game\\SheepListToolbar.jsx",
+        "start": 68,
+        "end": 96,
+        "startLoc": {
+          "line": 68,
+          "column": 2,
+          "position": 557
+        },
+        "endLoc": {
+          "line": 96,
+          "column": 8,
+          "position": 757
+        }
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { CloseButton } from '../ui/CloseButton';
 import { Button } from '../ui/Button';
 import { generateVisuals, parseMaturity, sanitizeInput } from '../../utils/gameLogic';
 import { ASSETS } from '../../utils/AssetRegistry';
+import { Portal } from '../ui/Portal';
 // AuthContext import removed
 
 const ACCESSORIES = [
@@ -29,6 +30,10 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
         }
         return '';
     });
+    const [batchInput, setBatchInput] = useState('');
+    const [selectedVariant, setSelectedVariant] = useState(
+        editingSheep?.visual?.variant || ASSETS.VARIANT_OPTIONS[0].id
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -95,107 +100,109 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
     const hasVisualChanges = true;
 
     return (
-        <div className="debug-editor-overlay" onClick={onCancel}>
-            <div className="modal-card modal-card--sm" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>{isEditing ? `🎨 編輯外觀` : (isBatchMode ? '批量新增' : '新增小羊')}</h3>
-                    <CloseButton onClick={onCancel} ariaLabel="關閉" />
-                </div>
+        <Portal>
+            <div className="debug-editor-overlay" onClick={onCancel} style={{ zIndex: 10000 }}>
+                <div className="modal-card modal-card--sm" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <h3>{isEditing ? `🎨 編輯外觀` : (isBatchMode ? '批量新增' : '新增小羊')}</h3>
+                        <CloseButton onClick={onCancel} ariaLabel="關閉" />
+                    </div>
 
-                <div className="modal-form" style={{ padding: '16px', gap: '10px' }}>
-                    {(!isBatchMode || isEditing) && (
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0px' }}>
-                            <div style={{
-                                position: 'relative', width: '100px', height: '90px',
-                                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            }}>
-                                <AssetSheep
-                                    centered={true}
-                                    scale={0.6}
-                                    visual={{
-                                        variant: selectedVariant,
-                                        accessory: 'none'
-                                    }}
-                                    status="healthy"
-                                />
+                    <div className="modal-form" style={{ padding: '16px', gap: '10px' }}>
+                        {(!isBatchMode || isEditing) && (
+                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0px' }}>
+                                <div style={{
+                                    position: 'relative', width: '100px', height: '90px',
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                }}>
+                                    <AssetSheep
+                                        centered={true}
+                                        scale={0.6}
+                                        visual={{
+                                            variant: selectedVariant,
+                                            accessory: 'none'
+                                        }}
+                                        status="healthy"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
 
-                        {(!isBatchMode || isEditing) ? (
-                            <>
-                                {isAdmin && (
-                                    <div className="form-group">
-                                        <label>外觀 (Admin)</label>
-                                        <select value={selectedVariant} onChange={e => setSelectedVariant(e.target.value)}>
-                                            {ASSETS.VARIANT_OPTIONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
-                                        </select>
-                                    </div>
-                                )}
-
-                                {/* Basic Info */}
-                                {!isEditing && (
-                                    <>
+                            {(!isBatchMode || isEditing) ? (
+                                <>
+                                    {isAdmin && (
                                         <div className="form-group">
-                                            <label>名稱</label>
-                                            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="小羊" required />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>靈程</label>
-                                            <select value={spiritualMaturity} onChange={e => setSpiritualMaturity(e.target.value)}>
-                                                <option value="">未設定</option>
-                                                <option value="新朋友">新朋友</option>
-                                                <option value="慕道友">慕道友</option>
-                                                <option value="基督徒">基督徒</option>
+                                            <label>外觀 (Admin)</label>
+                                            <select value={selectedVariant} onChange={e => setSelectedVariant(e.target.value)}>
+                                                {ASSETS.VARIANT_OPTIONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
                                             </select>
                                         </div>
-                                        <div className="form-group">
-                                            <label>備註</label>
-                                            <textarea
-                                                value={note}
-                                                onChange={e => setNote(e.target.value)}
-                                                placeholder="..."
-                                                style={{ resize: 'none', minHeight: '40px', height: '40px' }}
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                            </>
-                        ) : (
-                            <div className="form-group" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <label>批量輸入</label>
-                                <textarea
-                                    value={batchInput}
-                                    onChange={(e) => setBatchInput(e.target.value)}
-                                    placeholder="例：王大明 新朋友 (換行輸入下一位)"
-                                    style={{ flex: 1, resize: 'none' }}
-                                    required
-                                />
-                            </div>
-                        )}
+                                    )}
 
-                        <div style={{ marginTop: 'auto' }}>
-                            <Button
-                                type="submit"
-                                variant="success"
-                                disabled={isBatchMode ? !batchInput.trim() : !name.trim()}
-                            >
-                                {isEditing ? '儲存' : (isBatchMode ? '批量新增' : '新增')}
-                            </Button>
-                        </div>
+                                    {/* Basic Info */}
+                                    {!isEditing && (
+                                        <>
+                                            <div className="form-group">
+                                                <label>名稱</label>
+                                                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="小羊" required />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>靈程</label>
+                                                <select value={spiritualMaturity} onChange={e => setSpiritualMaturity(e.target.value)}>
+                                                    <option value="">未設定</option>
+                                                    <option value="新朋友">新朋友</option>
+                                                    <option value="慕道友">慕道友</option>
+                                                    <option value="基督徒">基督徒</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>備註</label>
+                                                <textarea
+                                                    value={note}
+                                                    onChange={e => setNote(e.target.value)}
+                                                    placeholder="..."
+                                                    style={{ resize: 'none', minHeight: '40px', height: '40px' }}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="form-group" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                    <label>批量輸入</label>
+                                    <textarea
+                                        value={batchInput}
+                                        onChange={(e) => setBatchInput(e.target.value)}
+                                        placeholder="例：王大明 新朋友 (換行輸入下一位)"
+                                        style={{ flex: 1, resize: 'none' }}
+                                        required
+                                    />
+                                </div>
+                            )}
 
-                        {!isEditing && (
-                            <div style={{ textAlign: 'center', marginTop: '2px' }}>
-                                <span onClick={() => setIsBatchMode(!isBatchMode)} style={{ fontSize: '0.75rem', color: 'var(--text-muted-light)', cursor: 'pointer', textDecoration: 'underline' }}>
-                                    {isBatchMode ? '單一模式' : '批量模式'}
-                                </span>
+                            <div style={{ marginTop: 'auto' }}>
+                                <Button
+                                    type="submit"
+                                    variant="success"
+                                    disabled={isBatchMode ? !batchInput.trim() : !name.trim()}
+                                >
+                                    {isEditing ? '儲存' : (isBatchMode ? '批量新增' : '新增')}
+                                </Button>
                             </div>
-                        )}
-                    </form>
+
+                            {!isEditing && (
+                                <div style={{ textAlign: 'center', marginTop: '2px' }}>
+                                    <span onClick={() => setIsBatchMode(!isBatchMode)} style={{ fontSize: '0.75rem', color: 'var(--text-muted-light)', cursor: 'pointer', textDecoration: 'underline' }}>
+                                        {isBatchMode ? '單一模式' : '批量模式'}
+                                    </span>
+                                </div>
+                            )}
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Portal>
     );
 };
