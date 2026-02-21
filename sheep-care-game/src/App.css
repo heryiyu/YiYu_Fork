@@ -615,8 +615,8 @@
 }
 
 .guide-modal-content {
-  max-height: none;
-  overflow: visible;
+  max-height: 55vh;
+  overflow-y: auto;
 }
 
 .guide-action-btn {
