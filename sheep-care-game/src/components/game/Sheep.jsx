@@ -51,15 +51,14 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
             height: '100px',
             marginLeft: '-50px', // Center the wrapper on the x-coordinate
             zIndex: zIdx,
-            transformOrigin: 'bottom center'
+            transformOrigin: 'bottom center',
+            willChange: 'transform'
         };
 
         if (containerSize && containerSize.width > 0) {
             // Pixel Transform Mode (GPU Friendly)
             const px = (sheep.x / 100) * containerSize.width;
             const py = (bottomPos / 100) * containerSize.height;
-            // Calculate Top (Y) position: ContainerHeight - BottomOffset - ElementHeight
-            // Since transform is relative to "top: 0, left: 0" (if we set them)
             const topPx = containerSize.height - py - 100;
 
             return {
@@ -71,12 +70,13 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
             };
         } else {
             // Fallback (Layout Thrashing but reliable)
+            // Still try to use translate for the scale part to keep it on GPU
             return {
                 ...baseStyle,
                 left: `${sheep.x}%`,
                 bottom: `${bottomPos}%`,
-                transform: `scale(${depthScale})`,
-                transition: isSleeping(sheep) ? 'none' : 'left 1.1s linear, bottom 1.1s linear',
+                transform: `scale(${depthScale}) translate3d(0, 0, 0)`,
+                transition: isSleeping(sheep) ? 'none' : 'left 1.1s linear, bottom 1.1s linear, transform 1.1s linear',
             };
         }
     }, [sheep.x, bottomPos, depthScale, zIdx, containerSize, isSleeping(sheep)]);
@@ -138,13 +138,13 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
     );
 }, (prevProps, nextProps) => {
     // Custom Comparison for Performance
-    // Ignore micro-changes in health (decay) unless it changes the visual stage
     const prev = prevProps.sheep;
     const next = nextProps.sheep;
 
-    // Check Container Size (Critical for Pixel Transforms)
+    // Check Container Size 
     if (prevProps.containerSize !== nextProps.containerSize) return false;
 
+    // Essential props check (Fast path)
     if (prev.id !== next.id) return false;
     if (prev.x !== next.x) return false;
     if (prev.y !== next.y) return false;
@@ -155,12 +155,14 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
     if (prev.type !== next.type) return false;
     if (prev.name !== next.name) return false;
 
-    // Deep compare visual if needed
+    // Visual comparison: Avoid JSON.stringify, use shallow key check
     if (prev.visual !== next.visual) {
-        if (JSON.stringify(prev.visual) !== JSON.stringify(next.visual)) return false;
+        if (prev.visual?.bodyColor !== next.visual?.bodyColor ||
+            prev.visual?.hornType !== next.visual?.hornType ||
+            prev.visual?.accessory !== next.visual?.accessory) return false;
     }
 
-    // Health Stage Logic (Match SheepVisual)
+    // Health Stage Logic
     const getStage = (h) => {
         if (h > 80) return 'super';
         if (h < 20) return 'critical';
@@ -170,5 +172,5 @@ export const Sheep = React.memo(({ sheep, onPray, onSelect, alwaysShowName, cont
 
     if (getStage(prev.health) !== getStage(next.health)) return false;
 
-    return true; // Props are "equal" visually
+    return true;
 });

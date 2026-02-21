@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SevenStepsMap } from './SevenStepsMap';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
-import { useGame } from '../../context/GameContext';
+import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { CloseButton } from '../ui/CloseButton';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -10,7 +10,7 @@ import './Guide.css';
 const ManualSection = () => {
     const shouldReduceMotion = useReducedMotion();
     const isMobile = useIsMobile();
-    const { isAdmin } = useGame();
+    const { isAdmin } = useUserAuth();
     const [view, setView] = useState('MENU'); // MENU | SEVEN_STEPS | BIND_RELEASE | SCRIPTURES | CARDS | PRAYERS
     const [selectedId, setSelectedId] = useState(null);
     const [activeScripture, setActiveScripture] = useState(null); // New state for Scriptures

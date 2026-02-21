@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGame } from './context/GameContext';
+import { useGameState, useGameActions, useUserAuth } from './context/GameContext/useGame';
 import { Field } from './components/ui/Field';
 
 import { SheepDetailModal } from './components/modals/SheepDetailModal';
@@ -19,7 +19,10 @@ import { ScheduleListModal } from './components/modals/ScheduleListModal';
 import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react';
 
 function App() {
-  const { currentUser, message, isLoading, nickname, notificationEnabled, toggleNotification, sheep, isAdmin, weather, showIntroVideo, markIntroWatched } = useGame();
+  // Use specialized hooks to prevent unnecessary rerenders from high-frequency game state (like sheep movement)
+  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading } = useUserAuth();
+  const { toggleNotification, markIntroWatched } = useGameActions();
+  const { message, weather, showIntroVideo } = useGameState();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);

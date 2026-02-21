@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { useConfirm } from '../../context/ConfirmContext.jsx';
 import { isSleeping } from '../../utils/gameLogic';
 import { AddSheepModal } from '../modals/AddSheepModal';
@@ -16,17 +16,22 @@ const TAG_FILTER_PREFIX = 'TAG:';
 export const SheepList = ({ onSelect }) => {
     const {
         sheep,
+        tags,
+        tagAssignmentsBySheep,
+        focusedSheepId
+    } = useGameState();
+
+    const {
         deleteMultipleSheep,
         updateSheep,
         adoptSheep,
         updateMultipleSheep,
-        settings,
         togglePin,
         findSheep,
-        tags,
-        tagAssignmentsBySheep,
         updateSetting
-    } = useGame();
+    } = useGameActions();
+
+    const { settings } = useUserAuth();
     const confirm = useConfirm();
 
     // State
@@ -109,7 +114,6 @@ export const SheepList = ({ onSelect }) => {
     }, [sortedSheep, settings?.pinnedSheepIds, tags, tagAssignmentsBySheep]);
 
     // Effects
-    const { focusedSheepId } = useGame();
     useEffect(() => {
         if (focusedSheepId) {
             setIsCollapsed(true);

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Eye } from 'lucide-react';
-import { useGame } from '../../context/GameContext';
+import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { isSleeping } from '../../utils/gameLogic';
 import { Sheep } from '../game/Sheep';
 import { AssetBackground } from '../game/AssetBackground';
@@ -23,7 +23,9 @@ const simpleHash = (str) => {
 };
 
 export const Field = ({ onSelectSheep }) => {
-    const { sheep, prayForSheep, weather, settings, focusedSheepId, clearFocus, lineId } = useGame();
+    const { sheep, weather, focusedSheepId } = useGameState();
+    const { prayForSheep, clearFocus } = useGameActions();
+    const { settings, lineId } = useUserAuth();
     const [isLoaded, setIsLoaded] = useState(false);
 
     // --- Manual Panning Logic (via Hook) ---

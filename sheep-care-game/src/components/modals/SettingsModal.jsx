@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { ModalHint } from './ModalHint';
 import { CloseButton } from '../ui/CloseButton';
 import { Slider } from '../ui/Slider';
@@ -8,7 +8,9 @@ import { Tag } from '../ui/Tag';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const SettingsModal = ({ onClose }) => {
-    const { settings, updateSetting, tags, cleanupDuplicateSchedules } = useGame();
+    const { tags } = useGameState();
+    const { updateSetting, cleanupDuplicateSchedules } = useGameActions();
+    const { settings } = useUserAuth();
     const closeBtnRef = useRef(null);
     const isMobile = useIsMobile();
 

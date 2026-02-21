@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Plus, ChevronRight, Calendar, ChevronUp, ChevronDown, Settings, X, Check, Megaphone, Sparkles, Users, HeartHandshake, Flame, BookOpen, Edit2, Save, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { useGame } from '../../context/GameContext';
+import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { useConfirm } from '../../context/ConfirmContext.jsx';
 import { getAwakeningProgress, isSleeping, calculateSheepState, sanitizeInput } from '../../utils/gameLogic';
 import { TagManagerModal } from './TagManagerModal';
@@ -25,10 +25,15 @@ import { SheepDetailPlanFeedback } from './SheepDetailPlanFeedback';
 import { SheepDetailEffects } from './SheepDetailEffects';
 import { SheepDetailSettings } from './SheepDetailSettings';
 
-
-
 export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) => {
-    const { sheep, updateSheep, prayForSheep, completePlan, deleteSheep, forceLoadFromCloud, isAdmin, lineId, tags, tagAssignmentsBySheep, setSheepTags, notifyScheduleUpdate, settings, updateSetting, updatePlanFeedback, fetchWeeklySchedules } = useGame();
+    const { sheep, tags, tagAssignmentsBySheep } = useGameState();
+    const {
+        updateSheep, prayForSheep, completePlan, deleteSheep,
+        forceLoadFromCloud, setSheepTags, notifyScheduleUpdate,
+        updatePlanFeedback, fetchWeeklySchedules
+    } = useGameActions();
+    const { isAdmin, lineId, settings } = useUserAuth();
+    const { updateSetting } = useGameActions(); // Some overlap but grouped by logic
     const confirm = useConfirm();
     const modalRef = useRef(null);
     const closeBtnRef = useRef(null);

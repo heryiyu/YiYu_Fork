@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, ChevronUp, Users } from 'lucide-react';
-import { useGame } from '../../context/GameContext';
+import { useGameState, useGameActions } from '../../context/GameContext/useGame';
 import { CloseButton } from '../ui/CloseButton';
 import { AssetSheep } from '../game/AssetSheep';
 import { BatchAddScheduleModal } from './BatchAddScheduleModal';
@@ -29,7 +28,11 @@ const addDays = (date, days) => {
 };
 
 export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
-    const { fetchWeeklySchedules, sheep, lastScheduleUpdate, completePlan, updatePlanFeedback, notifyScheduleUpdate } = useGame();
+    const { sheep, lastScheduleUpdate } = useGameState();
+    const {
+        fetchWeeklySchedules, completePlan,
+        updatePlanFeedback, notifyScheduleUpdate
+    } = useGameActions();
 
 
     const [schedules, setSchedules] = useState([]);
