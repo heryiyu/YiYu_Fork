@@ -153,21 +153,29 @@ export const GameProvider = ({ children }) => {
                 Promise.all([
                     (async () => {
                         try {
-                            // --- Robust Auth Strategy ---
-                            console.log(`[Auth] Initializing for ${shadowEmail} using suffix: ${urlSuffix}`);
+                            // --- Precise Identity Recognition Strategy ---
+                            // 1. Pre-check: Does this line_id exist in our data records?
+                            const { data: existingUser } = await supabase
+                                .from('users')
+                                .select('id')
+                                .eq('line_id', lineIdVal)
+                                .single();
 
-                            // Attempt 1: New Standard (Lowercase everything)
+                            const isOldFriend = !!existingUser;
+                            console.log(`[Auth] Identity: ${isOldFriend ? 'Existing User' : 'New User'}. Suffix: ${urlSuffix}`);
+
+                            // Attempt 1: New Standard
                             let { error: authError } = await supabase.auth.signInWithPassword({
                                 email: shadowEmail,
                                 password: shadowPass
                             });
 
-                            // Attempt 2: Compatibility Check (Try potential legacy formats if App 1 fails)
+                            // Attempt 2: Compatibility救援 (Only if Attempt 1 fails)
                             if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                console.warn("[Auth] Primary login failed, trying legacy formats...");
+                                console.log("[Auth] Standard pass failed, trying compatibility mode...");
                                 const legacyPasses = [
-                                    `p@ss_${lineIdVal}_${urlSuffix}`, // No toLowerCase on the whole string
-                                    `p@ss_${lineIdVal}_fixed`.toLowerCase(), // Legacy fixed suffix
+                                    `p@ss_${lineIdVal}_${urlSuffix}`,
+                                    `p@ss_${lineIdVal}_fixed`.toLowerCase(),
                                 ];
 
                                 for (const legacyPass of legacyPasses) {
@@ -177,7 +185,7 @@ export const GameProvider = ({ children }) => {
                                         password: legacyPass
                                     });
                                     if (!retryError) {
-                                        console.log("[Auth] Legacy login success! Auto-migrating to new password format...");
+                                        console.log("[Auth] Legacy login success! Auto-upgrading password...");
                                         await supabase.auth.updateUser({ password: shadowPass });
                                         authError = null;
                                         break;
@@ -185,31 +193,38 @@ export const GameProvider = ({ children }) => {
                                 }
                             }
 
-                            // Attempt 3: New User Registration
+                            // Attempt 3: Strict Branching
                             if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                console.log("[Auth] Account match failed. Attempting signup flow...");
-                                const { error: signUpError } = await supabase.auth.signUp({
-                                    email: shadowEmail, password: shadowPass,
-                                    options: { data: { display_name: displayName } }
-                                });
-
-                                if (signUpError) {
-                                    console.error("[Auth] Signup failed (User already exists?):", signUpError.message);
+                                if (isOldFriend) {
+                                    // CRITICAL PROTECTION: If you are an old friend, but all passwords failed,
+                                    // WE DO NOT SIGN UP. We block entry to protect your current data.
+                                    console.error("[Auth] SECURITY ALERT: Password mismatch for existing user. Blocking entry to prevent data corruption.");
+                                    throw new Error("身分驗證失敗：舊帳號密碼不符。請聯繫管理員或確認部署環境。");
                                 } else {
-                                    await supabase.auth.signInWithPassword({ email: shadowEmail, password: shadowPass });
-                                    authError = null;
+                                    // Only new users get to sign up
+                                    console.log("[Auth] New user detected. Performing secure signup...");
+                                    const { error: signUpError } = await supabase.auth.signUp({
+                                        email: shadowEmail, password: shadowPass,
+                                        options: { data: { display_name: displayName } }
+                                    });
+
+                                    if (signUpError) {
+                                        console.error("[Auth] Signup failed:", signUpError.message);
+                                        throw signUpError;
+                                    } else {
+                                        const { error: finalSignInError } = await supabase.auth.signInWithPassword({
+                                            email: shadowEmail, password: shadowPass
+                                        });
+                                        if (!finalSignInError) authError = null;
+                                    }
                                 }
                             }
 
-                            if (authError) {
-                                console.error("[Auth] Critical Failure: No valid login/signup path found.");
-                                throw authError;
-                            }
-                            console.log("[Auth] Shadow auth successful.");
+                            if (authError) throw authError;
+                            console.log("[Auth] Identity verified successfully.");
                             return true;
                         } catch (e) {
-                            console.error("Shadow Auth Critical Failure:", e);
-                            // Re-throw to be caught by the outer catch and set LoginStatus to ERROR
+                            console.error("[Auth] Verification Error:", e.message);
                             throw e;
                         }
                     })(),
