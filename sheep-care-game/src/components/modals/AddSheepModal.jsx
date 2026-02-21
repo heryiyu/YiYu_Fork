@@ -132,14 +132,12 @@ export const AddSheepModal = ({ onConfirm, onCancel, editingSheep = null }) => {
 
                             {(!isBatchMode || isEditing) ? (
                                 <>
-                                    {isAdmin && (
-                                        <div className="form-group">
-                                            <label>外觀 (Admin)</label>
-                                            <select value={selectedVariant} onChange={e => setSelectedVariant(e.target.value)}>
-                                                {ASSETS.VARIANT_OPTIONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
-                                            </select>
-                                        </div>
-                                    )}
+                                    <div className="form-group">
+                                        <label>外觀</label>
+                                        <select value={selectedVariant} onChange={e => setSelectedVariant(e.target.value)}>
+                                            {ASSETS.VARIANT_OPTIONS.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}
+                                        </select>
+                                    </div>
 
                                     {/* Basic Info */}
                                     {!isEditing && (
