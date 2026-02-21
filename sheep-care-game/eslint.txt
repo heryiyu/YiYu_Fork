@@ -1,0 +1,262 @@
+﻿
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\App.jsx
+  24:55  error  'isAdmin' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  37:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  35 |   // Reset state when user changes
+  36 |   useEffect(() => {
+> 37 |     setSelectedSheepId(null);
+     |     ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |     setSelectedPlanId(null);
+  39 |     setShowGuide(false);
+  40 |     setShowSettings(false);  react-hooks/set-state-in-effect
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\auth\Login.jsx
+  16:62  error  'isInClient' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u    no-unused-vars
+  27:12  error  'adminPass' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+  27:23  error  'setAdminPass' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\auth\UserProfile.jsx
+  14:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  12 |     // Sync local state with global
+  13 |     useEffect(() => {
+> 14 |         if (nickname) setName(nickname);
+     |                       ^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     }, [nickname]);
+  16 |
+  17 |     const wrapperRef = useRef(null);  react-hooks/set-state-in-effect
+  49:8   warning  React Hook useEffect has a missing dependency: 'handleSave'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\AssetBackground.jsx
+  3:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\AssetPreloader.jsx
+  25:42  error  'reject' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\AssetSheep.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  32:5   error  'scale' is assigned a value but never used                                     no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\Guide.jsx
+    1:27  error  'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u       no-unused-vars
+    4:10  error  'useGameState' is defined but never used. Allowed unused vars must match /^[A-Z_]/u    no-unused-vars
+    4:24  error  'useGameActions' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+    7:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u          no-unused-vars
+  135:17  error  Unexpected lexical declaration in case block                                           no-case-declarations
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\SevenStepsMap.jsx
+  105:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  103 |
+  104 |     useEffect(() => {
+> 105 |         setVisible(true);
+      |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  106 |     }, []);
+  107 |
+  108 |     useEffect(() => {                                                                                                                react-hooks/set-state-in-effect
+  109:26  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  107 |
+  108 |     useEffect(() => {
+> 109 |         if (!isExpanded) setVideoModalOpen(false);
+      |                          ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  110 |     }, [isExpanded]);
+  111 |
+  112 |     /* At 480px and below, expanded map uses collapsed viewBox/sizing */  react-hooks/set-state-in-effect
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\Sheep.jsx
+   6:43  error    'onPray' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  82:8   warning  React Hook React.useMemo has a missing dependency: 'sheep'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  82:62  error    Error: Expected the dependency list to be an array of simple expressions (e.g. `x`, `x.y.z`, `x?.y?.z`)
+
+Expected the dependency list to be an array of simple expressions (e.g. `x`, `x.y.z`, `x?.y?.z`).
+
+  80 |             };
+  81 |         }
+> 82 |     }, [sheep.x, bottomPos, depthScale, zIdx, containerSize, isSleeping(sheep)]);
+     |                                                              ^^^^^^^^^^^^^^^^^ Expected the dependency list to be an array of simple expressions (e.g. `x`, `x.y.z`, `x?.y?.z`)
+  83 |
+  84 |     return (
+  85 |         <div  react-hooks/use-memo
+  82:62  warning  React Hook React.useMemo has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\SheepList.jsx
+  119:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  117 |     useEffect(() => {
+  118 |         if (focusedSheepId) {
+> 119 |             setIsCollapsed(true);
+      |             ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  120 |         }
+  121 |     }, [focusedSheepId]);
+  122 |  react-hooks/set-state-in-effect
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\SheepListTextView.jsx
+  8:5  error  'isSelectionMode' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\game\SheepListToolbar.jsx
+  29:5  error  'filterStatus' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\AddSheepModal.jsx
+    6:10  error  'generateVisuals' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+   37:11  error  'selectedAccessory' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+   48:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  46 |             // But now we just want "Level".
+  47 |             const { level } = parseMaturity(editingSheep.spiritualMaturity);
+> 48 |             setSpiritualMaturity(level);
+     |             ^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  49 |         }
+  50 |     }, [editingSheep]);
+  51 |  react-hooks/set-state-in-effect
+  114:11  error  'hasVisualChanges' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\BatchAddScheduleModal.jsx
+   3:10  error  'supabase' is defined but never used. Allowed unused vars must match /^[A-Z_]/u         no-unused-vars
+  17:20  error  'lineId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\PlanDetailModal.jsx
+  12:9  error  'currentUser' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  13:9  error  'lineId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u       no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\ScheduleListModal.jsx
+   8:10  error    'generateGoogleCalendarUrl' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                     no-unused-vars
+  30:46  error    'onSelectSheep' is defined but never used                                                                            no-unused-vars
+  62:8   warning  React Hook useEffect has a missing dependency: 'loadSchedules'. Either include it or remove the dependency array     react-hooks/exhaustive-deps
+  72:8   warning  React Hook useEffect has a missing dependency: 'selectedSchedule'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\SheepDetailModal.jsx
+    6:44  error    'calculateSheepState' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                    no-unused-vars
+   18:10  error    'generateGoogleCalendarUrl' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                              no-unused-vars
+   31:50  error    'deleteSheep' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                   no-unused-vars
+   32:9   error    'forceLoadFromCloud' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                            no-unused-vars
+   35:22  error    'lineId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                        no-unused-vars
+   37:11  error    'confirm' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                       no-unused-vars
+  137:8   warning  React Hook useEffect has missing dependencies: 'fetchPlans' and 'target'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  182:13  error    'buttonText' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                    no-unused-vars
+  274:11  error    'toggleFeedbackTag' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                             no-unused-vars
+  286:11  error    'formatDisplayTime' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                             no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\SheepDetailPlan.jsx
+  10:5  error  'openCompletePlan' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\modals\SheepDetailSettings.jsx
+   9:22  error    'sheepId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+  11:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   9 | const TagSelect = ({ sheepId, tags, assignedIds, onSave }) => {
+  10 |     const [orderedIds, setOrderedIds] = useState(assignedIds);
+> 11 |     useEffect(() => { setOrderedIds(assignedIds || []); }, [(assignedIds || []).join(',')]);
+     |                       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |
+  13 |     const addTag = (tagId) => {
+  14 |         if (orderedIds.includes(tagId)) return;  react-hooks/set-state-in-effect
+  11:60  warning  React Hook useEffect has a missing dependency: 'assignedIds'. Either include it or remove the dependency array. If 'setOrderedIds' needs the current value of 'assignedIds', you can also switch to useReducer instead of useState and read 'assignedIds' in the reducer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  11:61  warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\ui\Controls.jsx
+  5:28  error  'onOpenList' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\ui\ErrorBoundary.jsx
+  10:37  error  'error' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\ui\Field.jsx
+   45:11  error    'livingSheep' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u               no-unused-vars
+   46:11  error    'sleepingSheep' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u             no-unused-vars
+   92:8   warning  React Hook useEffect has a missing dependency: 'sheep'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  138:11  error    'focusedSheep' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u              no-unused-vars
+  215:23  error    'e' is defined but never used                                                                             no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\components\ui\Portal.jsx
+  8:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   6 |
+   7 |     useEffect(() => {
+>  8 |         setMountNode(document.body);
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+   9 |     }, []);
+  10 |
+  11 |     return mountNode ? createPortal(children, mountNode) : null;  react-hooks/set-state-in-effect
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\context\ConfirmContext.jsx
+  8:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\context\GameContext.jsx
+  2:10  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\context\GameContext\GameProvider.jsx
+    5:37  error  'getSheepMessage' is defined but never used. Allowed unused vars must match /^[A-Z_]/u             no-unused-vars
+   40:12  error  'isAuthRestored' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+   40:28  error  'setIsAuthRestored' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  105:21  error  'hasNewSleepers' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars
+  152:20  error  'authResult' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u         no-unused-vars
+  806:81  error  'e' is defined but never used                                                                      no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\hooks\usePanGesture.js
+  37:23  error  'e' is defined but never used  no-unused-vars
+  40:26  error  'e' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\services\gameState.js
+  123:9   error  Unreachable code                                                                      no-unreachable
+  181:25  error  'plan' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\utils\SceneGenerator.js
+  45:19  error  'dy' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\utils\db.js
+  90:14  error  'e' is defined but never used  no-unused-vars
+
+C:\Antigravity\sheep_card\YiYu_Fork\sheep-care-game\src\utils\weatherService.js
+  68:34  error  'reject' is defined but never used  no-unused-vars
+
+??75 problems (66 errors, 9 warnings)
+

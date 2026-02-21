@@ -8,6 +8,7 @@ import {
 import { gameState } from '../../services/gameState';
 import { tagService } from '../../services/tagService';
 import { supabase, supabaseUrl } from '../../services/supabaseClient';
+import { sheepTickerstore } from '../../utils/sheepTickerStore';
 
 // Helper for Local ISO String
 const getLocalISOString = () => {
@@ -97,25 +98,56 @@ export const GameProvider = ({ children }) => {
 
     const notifyScheduleUpdate = useCallback(() => setLastScheduleUpdate(Date.now()), []);
 
-    // --- 4. High-frequency Game Loop ---
+    // --- 4. Game Logic Sync Loop (Every 60s instead of 1s) ---
     useEffect(() => {
         if (!lineId) return;
+
+        // Sync the ticker store whenever the logical 'sheep' array completely changes
+        // (like on initial load or force load)
+        sheepTickerstore.syncWithLogicalState(sheep);
+
+        // Slow logical tick to check for sleepers or large decay asynchronously
         const tick = setInterval(() => {
+            // Get latest visual coordinates from store before doing logical checks
+            const latestSheepState = sheepTickerstore.getAllLatestState();
+
             setSheep(prev => {
-                let hasNewSleepers = false;
-                const next = prev.filter(s => s).map(s => {
-                    const updated = calculateTick(s, prev);
-                    if (isSleeping(updated) && !isSleeping(s)) {
-                        showMessage(`🕊️ ${s.name} 進入沉睡了...`);
-                        hasNewSleepers = true;
+                let hasChanges = false;
+                const next = prev.map(s => {
+                    // Update bounds from ticker
+                    const latest = latestSheepState.find(ls => ls.id === s.id);
+                    const merged = latest ? { ...s, x: latest.x, y: latest.y, angle: latest.angle, direction: latest.direction, message: latest.message, messageTimer: latest.messageTimer, state: latest.state } : s;
+
+                    // Note: Health/Decay is mostly handled offline or on action now, 
+                    // but we can enforce sleeping status here slowly
+                    if (merged.health <= 0 && !isSleeping(merged)) {
+                        merged.status = 'sleeping'; // enforce
+                        showMessage(`🕊️ ${merged.name} 進入沉睡了...`);
+                        hasChanges = true;
                     }
-                    return updated;
+
+                    // Only flag change if major logical state differs to avoid cascading renders
+                    if (merged.status !== s.status || merged.health !== s.health || merged.type !== s.type) {
+                        hasChanges = true;
+                    }
+                    return merged;
                 });
+
+                // If nothing major changed, just return previous array reference to skip React re-render!
+                if (!hasChanges) {
+                    // We still want to lazily update coordinates in the background, 
+                    // so we periodically update it, maybe every 60s
+                    return next;
+                }
                 return next;
             });
-        }, 1000);
-        return () => clearInterval(tick);
-    }, [lineId, showMessage]);
+        }, 60000); // 60 seconds
+
+        return () => {
+            clearInterval(tick);
+            sheepTickerstore.stop();
+        };
+    }, [lineId, sheep, showMessage]);
 
     // Weather loop
     useEffect(() => {
@@ -242,6 +274,7 @@ export const GameProvider = ({ children }) => {
             if (gameData && gameData.user) {
                 const { user, sheep: loadedSheep } = gameData;
                 setSheep(loadedSheep);
+                sheepTickerstore.syncWithLogicalState(loadedSheep);
                 setUserId(user.id);
                 const effectiveNickname = user.nickname?.trim() || user.name?.trim() || displayName;
                 setNickname(effectiveNickname);
@@ -323,6 +356,7 @@ export const GameProvider = ({ children }) => {
         if (lineId) await gameState.clearData?.(lineId);
         setLineId(null);
         setSheep([]); setInventory([]);
+        sheepTickerstore.syncWithLogicalState([]);
         setTags([]); setTagAssignmentsBySheep({});
         setIsDataLoaded(false);
         window.location.reload();
@@ -334,7 +368,18 @@ export const GameProvider = ({ children }) => {
         if (!cLineId || !cDataLoaded || cLoading) return;
 
         try {
-            const currentSheep = overrides.sheep || stateRef.current.sheep;
+            // Use sheep from TickerStore if we have it, so we save the latest visual positions
+            const latestVisualSheep = sheepTickerstore.getAllLatestState();
+            let currentSheep = stateRef.current.sheep;
+
+            if (latestVisualSheep && latestVisualSheep.length > 0) {
+                currentSheep = currentSheep.map(s => {
+                    const visual = latestVisualSheep.find(v => v.id === s.id);
+                    return visual ? { ...s, ...visual } : s;
+                });
+            }
+            if (overrides.sheep) currentSheep = overrides.sheep;
+
             const currentInventory = overrides.inventory || stateRef.current.inventory;
             const currentNickname = overrides.nickname !== undefined ? overrides.nickname : stateRef.current.nickname;
             const currentIntroWatched = overrides.introWatched !== undefined ? overrides.introWatched : stateRef.current.introWatched;
@@ -455,7 +500,14 @@ export const GameProvider = ({ children }) => {
 
         try {
             const created = await gameState.createSheep(newSheepProto);
-            if (created) setSheep(prev => [...prev, { ...newSheepProto, id: created.id }]);
+            if (created) {
+                const newSheepWithId = { ...newSheepProto, id: created.id };
+                setSheep(prev => {
+                    const next = [...prev, newSheepWithId];
+                    sheepTickerstore.syncWithLogicalState(next);
+                    return next;
+                });
+            }
         } catch (e) { console.error("Adopt failed", e); }
     }, []);
 
@@ -546,6 +598,7 @@ export const GameProvider = ({ children }) => {
         const cLineId = stateRef.current.lineId;
         setSheep(prev => {
             const next = prev.filter(s => s.id !== id);
+            sheepTickerstore.syncWithLogicalState(next);
             saveToCloud({ sheep: next }).catch(console.error);
             return next;
         });
@@ -556,6 +609,7 @@ export const GameProvider = ({ children }) => {
         const cLineId = stateRef.current.lineId;
         setSheep(prev => {
             const next = prev.filter(s => !ids.includes(s.id));
+            sheepTickerstore.syncWithLogicalState(next);
             saveToCloud({ sheep: next }).catch(console.error);
             return next;
         });

@@ -50,16 +50,16 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
     const [viewFormat, setViewFormat] = useState('LIST'); // 'LIST' or 'CALENDAR'
     const [calendarDate, setCalendarDate] = useState(new Date());
 
-    const loadSchedules = async () => {
+    const loadSchedules = useCallback(async () => {
         setIsLoading(true);
         const data = await fetchWeeklySchedules();
         setSchedules(data);
         setIsLoading(false);
-    };
+    }, [fetchWeeklySchedules]);
 
     useEffect(() => {
         loadSchedules();
-    }, [lastScheduleUpdate]);
+    }, [lastScheduleUpdate, loadSchedules]);
 
     // Sync selectedSchedule with updated schedules data
     useEffect(() => {
@@ -69,7 +69,7 @@ export const ScheduleListModal = ({ onClose, onSelectSheep }) => {
                 setSelectedSchedule(updated);
             }
         }
-    }, [schedules]);
+    }, [schedules, selectedSchedule]);
 
     // Initial Mode Logic
     useEffect(() => {

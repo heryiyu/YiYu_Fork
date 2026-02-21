@@ -114,11 +114,13 @@ export const SheepList = ({ onSelect }) => {
     }, [sortedSheep, settings?.pinnedSheepIds, tags, tagAssignmentsBySheep]);
 
     // Effects
-    useEffect(() => {
+    const [prevFocusedSheepId, setPrevFocusedSheepId] = useState(focusedSheepId);
+    if (focusedSheepId !== prevFocusedSheepId) {
+        setPrevFocusedSheepId(focusedSheepId);
         if (focusedSheepId) {
             setIsCollapsed(true);
         }
-    }, [focusedSheepId]);
+    }
 
     useEffect(() => {
         const handleClickOutside = (e) => {

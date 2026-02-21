@@ -95,15 +95,8 @@ const useMediaQuery = (query) => {
 };
 
 export function SevenStepsMap() {
-    const [visible, setVisible] = useState(false);
+    const [visible, setVisible] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [selectedStep, setSelectedStep] = useState(null);
-    const [videoModalOpen, setVideoModalOpen] = useState(false);
-    const isCompactView = useMediaQuery('(max-width: 480px)');
-
-    useEffect(() => {
-        setVisible(true);
-    }, []);
 
     useEffect(() => {
         if (!isExpanded) setVideoModalOpen(false);
