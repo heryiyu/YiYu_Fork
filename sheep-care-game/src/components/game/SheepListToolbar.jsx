@@ -49,6 +49,39 @@ export const SheepListToolbar = ({
         updateSetting('isSheepListExpanded', !isExpanded);
     };
 
+    const searchBarEl = (
+        <div
+            ref={searchWrapRef}
+            className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
+            style={!isSelectionMode ? { opacity: isCollapsed ? 0.6 : 1 } : {}}
+        >
+            <input
+                ref={searchInputRef}
+                type="text"
+                className="dock-toolbar-search-input"
+                placeholder="搜尋..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => setIsSearchExpanded(true)}
+            />
+            {isSearchExpanded && (
+                <CloseButton
+                    className="dock-toolbar-search-clear"
+                    ariaLabel="清除並收起搜尋"
+                    variant="sm"
+                    onClick={() => {
+                        setSearchTerm('');
+                        setIsSearchExpanded(false);
+                        searchInputRef.current?.blur();
+                    }}
+                />
+            )}
+            <span className="dock-toolbar-search-icon" aria-hidden="true">
+                <Search size={16} strokeWidth={2.5} />
+            </span>
+        </div>
+    );
+
     return (
         <div
             className={`dock-child dock-toolbar ${isSearchExpanded ? 'dock-toolbar--search-expanded' : ''}`}
@@ -63,35 +96,7 @@ export const SheepListToolbar = ({
                     <>
                         <span className="dock-toolbar-label">已選取 {selectedIds.size}</span>
 
-                        <div
-                            ref={searchWrapRef}
-                            className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
-                        >
-                            <input
-                                ref={searchInputRef}
-                                type="text"
-                                className="dock-toolbar-search-input"
-                                placeholder="搜尋..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onFocus={() => setIsSearchExpanded(true)}
-                            />
-                            {isSearchExpanded && (
-                                <CloseButton
-                                    className="dock-toolbar-search-clear"
-                                    ariaLabel="清除並收起搜尋"
-                                    variant="sm"
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        setIsSearchExpanded(false);
-                                        searchInputRef.current?.blur();
-                                    }}
-                                />
-                            )}
-                            <span className="dock-toolbar-search-icon" aria-hidden="true">
-                                <Search size={16} strokeWidth={2.5} />
-                            </span>
-                        </div>
+                        {searchBarEl}
 
                         <Tooltip content={selectedIds.size === sortedSheep.length && sortedSheep.length > 0 ? '取消全選' : '全選'} side="bottom">
                             <button
@@ -210,36 +215,7 @@ export const SheepListToolbar = ({
 
                         <div className="dock-toolbar-divider" />
 
-                        <div
-                            ref={searchWrapRef}
-                            className={`dock-toolbar-search-wrap ${isSearchExpanded ? 'dock-toolbar-search-wrap--expanded' : ''}`}
-                            style={{ opacity: isCollapsed ? 0.6 : 1 }}
-                        >
-                            <input
-                                ref={searchInputRef}
-                                type="text"
-                                className="dock-toolbar-search-input"
-                                placeholder="搜尋..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onFocus={() => setIsSearchExpanded(true)}
-                            />
-                            {isSearchExpanded && (
-                                <CloseButton
-                                    className="dock-toolbar-search-clear"
-                                    ariaLabel="清除並收起搜尋"
-                                    variant="sm"
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        setIsSearchExpanded(false);
-                                        searchInputRef.current?.blur();
-                                    }}
-                                />
-                            )}
-                            <span className="dock-toolbar-search-icon" aria-hidden="true">
-                                <Search size={16} strokeWidth={2.5} />
-                            </span>
-                        </div>
+                        {searchBarEl}
 
                         <div className="dock-toolbar-divider" />
 

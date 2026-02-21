@@ -5,6 +5,7 @@ import { CloseButton } from '../ui/CloseButton';
 import { Portal } from '../ui/Portal';
 import { AssetSheep } from '../game/AssetSheep';
 import { Checkbox } from '../ui/Checkbox';
+import { ScheduleFormFields } from './ScheduleFormFields';
 import { Search, Calendar, MapPin, Clock, X } from 'lucide-react';
 import '../../styles/design-tokens.css';
 
@@ -22,8 +23,8 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
 
     // Form State
     const [formData, setFormData] = useState({
-        action: '',
-        time: initialDate ? new Date(initialDate.getTime() - (initialDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : '',
+        title: '',
+        scheduled_time: initialDate ? new Date(initialDate.getTime() - (initialDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : '',
         location: '',
         content: '',
         reminderOffset: 15,
@@ -54,14 +55,14 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
     const { addSchedule } = useGame();
 
     const handleSubmit = async () => {
-        if (!formData.action || !formData.time) {
+        if (!formData.title || !formData.scheduled_time) {
             alert('請輸入行動名稱與時間');
             return;
         }
 
         setIsSubmitting(true);
         try {
-            const dateObj = new Date(formData.time);
+            const dateObj = new Date(formData.scheduled_time);
             const scheduledTime = dateObj.toISOString();
             let notifyAt = null;
 
@@ -71,7 +72,7 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
             }
 
             const scheduleData = {
-                title: formData.action,
+                title: formData.title,
                 scheduled_time: scheduledTime,
                 location: formData.location,
                 content: formData.content,
@@ -174,59 +175,7 @@ export const BatchAddScheduleModal = ({ onClose, onSaved, initialDate }) => {
                                 <div className="modal-hint" style={{ marginBottom: '16px' }}>
                                     已選擇 {selectedSheepIds.size} 隻小羊加入此規劃
                                 </div>
-
-                                <div className="form-group">
-                                    <label>📝 行動名稱</label>
-                                    <input
-                                        type="text"
-                                        value={formData.action}
-                                        onChange={(e) => setFormData({ ...formData, action: e.target.value })}
-                                        placeholder="例如：晨禱、小組聚會..."
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>📅 時間</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={formData.time}
-                                        onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>⏰ 提醒</label>
-                                    <select
-                                        value={formData.reminderOffset}
-                                        onChange={(e) => setFormData({ ...formData, reminderOffset: Number(e.target.value) })}
-                                    >
-                                        <option value={-1}>🔕 不提醒</option>
-                                        <option value={0}>⚡ 準時提醒</option>
-                                        <option value={15}>🔔 提前 15 分鐘</option>
-                                        <option value={30}>🔔 提前 30 分鐘</option>
-                                        <option value={60}>🔔 提前 1 小時</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>📍 地點</label>
-                                    <input
-                                        type="text"
-                                        value={formData.location}
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        placeholder="選填"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>📋 備註內容</label>
-                                    <textarea
-                                        value={formData.content}
-                                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                        rows={3}
-                                        placeholder="選填"
-                                    />
-                                </div>
+                                <ScheduleFormFields formData={formData} setFormData={setFormData} />
                             </div>
                         )}
                     </div>

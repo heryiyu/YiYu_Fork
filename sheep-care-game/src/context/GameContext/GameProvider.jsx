@@ -9,6 +9,7 @@ import { gameState } from '../../services/gameState';
 import { tagService } from '../../services/tagService';
 import { supabase, supabaseUrl } from '../../services/supabaseClient';
 import { sheepTickerstore } from '../../utils/sheepTickerStore';
+import { skinManagerService } from '../../services/skinManagerService';
 
 // Helper for Local ISO String
 const getLocalISOString = () => {
@@ -262,7 +263,8 @@ export const GameProvider = ({ children }) => {
                     })(),
                     gameState.loadGame(lineIdVal, { displayName, pictureUrl }),
                     tagService.loadTags(lineIdVal),
-                    tagService.loadTagAssignments(lineIdVal)
+                    tagService.loadTagAssignments(lineIdVal),
+                    skinManagerService.loadManifest()
                 ]),
                 timeoutPromise
             ]);
@@ -801,50 +803,6 @@ export const GameProvider = ({ children }) => {
         } catch (error) { console.error("Failed to remove participant:", error); return false; }
     }, [notifyScheduleUpdate]);
 
-    const cleanupDuplicateSchedules = useCallback(async () => {
-        const cUserId = stateRef.current.userId;
-        if (!cUserId) return;
-        showMessage("🧹 正在清理重複行程...");
-        try {
-            const { data: schedules, error } = await supabase.from('schedules').select('id, action, scheduled_time, created_at')
-                .eq('created_by', cUserId).order('scheduled_time', { ascending: true });
-            if (error) throw error;
-            const groups = {};
-            schedules.forEach(s => {
-                const key = `${s.action}|${s.scheduled_time}`;
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(s);
-            });
-            let deletedCount = 0;
-            for (const key in groups) {
-                const group = groups[key];
-                if (group.length > 1) {
-                    group.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                    const master = group[0];
-                    const duplicates = group.slice(1);
-                    for (const dup of duplicates) {
-                        const { data: parts } = await supabase.from('schedule_participants').select('*').eq('schedule_id', dup.id);
-                        if (parts && parts.length > 0) {
-                            for (const p of parts) {
-                                const { data: existing } = await supabase.from('schedule_participants').select('id')
-                                    .eq('schedule_id', master.id).eq('sheep_id', p.sheep_id);
-                                if (!existing || existing.length === 0) {
-                                    await supabase.from('schedule_participants').update({ schedule_id: master.id }).eq('id', p.id);
-                                } else {
-                                    await supabase.from('schedule_participants').delete().eq('id', p.id);
-                                }
-                            }
-                        }
-                        await supabase.from('schedules').delete().eq('id', dup.id);
-                        deletedCount++;
-                    }
-                }
-            }
-            showMessage(deletedCount > 0 ? `✅ 清理完成，移除了 ${deletedCount} 個重複行程` : "✅ 行程檢查完畢，沒有發現重複項");
-            notifyScheduleUpdate();
-        } catch (e) { console.error("Cleanup failed", e); showMessage("❌ 清理失敗"); }
-    }, [showMessage, notifyScheduleUpdate]);
-
     const fetchWeeklySchedules = useCallback(async () => {
         const cUserId = stateRef.current.userId;
         if (!cUserId) return [];
@@ -961,8 +919,7 @@ export const GameProvider = ({ children }) => {
         saveToCloud, forceLoadFromCloud, toggleNotification, updateNickname, markIntroWatched,
         updateSetting, setWeather, loadTags, createTag, updateTag, deleteTag, setSheepTags,
         fetchWeeklySchedules, notifyScheduleUpdate, findSheep, clearFocus, updatePlanFeedback,
-        addSchedule, updateSchedule, deleteSchedule, addParticipantToSchedule, removeParticipantFromSchedule,
-        cleanupDuplicateSchedules
+        addSchedule, updateSchedule, deleteSchedule, addParticipantToSchedule, removeParticipantFromSchedule
     }), [
         updateUserLocation, adoptSheep, updateSheep, updateMultipleSheep, togglePin,
         loginWithLine, loginAsAdmin, logout, prayForSheep, completePlan, deleteSheep,
@@ -970,8 +927,7 @@ export const GameProvider = ({ children }) => {
         updateNickname, markIntroWatched, updateSetting, loadTags, createTag,
         updateTag, deleteTag, setSheepTags, fetchWeeklySchedules, notifyScheduleUpdate,
         findSheep, clearFocus, updatePlanFeedback, addSchedule, updateSchedule,
-        deleteSchedule, addParticipantToSchedule, removeParticipantFromSchedule,
-        cleanupDuplicateSchedules
+        deleteSchedule, addParticipantToSchedule, removeParticipantFromSchedule
     ]);
 
     const auth = useMemo(() => ({

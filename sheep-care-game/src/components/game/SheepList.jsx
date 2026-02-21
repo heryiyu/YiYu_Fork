@@ -133,6 +133,17 @@ export const SheepList = ({ onSelect }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Global Event Listener for "Edit Appearance"
+    useEffect(() => {
+        const handleOpenEdit = (e) => {
+            if (e.detail && e.detail.sheep) {
+                setEditingSheep(e.detail.sheep);
+            }
+        };
+        window.addEventListener('open-edit-sheep-modal', handleOpenEdit);
+        return () => window.removeEventListener('open-edit-sheep-modal', handleOpenEdit);
+    }, []);
+
     useEffect(() => {
         const pendingId = pendingPinIdRef.current;
         if (!pendingId || lastPinActionRef.current !== 'pin') return;
@@ -451,7 +462,7 @@ export const SheepList = ({ onSelect }) => {
                 )}
 
                 {editingSheep && (
-                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 'var(--z-modal-base)', pointerEvents: 'auto' }}>
+                    <div className="dock-child" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, pointerEvents: 'auto' }}>
                         <AddSheepModal
                             editingSheep={editingSheep}
                             onConfirm={(updatedData) => {

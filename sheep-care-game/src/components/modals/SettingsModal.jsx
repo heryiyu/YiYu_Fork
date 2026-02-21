@@ -9,7 +9,7 @@ import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const SettingsModal = ({ onClose }) => {
     const { tags } = useGameState();
-    const { updateSetting, cleanupDuplicateSchedules } = useGameActions();
+    const { updateSetting } = useGameActions();
     const { settings } = useUserAuth();
     const closeBtnRef = useRef(null);
     const isMobile = useIsMobile();
@@ -176,40 +176,6 @@ export const SettingsModal = ({ onClose }) => {
                                     <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🐑</div>
                                     <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>小羊牧場</h4>
                                     <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>版本 v1.0.1 (Beta)</p>
-                                </div>
-
-                                <h4 style={{ fontSize: '1rem', marginBottom: '10px' }}>🛠️ 系統維護</h4>
-                                <div style={{
-                                    background: 'var(--bg-content-subtle)',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    border: '1px solid var(--border-subtle)'
-                                }}>
-                                    <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                        若您遇到畫面顯示異常、資料未更新或功能無法使用，可能是因為您的裝置使用了舊的快取檔案。
-                                    </p>
-                                    <button
-                                        className="modal-btn-secondary"
-                                        style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                        onClick={() => window.location.reload(true)}
-                                    >
-                                        <span>🔄</span>
-                                        <span>強制重新載入 (Clear Cache)</span>
-                                    </button>
-
-                                    <div style={{ height: '8px' }}></div>
-                                    <button
-                                        className="modal-btn-secondary"
-                                        style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-muted)' }}
-                                        onClick={() => {
-                                            if (window.confirm('確定要執行重複行程檢查嗎？這將會合併相同時間與名稱的行程。')) {
-                                                cleanupDuplicateSchedules();
-                                            }
-                                        }}
-                                    >
-                                        <span>🧹</span>
-                                        <span>檢查併清理重複行程</span>
-                                    </button>
                                 </div>
 
                                 <div style={{ marginTop: '20px', fontSize: '0.85rem', color: 'var(--text-muted-light)', textAlign: 'center' }}>
