@@ -8,7 +8,9 @@ export const SheepListTextView = ({
     isSelectionMode,
     tags = [],
     tagAssignmentsBySheep = {},
-    isLiteMode = true
+    isLiteMode = true,
+    onToggleAll,
+    isAllSelected
 }) => {
     if (!sheepList || sheepList.length === 0) {
         return (
@@ -22,7 +24,14 @@ export const SheepListTextView = ({
 
     return (
         <div className={containerClass}>
-            <div className="sheep-lite-header">
+            <div className={`sheep-lite-header ${isSelectionMode ? 'is-selection-mode' : ''}`}>
+                {isSelectionMode && (
+                    <div className="lite-col-checkbox" onClick={onToggleAll}>
+                        <div className={`lite-checkbox ${isAllSelected ? 'checked' : ''}`}>
+                            {isAllSelected && <span>✓</span>}
+                        </div>
+                    </div>
+                )}
                 <div className="lite-col-name">名字</div>
                 <div className="lite-col-maturity">靈程</div>
                 {isLiteMode ? (

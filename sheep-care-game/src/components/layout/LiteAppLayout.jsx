@@ -126,6 +126,16 @@ export const LiteAppLayout = ({
         setIsSelectionMode(false);
     };
 
+    const isAllSelected = filteredSheep.length > 0 && selectedIds.size === filteredSheep.length;
+
+    const handleToggleAll = () => {
+        if (isAllSelected) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredSheep.map(s => s.id)));
+        }
+    };
+
     const handleSignOut = () => {
         if (window.confirm('確定要登出嗎？')) {
             signOut();
@@ -272,7 +282,7 @@ export const LiteAppLayout = ({
                                     }}
                                 >
                                     <CheckSquare size={14} style={{ marginRight: '6px' }} />
-                                    管理
+                                    選取
                                 </button>
                                 <button className="lite-action-btn" onClick={() => setShowTagManagerModal(true)}>
                                     標籤管理
@@ -320,6 +330,8 @@ export const LiteAppLayout = ({
                                 tags={tags}
                                 tagAssignmentsBySheep={tagAssignmentsBySheep}
                                 isLiteMode={true}
+                                onToggleAll={handleToggleAll}
+                                isAllSelected={isAllSelected}
                             />
                         </div>
                     </>
