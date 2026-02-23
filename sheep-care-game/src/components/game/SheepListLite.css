@@ -304,7 +304,9 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
-    .sheep-list-lite-container {
+
+    .is-lite-mode.sheep-list-lite-container,
+    .is-game-mode.sheep-list-lite-container {
         margin: 0;
         border-radius: 0;
         border-left: none;
@@ -314,29 +316,25 @@
         -webkit-overflow-scrolling: touch;
     }
 
+    .is-lite-mode .sheep-lite-body,
+    .is-game-mode .sheep-lite-body {
+        overflow-x: visible;
+        /* Prevent inner clip so sticky works */
+    }
+
     .sheep-lite-header,
     .sheep-lite-row {
         width: max-content;
         min-width: 100%;
         padding: 10px 12px;
-    }
-
-    .sheep-lite-header {
-        padding: 10px 12px;
-        font-size: 0.8rem;
-    }
-
-    .sheep-lite-row {
-        padding: 12px 12px;
-        font-size: 0.85rem;
+        position: relative;
     }
 
     .lite-col-checkbox,
     .lite-col-name {
         position: sticky;
-        z-index: 5;
-        background: #ffffff;
-        /* Default background for row */
+        z-index: 10;
+        background-color: #ffffff !important;
     }
 
     .lite-col-checkbox {
@@ -346,39 +344,45 @@
     }
 
     .lite-col-name {
-        left: 40px;
+        left: 0;
         flex: 0 0 100px;
         padding-right: 12px;
-        box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.1);
     }
 
-    /* Solid backgrounds to cover content during scroll */
-    .is-lite-mode .sheep-lite-row:nth-child(even) .lite-col-checkbox,
-    .is-lite-mode .sheep-lite-row:nth-child(even) .lite-col-name {
-        background: #f8f9fa;
+    /* Shift name if checkbox is present */
+    .is-selection-mode .lite-col-name {
+        left: 40px;
+        box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.15);
     }
 
+    /* Background overrides for different modes and stripes */
     .is-lite-mode .sheep-lite-header .lite-col-checkbox,
     .is-lite-mode .sheep-lite-header .lite-col-name {
-        background: #f8f9fa;
+        background-color: #f8f9fa !important;
+    }
+
+    .is-lite-mode .sheep-lite-body .sheep-lite-row:nth-child(even) .lite-col-checkbox,
+    .is-lite-mode .sheep-lite-body .sheep-lite-row:nth-child(even) .lite-col-name {
+        background-color: #f8f9fa !important;
     }
 
     .is-game-mode .sheep-lite-header .lite-col-checkbox,
     .is-game-mode .sheep-lite-header .lite-col-name {
-        background: #F9F3E8;
+        background-color: #F9F3E8 !important;
     }
 
-    .sheep-lite-header :not(.lite-col-checkbox)+.lite-col-name,
-    .sheep-lite-row :not(.lite-col-checkbox)+.lite-col-name {
-        left: 0;
+    .is-game-mode .sheep-lite-body .sheep-lite-row .lite-col-checkbox,
+    .is-game-mode .sheep-lite-body .sheep-lite-row .lite-col-name {
+        background-color: #ffffff !important;
     }
 
     .lite-col-health {
-        flex: 0 0 100px;
+        flex: 0 0 90px;
+        padding: 0 8px;
     }
 
     .lite-col-pray {
-        flex: 0 0 75px;
+        flex: 0 0 85px;
         font-size: 0.75rem;
     }
 
@@ -393,11 +397,9 @@
     }
 
     .lite-status-tag {
-        font-size: 0.6rem;
-        padding: 1px 4px;
-        max-width: 45px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        opacity: 0.75;
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        max-width: none;
+        opacity: 1;
     }
 }
