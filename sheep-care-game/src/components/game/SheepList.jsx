@@ -13,7 +13,7 @@ import { SheepListTextView } from './SheepListTextView';
 
 const TAG_FILTER_PREFIX = 'TAG:';
 
-export const SheepList = ({ onSelect }) => {
+export const SheepList = ({ onSelect, forcedViewMode }) => {
     const {
         sheep,
         tags,
@@ -33,6 +33,10 @@ export const SheepList = ({ onSelect }) => {
 
     const { settings } = useUserAuth();
     const confirm = useConfirm();
+
+    // Determine actual view mode
+    const activeViewMode = forcedViewMode || settings?.sheepListViewMode || 'card';
+    const isForcedExpand = forcedViewMode === 'text';
 
     // State
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -117,7 +121,7 @@ export const SheepList = ({ onSelect }) => {
     const [prevFocusedSheepId, setPrevFocusedSheepId] = useState(focusedSheepId);
     if (focusedSheepId !== prevFocusedSheepId) {
         setPrevFocusedSheepId(focusedSheepId);
-        if (focusedSheepId) {
+        if (focusedSheepId && !isForcedExpand) {
             setIsCollapsed(true);
         }
     }
@@ -273,18 +277,29 @@ export const SheepList = ({ onSelect }) => {
     };
 
     const handleToolbarClick = () => {
+        if (isForcedExpand) return; // Disable collapsing in forced mode
         if (isCollapsed) setIsCollapsed(false);
         else setIsCollapsed(true);
     };
 
     const handleOverlayClick = (e) => {
+        if (isForcedExpand) return;
         e.stopPropagation();
         setIsCollapsed(true);
     };
 
+    // Calculate height
+    const isExpanded = isForcedExpand || settings?.isSheepListExpanded;
+    let listHeight = isCollapsed && !isForcedExpand ? '0px' : (isExpanded ? 'calc(100vh - 56px)' : 'clamp(180px, 25vh, 260px)');
+
+    // In full lite mode, the dock group itself shouldn't restrict height transitions down
+    if (isForcedExpand) {
+        listHeight = '100dvh'; // Take whole screen behind header
+    }
+
     return (
         <>
-            {!isCollapsed && (
+            {!isCollapsed && !isForcedExpand && (
                 <div
                     className="drawer-overlay"
                     onClick={handleOverlayClick}
@@ -299,10 +314,13 @@ export const SheepList = ({ onSelect }) => {
                 />
             )}
 
-            <div className="sheep-list-container" style={{
-                position: 'absolute', bottom: 0, left: 0, width: '100vw',
-                height: 'auto',
-                zIndex: 'var(--z-dock-layer)',
+            <div className={`sheep-list-container ${isForcedExpand ? 'sheep-list-forced-full' : ''}`} style={{
+                position: isForcedExpand ? 'fixed' : 'absolute',
+                bottom: 0, left: 0, width: '100vw',
+                height: isForcedExpand ? '100dvh' : 'auto',
+                top: isForcedExpand ? 0 : 'auto',
+                paddingTop: isForcedExpand ? '90px' : 0, // Padding for top header
+                zIndex: isForcedExpand ? 'var(--z-dock-layer) - 1' : 'var(--z-dock-layer)',
                 display: 'flex', flexDirection: 'column',
                 pointerEvents: 'none',
                 transition: 'transform 0.3s ease, height 0.3s ease'
@@ -312,6 +330,12 @@ export const SheepList = ({ onSelect }) => {
                     .list-content-wrapper {
                         transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
                         overflow: hidden;
+                    }
+                    .sheep-list-forced-full .sheep-dock-group {
+                        height: 100%;
+                        border-radius: 0;
+                        box-shadow: none;
+                        background: var(--bg-body, #F0EBDF); /* So it replaces the sky */
                     }
                 `}</style>
 
@@ -330,7 +354,7 @@ export const SheepList = ({ onSelect }) => {
                         handleDeleteSelected={handleDeleteSelected}
                         handleResetSelected={handleResetSelected}
                         setShowAddModal={setShowAddModal}
-                        isCollapsed={isCollapsed}
+                        isCollapsed={isCollapsed && !isForcedExpand}
                         handleToolbarClick={handleToolbarClick}
                         sortedSheep={sortedSheep}
                         tags={tags}
@@ -345,18 +369,21 @@ export const SheepList = ({ onSelect }) => {
                         toggleFilterVisibility={toggleFilterVisibility}
                         setShowTagManagerModal={setShowTagManagerModal}
                         effectiveFilterStatus={effectiveFilterStatus}
+                        isForcedExpand={isForcedExpand}
                     />
 
                     <div
-                        className={`list-content-wrapper ${settings?.isSheepListExpanded ? 'list-content-wrapper--expanded' : ''}`}
+                        className={`list-content-wrapper ${isExpanded ? 'list-content-wrapper--expanded' : ''}`}
                         style={{
-                            height: isCollapsed ? '0px' : (settings?.isSheepListExpanded ? 'calc(100vh - 56px)' : 'clamp(180px, 25vh, 260px)'),
-                            opacity: isCollapsed ? 0 : 1,
+                            height: listHeight,
+                            flex: isForcedExpand ? 1 : 'none',
+                            opacity: isCollapsed && !isForcedExpand ? 0 : 1,
                             display: 'flex', flexDirection: 'column',
-                            pointerEvents: isCollapsed ? 'none' : 'auto'
+                            pointerEvents: (isCollapsed && !isForcedExpand) ? 'none' : 'auto',
+                            paddingBottom: isForcedExpand ? 'env(safe-area-inset-bottom, 20px)' : '0'
                         }}
                     >
-                        {settings?.sheepListViewMode === 'text' ? (
+                        {activeViewMode === 'text' ? (
                             <SheepListTextView
                                 sheepList={filteredSheep}
                                 selectedIds={selectedIds}
@@ -369,6 +396,8 @@ export const SheepList = ({ onSelect }) => {
                                     }
                                 }}
                                 isSelectionMode={isSelectionMode}
+                                tagAssignmentsBySheep={tagAssignmentsBySheep}
+                                isLiteMode={false}
                             />
                         ) : (
                             <div

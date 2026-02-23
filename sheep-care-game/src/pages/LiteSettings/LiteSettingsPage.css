@@ -1,0 +1,113 @@
+/* LiteSettingsPage.css */
+.lite-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: #fdfdfd;
+}
+
+.lite-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-subtle, #dee2e6);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.lite-page-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: var(--palette-blue-action, #5385db);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 120px;
+}
+
+.lite-page-back-btn:hover {
+    background: rgba(83, 133, 219, 0.08);
+}
+
+.lite-page-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #343a40;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+.lite-page-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.lite-page-card {
+    width: 100%;
+    max-width: 600px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    padding: 24px;
+}
+
+/* Inherit/override modal styles for the dashboard feel */
+.lite-settings-page .modal-tabs {
+    margin-bottom: 24px;
+}
+
+.lite-settings-page .modal-scroll {
+    overflow-y: visible;
+}
+
+.lite-settings-page .modal-content {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .lite-page-header {
+        padding: 12px 16px;
+    }
+
+    .lite-page-content {
+        padding: 16px;
+    }
+
+    .lite-page-card {
+        padding: 16px;
+        border: none;
+        box-shadow: none;
+    }
+}

@@ -1,0 +1,20 @@
+.lite-schedule-page {
+    animation: slideInUp 0.3s ease-out forwards;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-app);
+}
+
+.lite-schedule-page .schedule-content {
+    background: transparent !important;
+}
+
+.lite-schedule-page .modal-header {
+    background: transparent;
+    padding-top: max(env(safe-area-inset-top), 16px);
+}
+
+.lite-schedule-page .modal-content {
+    background: transparent;
+}

@@ -1,0 +1,356 @@
+/* 
+ * SheepListLite.css
+ * 簡約管理模式 (Text-Only Mode) 專用的現代化清理樣式表
+ * - 移除厚重陰影與大量圓角，改為簡潔的管理列表 (Dashboard / Web App 風格)
+ * - 優化了桌面版的高效閱讀與手機版的彈性適配
+ */
+
+.is-lite-mode.sheep-list-lite-container {
+    background: rgba(254, 254, 254, 0.95);
+    border-radius: 12px;
+    margin: 0 16px;
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+    border-bottom: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+
+.is-game-mode.sheep-list-lite-container {
+    background: #FFFFFF;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+.sheep-list-lite-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.list-content-wrapper--expanded .sheep-list-lite-container {
+    margin: 0;
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
+}
+
+.is-lite-mode .sheep-lite-header {
+    background: #f8f9fa;
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.is-game-mode .sheep-lite-header {
+    background: #F9F3E8;
+    color: #8D6E63;
+    border-bottom: 1px solid #F3EDE4;
+    border-radius: 0;
+    text-shadow: none;
+}
+
+.sheep-lite-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.sheep-lite-header.is-selection-mode .lite-col-checkbox {
+    cursor: pointer;
+}
+
+.is-lite-mode .sheep-lite-body {
+    background: #ffffff;
+}
+
+.is-game-mode .sheep-lite-body {
+    background: #ffffff;
+    padding: 0;
+}
+
+.sheep-lite-body {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd transparent;
+}
+
+.is-lite-mode .sheep-lite-row {
+    color: #212529;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.is-game-mode .sheep-lite-row {
+    color: #7B5B33;
+    border-bottom: 1px solid #F3EDE4;
+    background: transparent;
+}
+
+.is-game-mode .sheep-lite-row:hover {
+    background: #FDFBF7;
+}
+
+.is-game-mode .sheep-lite-row.is-selected {
+    background: #FFF8EB;
+}
+
+.sheep-lite-row {
+    display: flex;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, padding-left 0.2s ease;
+    align-items: center;
+}
+
+.sheep-lite-row:last-child {
+    border-bottom: none;
+}
+
+/* Hover effect specifically for devices that support hover (desktop) */
+@media (hover: hover) and (pointer: fine) {
+    .sheep-lite-row:hover {
+        background-color: #f8f9fa;
+        padding-left: 20px;
+        /* Slight indent indicator on hover */
+    }
+}
+
+/* Active state for both mobile and desktop upon pressing */
+.sheep-lite-row:active {
+    background-color: #e9ecef;
+}
+
+.sheep-lite-row.is-selected {
+    background-color: rgba(83, 133, 219, 0.08);
+    /* Thin vertical indicator line for selected state */
+    box-shadow: inset 4px 0 0 var(--palette-blue-action, #5385db);
+}
+
+/* Columns */
+.lite-col-name {
+    flex: 0 0 100px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #343a40;
+}
+
+.lite-col-checkbox {
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.lite-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #adb5bd;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: #fff;
+    cursor: pointer;
+}
+
+.lite-checkbox.checked {
+    background: var(--palette-blue-action, #5385db);
+    border-color: var(--palette-blue-action, #5385db);
+    color: #fff;
+    font-size: 12px;
+}
+
+.sheep-lite-row.is-selection-mode:hover {
+    padding-left: 16px;
+    /* No indent during selection mode to keep checkbox stable */
+}
+
+.is-game-mode .lite-col-name {
+    flex: 0 0 100px;
+    color: #7B5B33;
+    font-size: 0.95rem;
+}
+
+.is-game-mode .lite-col-maturity {
+    flex: 0 0 100px;
+    color: #7B5B33;
+    font-weight: normal;
+    text-align: left;
+}
+
+.is-game-mode .lite-col-needs {
+    flex: 1;
+    color: #7B5B33;
+}
+
+.is-game-mode .lite-text-muted {
+    color: #C7B9A3;
+    font-style: normal;
+    font-size: 0.95rem;
+}
+
+.lite-col-health {
+    flex: 0 0 80px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Cleaner health percentage visualization */
+.lite-health-indicator {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-right: 8px;
+    font-weight: 700;
+}
+
+.lite-health-heart {
+    color: var(--palette-pink-action, #ff7193);
+    font-size: 1.1em;
+}
+
+.lite-health-percent {
+    color: #495057;
+    font-size: 0.85rem;
+}
+
+.lite-status-tag {
+    /* removed margin-left: auto */
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+    /* Make it less prominent */
+}
+
+.lite-col-maturity {
+    flex: 0 0 60px;
+    text-align: left;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.lite-col-pray {
+    flex: 0 0 90px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--palette-sheep-brown, #8f7d67);
+    white-space: nowrap;
+}
+
+.lite-col-pray.is-sleeping {
+    color: #adb5bd;
+}
+
+.is-lite-mode .lite-col-needs {
+    color: #495057;
+}
+
+.is-game-mode .lite-col-needs {
+    color: var(--palette-sheep-brown);
+}
+
+.lite-col-needs {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 16px;
+}
+
+.pinned-indicator {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.lite-text-muted {
+    color: #adb5bd;
+    font-style: italic;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+/* WebKit Scrollbar Styling for Body */
+.sheep-lite-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sheep-lite-body::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 10px;
+}
+
+.sheep-lite-body::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .sheep-list-lite-container {
+        margin: 0;
+        border-radius: 0;
+        /* Thinner borders on mobile to maximize space */
+        border-left: none;
+        border-right: none;
+    }
+
+    .sheep-lite-header {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+
+    .sheep-lite-row {
+        padding: 12px 12px;
+        font-size: 0.85rem;
+    }
+
+    .lite-col-name {
+        flex: 0 0 90px;
+    }
+
+    .lite-col-health {
+        flex: 0 0 100px;
+    }
+
+    .lite-col-pray {
+        flex: 0 0 75px;
+        font-size: 0.75rem;
+    }
+
+    .lite-col-maturity {
+        /* Hide maturity on very small screens to save space, relies on health and note */
+        flex: 0 0 45px;
+        font-size: 0.8rem;
+    }
+
+    .lite-col-needs {
+        padding-left: 10px;
+    }
+
+    .lite-status-tag {
+        font-size: 0.6rem;
+        padding: 1px 4px;
+        max-width: 45px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 0.75;
+    }
+}

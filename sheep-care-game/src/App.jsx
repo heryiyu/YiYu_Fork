@@ -17,11 +17,12 @@ import './App.css';
 import { AssetPreloader } from './components/game/AssetPreloader';
 import { IntroVideo } from './components/game/IntroVideo';
 import { ScheduleListModal } from './components/modals/ScheduleListModal';
+import { LiteAppLayout } from './components/layout/LiteAppLayout';
 import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react';
 
 function App() {
   // Use specialized hooks to prevent unnecessary rerenders from high-frequency game state (like sheep movement)
-  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus } = useUserAuth();
+  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus, settings } = useUserAuth();
   const { toggleNotification, markIntroWatched } = useGameActions();
   const { message, weather, showIntroVideo } = useGameState();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
@@ -72,101 +73,103 @@ function App() {
 
 
   return (
-    <div className="game-container" key={currentUser} data-theme={weather?.timeStatus || 'day'}>
+    <div className={`game-container ${settings.liteMode ? 'lite-mode' : ''}`} key={currentUser} data-theme={weather?.timeStatus || 'day'}>
       <Toast key={message || 'toast'} message={message} />
 
-      {/* --- Unified Top Left Widget --- */}
-      <UserProfile />
+      {settings.liteMode ? (
+        <LiteAppLayout
+          onSelectSheep={handleSelectFromList}
+        />
+      ) : (
+        <>
+          {/* --- Unified Top Left Widget --- */}
+          <UserProfile />
 
-
-      {/* --- HUD: Top Right System Buttons (Lucide icons) --- */}
-      <div className="hud-right">
-        <Tooltip content="選單" side="bottom">
-          <button
-            className="hud-btn hud-menu-btn"
-            onClick={() => setIsHudMenuOpen((prev) => !prev)}
-            aria-expanded={isHudMenuOpen}
-            aria-haspopup="true"
-          >
-            <Menu size={18} strokeWidth={2.5} />
-          </button>
-        </Tooltip>
-
-        <div className={`hud-right-actions ${isHudMenuOpen ? 'hud-right-actions--open' : ''}`}>
-          {/* Bell */}
-          <div className="hud-tooltip-container">
-            <Tooltip content={notificationEnabled ? "關閉提醒" : "開啟提醒"} side="bottom">
+          {/* --- HUD: Top Right System Buttons (Lucide icons) --- */}
+          <div className="hud-right">
+            <Tooltip content="選單" side="bottom">
               <button
-                className="hud-btn"
-                style={{ background: notificationEnabled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)' }}
-                onClick={() => {
-                  toggleNotification();
-                  setIsHudMenuOpen(false);
-                }}
+                className="hud-btn hud-menu-btn"
+                onClick={() => setIsHudMenuOpen((prev) => !prev)}
+                aria-expanded={isHudMenuOpen}
+                aria-haspopup="true"
               >
-                {notificationEnabled ? <Bell size={18} strokeWidth={2.5} /> : <BellOff size={18} strokeWidth={2.5} />}
+                <Menu size={18} strokeWidth={2.5} />
               </button>
             </Tooltip>
-            <div className="hud-tooltip">
-              將會在以下時段提醒要認領禱告：{'\n'}
-              早上：8:00{'\n'}
-              中午：12:00{'\n'}
-              晚上：18:30
+
+            <div className={`hud-right-actions ${isHudMenuOpen ? 'hud-right-actions--open' : ''}`}>
+              {/* Bell */}
+              <div className="hud-tooltip-container">
+                <Tooltip content={notificationEnabled ? "關閉提醒" : "開啟提醒"} side="bottom">
+                  <button
+                    className="hud-btn"
+                    style={{ background: notificationEnabled ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)' }}
+                    onClick={() => {
+                      toggleNotification();
+                      setIsHudMenuOpen(false);
+                    }}
+                  >
+                    {notificationEnabled ? <Bell size={18} strokeWidth={2.5} /> : <BellOff size={18} strokeWidth={2.5} />}
+                  </button>
+                </Tooltip>
+                <div className="hud-tooltip">
+                  將會在以下時段提醒要認領禱告：{'\n'}
+                  早上：8:00{'\n'}
+                  中午：12:00{'\n'}
+                  晚上：18:30
+                </div>
+              </div>
+
+              {/* Guide */}
+              <Tooltip content="使用說明" side="bottom">
+                <button
+                  className="hud-btn"
+                  onClick={() => {
+                    setShowGuide(true);
+                    setIsHudMenuOpen(false);
+                  }}
+                >
+                  <BookOpen size={18} strokeWidth={2.5} />
+                </button>
+              </Tooltip>
+
+              {/* Schedule */}
+              <Tooltip content="牧羊人週記" side="bottom">
+                <button
+                  className="hud-btn"
+                  onClick={() => {
+                    setShowSchedule(true);
+                    setIsHudMenuOpen(false);
+                  }}
+                >
+                  <Calendar size={18} strokeWidth={2.5} />
+                </button>
+              </Tooltip>
+
+              {/* Display Settings (Sheep Count) */}
+              <Tooltip content="設定" side="bottom">
+                <button
+                  className="hud-btn"
+                  onClick={() => {
+                    setShowSettings(true);
+                    setIsHudMenuOpen(false);
+                  }}
+                >
+                  <Settings size={18} strokeWidth={2.5} />
+                </button>
+              </Tooltip>
+
             </div>
           </div>
 
-          {/* Guide */}
-          <Tooltip content="使用說明" side="bottom">
-            <button
-              className="hud-btn"
-              onClick={() => {
-                setShowGuide(true);
-                setIsHudMenuOpen(false);
-              }}
-            >
-              <BookOpen size={18} strokeWidth={2.5} />
-            </button>
-          </Tooltip>
+          <Field onSelectSheep={handleSelectSheep} />
 
-          {/* Schedule */}
-          <Tooltip content="牧羊人週記" side="bottom">
-            <button
-              className="hud-btn"
-              onClick={() => {
-                setShowSchedule(true);
-                setIsHudMenuOpen(false);
-              }}
-            >
-              <Calendar size={18} strokeWidth={2.5} />
-            </button>
-          </Tooltip>
+          <SheepList onSelect={handleSelectFromList} />
+        </>
+      )}
 
-          {/* Display Settings (Sheep Count) */}
-          <Tooltip content="設定" side="bottom">
-            <button
-              className="hud-btn"
-              onClick={() => {
-                setShowSettings(true);
-                setIsHudMenuOpen(false);
-              }}
-            >
-              <Settings size={18} strokeWidth={2.5} />
-            </button>
-          </Tooltip>
-
-        </div>
-      </div>
-
-      <Field onSelectSheep={handleSelectSheep} />
-
-
-
-      {/* Permanent Foreground Dock */}
-      <SheepList
-        onSelect={handleSelectFromList}
-      />
-
-      {selectedSheepId && (
+      {selectedSheepId && !settings.liteMode && (
         <SheepDetailModal
           selectedSheepId={selectedSheepId}
           initialPlanId={selectedPlanId}
@@ -177,11 +180,11 @@ function App() {
         />
       )}
 
-      {showGuide && (
+      {showGuide && !settings.liteMode && (
         <Guide onClose={() => setShowGuide(false)} />
       )}
 
-      {showSettings && (
+      {showSettings && !settings.liteMode && (
         <SettingsModal onClose={() => setShowSettings(false)} />
       )}
 

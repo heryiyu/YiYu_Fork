@@ -1,0 +1,614 @@
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, Users } from 'lucide-react';
+import { useGameState, useGameActions } from '../../context/GameContext/useGame';
+import { AssetSheep } from '../game/AssetSheep';
+import { BatchAddScheduleModal } from './BatchAddScheduleModal';
+import { PlanDetailModal } from './PlanDetailModal';
+import { MiniCalendar } from '../game/MiniCalendar';
+import { FeedbackForm } from '../game/FeedbackForm';
+import { FeedbackResult } from '../game/FeedbackResult';
+
+const DAYS = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+
+const getStartOfWeek = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    return new Date(d.setDate(diff));
+};
+
+const addDays = (date, days) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+};
+
+export const ScheduleListContent = ({ onClose }) => {
+    const { sheep, lastScheduleUpdate } = useGameState();
+    const {
+        fetchWeeklySchedules, completePlan,
+        updatePlanFeedback, notifyScheduleUpdate
+    } = useGameActions();
+
+    const [schedules, setSchedules] = useState([]);
+    const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(new Date()));
+    const [selectedDayIndex, setSelectedDayIndex] = useState(new Date().getDay()); // 0-6
+    const [isLoading, setIsLoading] = useState(true);
+    const [showBatchAdd, setShowBatchAdd] = useState(false);
+    const [selectedSchedule, setSelectedSchedule] = useState(null); // Track selected schedule for detail view
+    const [interactionMode, setInteractionMode] = useState('VIEW_PLAN'); // 'VIEW_PLAN', 'VIEW_RESULT', 'EDIT_RESULT'
+    const [completionTarget, setCompletionTarget] = useState(null);
+    const [completionData, setCompletionData] = useState({ note: '', tags: [] });
+    const [planActionLoading, setPlanActionLoading] = useState(false);
+
+    // Calendar View State
+    const [viewFormat, setViewFormat] = useState('LIST'); // 'LIST' or 'CALENDAR'
+    const [calendarDate, setCalendarDate] = useState(new Date());
+
+    const loadSchedules = useCallback(async () => {
+        setIsLoading(true);
+        const data = await fetchWeeklySchedules();
+        setSchedules(data);
+        setIsLoading(false);
+    }, [fetchWeeklySchedules]);
+
+    useEffect(() => {
+        loadSchedules();
+    }, [lastScheduleUpdate, loadSchedules]);
+
+    // Sync selectedSchedule with updated schedules data
+    useEffect(() => {
+        if (selectedSchedule) {
+            const updated = schedules.find(s => s.id === selectedSchedule.id);
+            if (updated && updated !== selectedSchedule) {
+                setSelectedSchedule(updated);
+            }
+        }
+    }, [schedules, selectedSchedule]);
+
+    // Initial Mode Logic
+    useEffect(() => {
+        if (selectedSchedule) {
+            const parts = selectedSchedule.schedule_participants || [];
+            // Simple logic: if single participant and completed, show Result
+            if (parts.length === 1 && parts[0].completed_at) {
+                setInteractionMode('VIEW_RESULT');
+                setCompletionTarget(parts[0].id);
+                setCompletionData({
+                    note: parts[0].feedback?.note || '',
+                    tags: parts[0].feedback?.tags || [],
+                    completedAt: parts[0].completed_at
+                });
+            } else {
+                setInteractionMode('VIEW_PLAN');
+            }
+        }
+    }, [selectedSchedule]);
+
+    const handleEditFeedback = () => {
+        if (!selectedSchedule) return;
+        const parts = selectedSchedule.schedule_participants || [];
+        if (parts.length === 0) return;
+
+        // Use existing completionTarget if set, or default to first
+        let targetId = completionTarget;
+        if (!targetId) {
+            targetId = parts[0].id;
+            setCompletionTarget(targetId);
+        }
+
+        const target = parts.find(p => p.id === targetId);
+        if (target) {
+            setCompletionData({
+                note: target.feedback?.note || '',
+                tags: target.feedback?.tags || [],
+                completedAt: target.completed_at
+            });
+        }
+
+        setInteractionMode('EDIT_RESULT');
+    };
+
+    const handleCompleteSubmit = async (data) => {
+        if (!completionTarget) return;
+        setPlanActionLoading(true);
+        try {
+            const parts = selectedSchedule.schedule_participants || [];
+            const targetPart = parts.find(p => p.id === completionTarget);
+
+            if (targetPart) {
+                if (targetPart.completed_at) {
+                    await updatePlanFeedback(completionTarget, data);
+                } else {
+                    await completePlan(completionTarget, targetPart.sheep_id, data);
+                }
+                notifyScheduleUpdate();
+                notifyScheduleUpdate();
+                loadSchedules();
+
+                setInteractionMode('VIEW_RESULT');
+                setCompletionData({ ...data, completedAt: targetPart.completed_at || new Date().toISOString() });
+            }
+        } catch (error) {
+            console.error(error);
+            alert('儲存失敗');
+        } finally {
+            setPlanActionLoading(false);
+        }
+    };
+
+    const prevWeek = () => {
+        const newStart = new Date(currentWeekStart);
+        newStart.setDate(newStart.getDate() - 7);
+        setCurrentWeekStart(newStart);
+    };
+
+    const nextWeek = () => {
+        const newStart = new Date(currentWeekStart);
+        newStart.setDate(newStart.getDate() + 7);
+        setCurrentWeekStart(newStart);
+    };
+
+    const currentYearMonth = useMemo(() => {
+        return `${currentWeekStart.getFullYear()}年 ${currentWeekStart.getMonth() + 1} 月`;
+    }, [currentWeekStart]);
+
+    const daySchedules = useMemo(() => {
+        const targetDate = addDays(currentWeekStart, selectedDayIndex);
+        const targetDateStr = targetDate.toDateString();
+
+        return schedules.filter(s => {
+            if (!s.scheduled_time) return false;
+            const d = new Date(s.scheduled_time);
+            return d.toDateString() === targetDateStr;
+        }).sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
+    }, [schedules, currentWeekStart, selectedDayIndex]);
+
+    const unscheduledSchedules = useMemo(() => {
+        return schedules.filter(s => !s.scheduled_time);
+    }, [schedules]);
+
+    const hasEventOnDay = (date) => {
+        const dStr = date.toDateString();
+        return schedules.some(s => s.scheduled_time && new Date(s.scheduled_time).toDateString() === dStr);
+    };
+
+    const goToToday = () => {
+        const today = new Date();
+        setCurrentWeekStart(getStartOfWeek(today));
+        setSelectedDayIndex(today.getDay());
+    };
+
+    const formatTime = (isoString) => {
+        const d = new Date(isoString);
+        return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+    };
+
+    if (showBatchAdd) {
+        const initialDate = viewFormat === 'CALENDAR' ? calendarDate : addDays(currentWeekStart, selectedDayIndex);
+        initialDate.setHours(8, 0, 0, 0);
+
+        return (
+            <BatchAddScheduleModal
+                onClose={() => setShowBatchAdd(false)}
+                onSaved={() => {
+                    setShowBatchAdd(false);
+                    loadSchedules();
+                }}
+                initialDate={initialDate}
+            />
+        );
+    }
+
+    return (
+        <div className="schedule-content" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--bg-card)' }}>
+            {selectedSchedule ? (
+                <div className="modal-scroll" style={{ height: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    {interactionMode === 'EDIT_RESULT' && (
+                        <div style={{ padding: '20px', minHeight: 'min-content' }}>
+                            <FeedbackForm
+                                initialData={completionData}
+                                onSubmit={handleCompleteSubmit}
+                                onCancel={() => {
+                                    const parts = selectedSchedule.schedule_participants || [];
+                                    const target = parts.find(p => p.id === completionTarget);
+                                    if (target && target.completed_at) {
+                                        setInteractionMode('VIEW_RESULT');
+                                    } else {
+                                        setInteractionMode('VIEW_PLAN');
+                                    }
+                                }}
+                                loading={planActionLoading}
+                            />
+                        </div>
+                    )}
+
+                    {interactionMode === 'VIEW_RESULT' && (
+                        <div style={{ padding: '20px', minHeight: 'min-content' }}>
+                            <FeedbackResult
+                                data={completionData}
+                                onEdit={handleEditFeedback}
+                                onBack={() => {
+                                    setSelectedSchedule(null);
+                                    loadSchedules();
+                                }}
+                                onViewPlan={() => setInteractionMode('VIEW_PLAN')}
+                            />
+                        </div>
+                    )}
+
+                    {interactionMode === 'VIEW_PLAN' && (
+                        <PlanDetailModal
+                            schedule={selectedSchedule}
+                            onClose={() => {
+                                setSelectedSchedule(null);
+                                loadSchedules();
+                            }}
+                            onComplete={handleEditFeedback}
+                        />
+                    )}
+                </div>
+            ) : (
+                <>
+                    <div className="modal-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                            <div
+                                onClick={() => setViewFormat(prev => prev === 'LIST' ? 'CALENDAR' : 'LIST')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer',
+                                    padding: '4px 8px',
+                                    borderRadius: '8px',
+                                    transition: 'background 0.2s'
+                                }}
+                                className="header-date-toggle"
+                            >
+                                <Calendar size={20} />
+                                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{currentYearMonth}</h3>
+                                <ChevronDown size={16} style={{
+                                    transform: viewFormat === 'CALENDAR' ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s',
+                                    color: 'var(--text-muted)'
+                                }} />
+                            </div>
+
+                            {viewFormat === 'LIST' && (
+                                <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto', marginRight: '8px' }}>
+                                    <button className="icon-btn" onClick={prevWeek} title="上一週">
+                                        <ChevronLeft size={18} />
+                                    </button>
+                                    <button
+                                        className="icon-btn"
+                                        onClick={goToToday}
+                                        style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--palette-blue-action)' }}
+                                        title="回到今天"
+                                    >
+                                        今
+                                    </button>
+                                    <button className="icon-btn" onClick={nextWeek} title="下一週">
+                                        <ChevronRight size={18} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                className="icon-btn-ghost"
+                                onClick={loadSchedules}
+                                title="重新整理"
+                                style={{ color: '#fff' }}
+                            >
+                                <span style={{ fontSize: '1.2rem' }}>🔄</span>
+                            </button>
+                            {onClose && (
+                                <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}>
+                                    <X size={24} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Day Tabs */}
+                    {viewFormat === 'LIST' && (
+                        <div className="schedule-tabs" style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: '2px',
+                            padding: '10px 8px',
+                            borderBottom: '1px solid var(--border-subtle)',
+                            background: 'rgba(255,255,255,0.5)',
+                        }}>
+                            {DAYS.map((day, idx) => {
+                                const date = addDays(currentWeekStart, idx);
+                                const isToday = new Date().toDateString() === date.toDateString();
+                                const isSelected = selectedDayIndex === idx;
+
+                                return (
+                                    <button
+                                        key={day}
+                                        onClick={() => setSelectedDayIndex(idx)}
+                                        className={`schedule-tab-btn ${isSelected ? 'active' : ''}`}
+                                        style={{
+                                            position: 'relative',
+                                            flex: 1,
+                                            padding: '6px 0 10px 0',
+                                            borderRadius: '12px',
+                                            background: isSelected ? 'var(--palette-blue-action)' : (isToday ? 'var(--bg-snow)' : 'transparent'),
+                                            color: isSelected ? '#fff' : (isToday ? 'var(--palette-blue-text)' : 'var(--text-secondary)'),
+                                            border: isToday && !isSelected ? '1px solid var(--palette-blue-text)' : 'none',
+                                            whiteSpace: 'nowrap',
+                                            fontSize: '0.85rem',
+                                            fontWeight: isSelected || isToday ? 'bold' : 'normal',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '2px',
+                                            minWidth: 0
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '0.8rem' }}>{day}</span>
+                                        <span style={{ fontSize: '0.9rem' }}>{date.getDate()}</span>
+                                        {hasEventOnDay(date) && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                bottom: '3px',
+                                                width: '5px',
+                                                height: '5px',
+                                                borderRadius: '50%',
+                                                background: isSelected ? '#fff' : 'var(--palette-danger)'
+                                            }} />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {viewFormat === 'CALENDAR' && (
+                        <div style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                            <MiniCalendar
+                                schedules={schedules}
+                                selectedDate={calendarDate}
+                                onSelectDate={(date) => {
+                                    setCalendarDate(date);
+                                    setCurrentWeekStart(getStartOfWeek(date));
+                                    setSelectedDayIndex(date.getDay());
+                                    setViewFormat('LIST');
+                                }}
+                            />
+                            <div style={{
+                                textAlign: 'center',
+                                fontSize: '0.8rem',
+                                color: 'var(--text-muted)',
+                                padding: '4px',
+                                background: 'var(--bg-snow)'
+                            }}>
+                                選擇日期以篩選行程
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="modal-content" style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                        {isLoading ? (
+                            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>載入中...</div>
+                        ) : (viewFormat === 'LIST' ? daySchedules : schedules.filter(s => s.scheduled_time && new Date(s.scheduled_time).toDateString() === calendarDate.toDateString())).length === 0 ? (
+                            <div className="plan-list-empty">
+                                <Calendar size={48} strokeWidth={1} style={{ opacity: 0.3 }} />
+                                <p>{viewFormat === 'LIST' ? `週${DAYS[selectedDayIndex].slice(1)}沒有安排行程` : `${calendarDate.getMonth() + 1}/${calendarDate.getDate()} 沒有安排行程`}</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {(viewFormat === 'LIST' ? daySchedules : schedules.filter(s => s.scheduled_time && new Date(s.scheduled_time).toDateString() === calendarDate.toDateString()).sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))).map(schedule => {
+                                    const currentParticipants = schedule.schedule_participants || [];
+                                    const completedCount = currentParticipants.filter(p => p.completed_at).length;
+                                    const allCompleted = currentParticipants.length > 0 && completedCount === currentParticipants.length;
+
+                                    return (
+                                        <div key={schedule.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <div
+                                                onClick={() => setSelectedSchedule(schedule)}
+                                                style={{
+                                                    background: 'var(--bg-snow)',
+                                                    borderRadius: '12px',
+                                                    padding: '12px',
+                                                    boxShadow: 'var(--shadow-subtle)',
+                                                    border: '1px solid var(--border-subtle)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '48px', height: '48px',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    background: 'var(--palette-pale-blue-bg)',
+                                                    borderRadius: '50%',
+                                                    color: 'var(--palette-blue-action)'
+                                                }}>
+                                                    {currentParticipants.length > 1 ? <Users size={24} /> : <User size={24} />}
+                                                </div>
+
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                        <span style={{
+                                                            fontWeight: 'bold',
+                                                            color: 'var(--text-primary)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px'
+                                                        }}>
+                                                            {schedule.action}
+                                                            {currentParticipants.length === 1 ? (
+                                                                (() => {
+                                                                    const p = currentParticipants[0];
+                                                                    const s = p.sheep || sheep.find(is => is.id === p.sheep_id);
+                                                                    return s ? ` - ${s.name}` : '';
+                                                                })()
+                                                            ) : (
+                                                                ` (共${currentParticipants.length}人)`
+                                                            )}
+                                                            {allCompleted && <span style={{ fontSize: '0.8rem', color: 'var(--palette-success)' }}>✓ 全員完成</span>}
+                                                            {!allCompleted && completedCount > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({completedCount}人完成)</span>}
+                                                        </span>
+                                                        <span style={{
+                                                            fontSize: '0.85rem',
+                                                            color: 'var(--palette-blue-action)',
+                                                            background: 'var(--palette-pale-blue-bg)',
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px'
+                                                        }}>
+                                                            <Clock size={12} />
+                                                            {formatTime(schedule.scheduled_time)}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '-6px' }}>
+                                                            {currentParticipants.slice(0, 5).map((p, i) => {
+                                                                const s = p.sheep || sheep.find(is => is.id === p.sheep_id);
+                                                                return (
+                                                                    <div key={p.id} style={{
+                                                                        width: '24px', height: '24px',
+                                                                        borderRadius: '50%',
+                                                                        overflow: 'hidden',
+                                                                        border: '2px solid #fff',
+                                                                        marginLeft: i > 0 ? '-8px' : 0,
+                                                                        background: '#eee'
+                                                                    }}>{s ? <AssetSheep visual={s.visual} centered animated={false} /> : null}</div>
+                                                                );
+                                                            })}
+                                                            {currentParticipants.length > 5 && <span style={{ marginLeft: '4px', fontSize: '0.8rem' }}>+{currentParticipants.length - 5}</span>}
+                                                        </div>
+                                                        {schedule.location && (
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '8px' }}>
+                                                                <MapPin size={12} />
+                                                                {schedule.location}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <ChevronRight size={20} color="var(--text-muted)" />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {unscheduledSchedules.length > 0 && (
+                            <div style={{ marginTop: '24px' }}>
+                                <div style={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: 'bold',
+                                    color: 'var(--text-muted)',
+                                    marginBottom: '12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}>
+                                    <div style={{ width: '4px', height: '12px', background: 'var(--palette-blue-action)', borderRadius: '2px' }} />
+                                    待安排行程 ({unscheduledSchedules.length})
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {unscheduledSchedules.map(schedule => {
+                                        const currentParticipants = schedule.schedule_participants || [];
+
+                                        if (currentParticipants.length === 0) return null;
+
+                                        return (
+                                            <div key={schedule.id}
+                                                onClick={() => setSelectedSchedule(schedule)}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.6)',
+                                                    borderRadius: '12px',
+                                                    padding: '12px',
+                                                    border: '1px dashed var(--border-subtle)',
+                                                    display: 'flex',
+                                                    gap: '12px',
+                                                    alignItems: 'center',
+                                                    opacity: 0.8,
+                                                    cursor: 'pointer'
+                                                }}>
+
+                                                <div style={{
+                                                    width: '40px', height: '40px',
+                                                    background: 'var(--bg-app)',
+                                                    borderRadius: '50%',
+                                                    flexShrink: 0,
+                                                    overflow: 'hidden',
+                                                    border: '2px solid #fff',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    {currentParticipants.length > 1 ? (
+                                                        <Users size={20} color="var(--text-muted)" />
+                                                    ) : (
+                                                        (() => {
+                                                            const p = currentParticipants[0];
+                                                            const s = p.sheep || sheep.find(is => is.id === p.sheep_id);
+                                                            return s ? <AssetSheep visual={s.visual} centered={true} status={s.status} /> : <User size={20} />;
+                                                        })()
+                                                    )}
+                                                </div>
+
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>
+                                                        {schedule.action}
+                                                        {currentParticipants.length > 1 && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}> (共{currentParticipants.length}人)</span>}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                        {currentParticipants.length === 1
+                                                            ? (currentParticipants[0].sheep || sheep.find(s => s.id === currentParticipants[0].sheep_id))?.name || '未知小羊'
+                                                            : '小組行程'
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="modal-footer" style={{
+                        padding: '16px',
+                        borderTop: '1px solid var(--border-subtle)',
+                        background: 'var(--bg-card-secondary)',
+                        borderRadius: '0'
+                    }}>
+                        <button
+                            className="modal-btn-primary"
+                            style={{
+                                width: '100%',
+                                height: '48px',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '8px',
+                                background: 'var(--palette-blue-action)',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                border: 'none',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                            }}
+                            onClick={() => setShowBatchAdd(true)}
+                        >
+                            <Plus size={20} />
+                            新增批量規劃
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};

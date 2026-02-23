@@ -18,12 +18,7 @@ import { FeedbackResult } from '../game/FeedbackResult';
 import { generateGoogleCalendarUrl } from '../../utils/calendarHelper';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
-// Sub-components
-import { SheepDetailDashboard } from './SheepDetailDashboard';
-import { SheepDetailPlan } from './SheepDetailPlan';
-import { SheepDetailPlanFeedback } from './SheepDetailPlanFeedback';
-import { SheepDetailEffects } from './SheepDetailEffects';
-import { SheepDetailSettings } from './SheepDetailSettings';
+import { SheepDetailContent } from '../../pages/LiteSheepDetail/SheepDetailContent';
 
 export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) => {
     const { sheep, tags, tagAssignmentsBySheep } = useGameState();
@@ -364,140 +359,51 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                         <CloseButton ref={closeBtnRef} onClick={onClose} ariaLabel="關閉" />
                     </div>
 
-                    <div className="modal-form sheep-detail-modal-form">
-                        <div className="modal-tabs">
-                            <button
-                                className={`modal-tab ${activeTab === 'DASHBOARD' ? 'modal-tab-active' : ''}`}
-                                onClick={() => setActiveTab('DASHBOARD')}
-                            >
-                                總覽
-                            </button>
-                            <button
-                                className={`modal-tab ${activeTab === 'PLAN' ? 'modal-tab-active' : ''}`}
-                                data-tab="plan"
-                                onClick={() => setActiveTab('PLAN')}
-                            >
-                                認領規劃
-                            </button>
-                            <button
-                                className={`modal-tab ${activeTab === 'EFFECTS' ? 'modal-tab-active' : ''}`}
-                                data-tab="effects"
-                                onClick={() => setActiveTab('EFFECTS')}
-                            >
-                                認領紀錄
-                            </button>
-                            <button
-                                className={`modal-tab ${activeTab === 'SETTINGS' ? 'modal-tab-active' : ''}`}
-                                onClick={() => setActiveTab('SETTINGS')}
-                            >
-                                自訂/資料
-                            </button>
-                        </div>
-
-                        <div className="sheep-detail-scroll">
-                            {activeTab === 'DASHBOARD' && (
-                                <SheepDetailDashboard
-                                    target={target}
-                                    currentCount={currentCount}
-                                    isFull={isFull}
-                                    isAdmin={isAdmin}
-                                    isPrayingAnim={isPrayingAnim}
-                                    handlePray={handlePray}
-                                    localMsg={localMsg}
-                                    note={note}
-                                    setNote={setNote}
-                                    handleBasicAutoSave={handleBasicAutoSave}
-                                    plans={plans}
-                                    openCompletePlan={openCompletePlan}
-                                    setActiveTab={setActiveTab}
-                                    openAddPlan={openAddPlan}
-                                    isSleepingState={isSleepingState}
-                                    getStatusText={getStatusText}
-                                />
-                            )}
-
-                            {activeTab === 'SETTINGS' && (
-                                <SheepDetailSettings
-                                    target={target}
-                                    name={name}
-                                    setName={setName}
-                                    handleBasicAutoSave={handleBasicAutoSave}
-                                    tags={tags}
-                                    tagAssignmentsBySheep={tagAssignmentsBySheep}
-                                    setSheepTags={setSheepTags}
-                                    setShowTagManager={setShowTagManager}
-                                    isAdmin={isAdmin}
-                                    isSleepingState={isSleepingState}
-                                    updateSheep={updateSheep}
-                                />
-                            )}
-
-                            {activeTab === 'PLAN' && (
-                                <div className="spiritual-plan-container" style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-                                    {viewMode === 'LIST' && (
-                                        selectedSchedule ? (
-                                            <div className="nested-plan-detail" style={{
-                                                flex: 1,
-                                                height: '100%',
-                                                background: 'var(--bg-card)',
-                                                animation: 'slideIn 0.3s ease-out',
-                                                display: 'flex',
-                                                flexDirection: 'column'
-                                            }}>
-                                                <PlanDetailModal
-                                                    key={selectedSchedule.id}
-                                                    embedded={true}
-                                                    schedule={selectedSchedule}
-                                                    onClose={() => {
-                                                        setSelectedSchedule(null);
-                                                        fetchPlans();
-                                                    }}
-                                                    onComplete={() => {
-                                                        openCompletePlan(selectedSchedule);
-                                                    }}
-                                                />
-                                            </div>
-                                        ) : (
-                                            <SheepDetailPlan
-                                                plans={plans}
-                                                handlePlanClick={handlePlanClick}
-                                                openAddPlan={openAddPlan}
-                                                openCompletePlan={openCompletePlan}
-                                            />
-                                        )
-                                    )}
-
-                                    <SheepDetailPlanFeedback
-                                        viewMode={viewMode}
-                                        completionData={completionData}
-                                        setCompletionData={setCompletionData}
-                                        handleCompleteSubmit={handleCompleteSubmit}
-                                        planActionLoading={planActionLoading}
-                                        setViewMode={setViewMode}
-                                        completionTarget={completionTarget}
-                                        plans={plans}
-                                        setSelectedSchedule={setSelectedSchedule}
-                                    />
-                                </div>
-                            )}
-
-                            {activeTab === 'EFFECTS' && (
-                                <SheepDetailEffects
-                                    target={target}
-                                    isAdmin={isAdmin}
-                                    STAMPS={STAMPS}
-                                    handleStampToggle={handleStampToggle}
-                                    isEditingLabels={isEditingLabels}
-                                    handleLabelEditStart={handleLabelEditStart}
-                                    handleLabelSave={handleLabelSave}
-                                    setIsEditingLabels={setIsEditingLabels}
-                                    tempLabels={tempLabels}
-                                    setTempLabels={setTempLabels}
-                                />
-                            )}
-
-                        </div>
-                    </div>
+                    <SheepDetailContent
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        target={target}
+                        currentCount={currentCount}
+                        isFull={isFull}
+                        isAdmin={isAdmin}
+                        isPrayingAnim={isPrayingAnim}
+                        handlePray={handlePray}
+                        localMsg={localMsg}
+                        note={note}
+                        setNote={setNote}
+                        handleBasicAutoSave={handleBasicAutoSave}
+                        plans={plans}
+                        openCompletePlan={openCompletePlan}
+                        openAddPlan={openAddPlan}
+                        isSleepingState={isSleepingState}
+                        getStatusText={getStatusText}
+                        name={name}
+                        setName={setName}
+                        tags={tags}
+                        tagAssignmentsBySheep={tagAssignmentsBySheep}
+                        setSheepTags={setSheepTags}
+                        setShowTagManager={setShowTagManager}
+                        updateSheep={updateSheep}
+                        viewMode={viewMode}
+                        selectedSchedule={selectedSchedule}
+                        setSelectedSchedule={setSelectedSchedule}
+                        fetchPlans={fetchPlans}
+                        completionData={completionData}
+                        setCompletionData={setCompletionData}
+                        handleCompleteSubmit={handleCompleteSubmit}
+                        planActionLoading={planActionLoading}
+                        setViewMode={setViewMode}
+                        completionTarget={completionTarget}
+                        STAMPS={STAMPS}
+                        handleStampToggle={handleStampToggle}
+                        isEditingLabels={isEditingLabels}
+                        handleLabelEditStart={handleLabelEditStart}
+                        handleLabelSave={handleLabelSave}
+                        setIsEditingLabels={setIsEditingLabels}
+                        tempLabels={tempLabels}
+                        setTempLabels={setTempLabels}
+                        handlePlanClick={handlePlanClick}
+                    />
                 </div>
             </div>
 
