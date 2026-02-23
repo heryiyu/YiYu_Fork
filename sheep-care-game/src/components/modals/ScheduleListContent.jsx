@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, Users } from 'lucide-react';
+import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, Users, RefreshCw } from 'lucide-react';
 import { useGameState, useGameActions } from '../../context/GameContext/useGame';
 import { AssetSheep } from '../game/AssetSheep';
 import { BatchAddScheduleModal } from './BatchAddScheduleModal';
@@ -296,12 +296,11 @@ export const ScheduleListContent = ({ onClose }) => {
 
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <button
-                                className="icon-btn-ghost"
+                                className="icon-btn"
                                 onClick={loadSchedules}
                                 title="重新整理"
-                                style={{ color: '#fff' }}
                             >
-                                <span style={{ fontSize: '1.2rem' }}>🔄</span>
+                                <RefreshCw size={20} />
                             </button>
                             {onClose && (
                                 <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', padding: '4px', cursor: 'pointer' }}>
@@ -313,7 +312,7 @@ export const ScheduleListContent = ({ onClose }) => {
 
                     {/* Day Tabs */}
                     {viewFormat === 'LIST' && (
-                        <div className="schedule-tabs" style={{
+                        <div className="schedule-tabs schedule-day-tabs" style={{
                             display: 'flex',
                             justifyContent: 'space-between',
                             gap: '2px',
@@ -411,6 +410,7 @@ export const ScheduleListContent = ({ onClose }) => {
                                     return (
                                         <div key={schedule.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             <div
+                                                className="schedule-item-card"
                                                 onClick={() => setSelectedSchedule(schedule)}
                                                 style={{
                                                     background: 'var(--bg-snow)',
@@ -526,6 +526,7 @@ export const ScheduleListContent = ({ onClose }) => {
 
                                         return (
                                             <div key={schedule.id}
+                                                className="schedule-unscheduled-card"
                                                 onClick={() => setSelectedSchedule(schedule)}
                                                 style={{
                                                     background: 'rgba(255,255,255,0.6)',
@@ -579,7 +580,7 @@ export const ScheduleListContent = ({ onClose }) => {
                         )}
                     </div>
 
-                    <div className="modal-footer" style={{
+                    <div className="modal-footer schedule-footer" style={{
                         padding: '16px',
                         borderTop: '1px solid var(--border-subtle)',
                         background: 'var(--bg-card-secondary)',

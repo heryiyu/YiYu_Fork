@@ -1,20 +1,131 @@
 .lite-schedule-page {
-    animation: slideInUp 0.3s ease-out forwards;
+    animation: slideInUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--bg-app);
+    background: #f8f9fa;
+    /* Clean modern background */
 }
 
+/* Header Override */
 .lite-schedule-page .schedule-content {
     background: transparent !important;
 }
 
 .lite-schedule-page .modal-header {
-    background: transparent;
+    background: #ffffff !important;
     padding-top: max(env(safe-area-inset-top), 16px);
+    border-bottom: 1px solid #dee2e6 !important;
+    padding-bottom: 12px;
+}
+
+.lite-schedule-page .modal-header .icon-btn-ghost,
+.lite-schedule-page .modal-header button {
+    color: #495057 !important;
+    /* Make white icons dark */
+}
+
+.lite-schedule-page .header-date-toggle h3 {
+    color: #212529 !important;
+    font-weight: 700;
+}
+
+.lite-schedule-page .header-date-toggle:hover {
+    background: #f1f3f5 !important;
 }
 
 .lite-schedule-page .modal-content {
-    background: transparent;
+    background: transparent !important;
+}
+
+/* Day Tabs / Modern Segmented Control */
+.lite-schedule-page .schedule-day-tabs {
+    background: #ffffff !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    padding: 8px 12px 12px 12px !important;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    z-index: 10;
+}
+
+.lite-schedule-page .schedule-tab-btn {
+    border-radius: 12px !important;
+    padding: 10px 4px 12px 4px !important;
+    background: transparent !important;
+    color: #868e96 !important;
+    border: 1px solid transparent !important;
+}
+
+.lite-schedule-page .schedule-tab-btn.active {
+    background: #e7f5ff !important;
+    color: #1c7ed6 !important;
+    font-weight: 600 !important;
+    border-color: #d0ebff !important;
+}
+
+/* Today indicator specifically handled via inline style override */
+.lite-schedule-page .schedule-tab-btn[style*="border: 1px solid"] {
+    border: 1px solid #ced4da !important;
+    color: #495057 !important;
+    background: #ffffff !important;
+}
+
+.lite-schedule-page .schedule-tab-btn.active[style*="border: 1px solid"] {
+    border: 1px solid #d0ebff !important;
+    color: #1c7ed6 !important;
+    background: #e7f5ff !important;
+}
+
+/* Event Cards */
+.lite-schedule-page .schedule-item-card {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s;
+}
+
+.lite-schedule-page .schedule-item-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.lite-schedule-page .schedule-unscheduled-card {
+    background: #ffffff !important;
+    border: 1px dashed #ced4da !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+}
+
+/* Clean up internal details of cards */
+.lite-schedule-page .schedule-item-card .lucide-users,
+.lite-schedule-page .schedule-item-card .lucide-user {
+    color: #5385db !important;
+}
+
+/* Footer / Sticky Action */
+.lite-schedule-page .schedule-footer {
+    background: #ffffff !important;
+    border-top: 1px solid #dee2e6 !important;
+    padding: 16px 24px !important;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.02) !important;
+    z-index: 20;
+}
+
+.lite-schedule-page .modal-btn-primary {
+    background: #212529 !important;
+    /* Bold sleek black button */
+    color: #fff !important;
+    border-radius: 14px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.2s, background 0.2s !important;
+}
+
+.lite-schedule-page .modal-btn-primary:active {
+    transform: scale(0.98) !important;
+    background: #343a40 !important;
 }

@@ -245,7 +245,7 @@ export const LiteSheepDetailPage = ({ target, onClose }) => {
             </div>
 
             <div className="lite-page-content lite-sheep-detail-page-content">
-                <div className="lite-page-card" style={{ height: 'calc(100vh - 120px)', padding: 0, display: 'flex', flexDirection: 'column' }}>
+                <div className="lite-page-card" style={{ height: '100%', padding: 0, display: 'flex', flexDirection: 'column' }}>
                     <SheepDetailContent
                         {...{
                             activeTab, setActiveTab, target, currentCount, isFull, isAdmin, isPrayingAnim,

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
-import { Settings, BookOpen, Calendar, Menu, User, Plus, LogOut, Trash2, RotateCcw, CheckSquare, X } from 'lucide-react';
+import { Settings, BookOpen, Calendar, Menu, User, Plus, Trash2, RotateCcw, CheckSquare, X } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import { useConfirm } from '../../context/ConfirmContext';
 import { SheepListTextView } from '../game/SheepListTextView';
@@ -34,6 +34,7 @@ export const LiteAppLayout = ({
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilterId, setActiveFilterId] = useState('ALL');
+    const [selectedSheepId, setSelectedSheepId] = useState(null);
 
     // Muted filters
     const hiddenFilterIds = useMemo(() => new Set(settings?.hiddenFilters || []), [settings?.hiddenFilters]);
@@ -136,12 +137,6 @@ export const LiteAppLayout = ({
         }
     };
 
-    const handleSignOut = () => {
-        if (window.confirm('確定要登出嗎？')) {
-            signOut();
-        }
-    };
-
     return (
         <div className="lite-app-layout">
             <header className="lite-navbar">
@@ -186,9 +181,6 @@ export const LiteAppLayout = ({
                                 <button className="lite-dropdown-item is-mobile" onClick={() => { setActiveView('SETTINGS'); setIsMenuOpen(false); }}>
                                     <Settings size={16} /> 系統設定
                                 </button>
-                                <button className="lite-dropdown-item danger" onClick={handleSignOut}>
-                                    <LogOut size={16} /> 登出
-                                </button>
                             </div>
                         )}
                     </div>
@@ -203,15 +195,17 @@ export const LiteAppLayout = ({
                 ) : activeView === 'SCHEDULE' ? (
                     <LiteSchedulePage onClose={() => setActiveView('DASHBOARD')} />
                 ) : activeView === 'DETAIL' && selectedSheepId ? (
-                    <LiteSheepDetailPage
-                        target={sheep.find(s => s.id === selectedSheepId)}
-                        onClose={() => {
-                            setActiveView('DASHBOARD');
-                            // If there was an internal selection state it needs to be cleared
-                        }}
-                    />
+                    <div className="lite-page-slide-in">
+                        <LiteSheepDetailPage
+                            target={sheep.find(s => s.id === selectedSheepId)}
+                            onClose={() => {
+                                setActiveView('DASHBOARD');
+                                setSelectedSheepId(null);
+                            }}
+                        />
+                    </div>
                 ) : (
-                    <>
+                    <div className="lite-page-slide-in">
                         <div className="lite-content-toolbar">
                             <div className="lite-search-box">
                                 <input
@@ -322,8 +316,8 @@ export const LiteAppLayout = ({
                                     if (isSelectionMode) {
                                         toggleSelection(id);
                                     } else {
-                                        const s = sheep.find(item => item.id === id);
-                                        if (onSelectSheep && s) onSelectSheep(s);
+                                        setSelectedSheepId(id);
+                                        setActiveView('DETAIL');
                                     }
                                 }}
                                 isSelectionMode={isSelectionMode}
@@ -334,7 +328,7 @@ export const LiteAppLayout = ({
                                 isAllSelected={isAllSelected}
                             />
                         </div>
-                    </>
+                    </div>
                 )}
             </main>
 

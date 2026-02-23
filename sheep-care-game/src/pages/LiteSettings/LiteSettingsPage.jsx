@@ -1,5 +1,6 @@
 import React from 'react';
 import { SettingsContent } from './SettingsContent';
+import { LiteProfileCard } from './LiteProfileCard';
 import { ArrowLeft } from 'lucide-react';
 import './LiteSettingsPage.css';
 
@@ -17,7 +18,8 @@ export const LiteSettingsPage = ({ onClose }) => {
             </div>
 
             <div className="lite-page-content lite-settings-page">
-                <div className="lite-page-card">
+                <LiteProfileCard />
+                <div className="lite-page-card" style={{ marginTop: '20px' }}>
                     <SettingsContent
                         activeTab={activeTab}
                         onChangeTab={setActiveTab}
