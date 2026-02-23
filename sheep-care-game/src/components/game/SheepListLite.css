@@ -350,19 +350,24 @@
 
     .lite-col-checkbox {
         left: 0;
-        margin-right: 8px;
-        flex: 0 0 32px;
+        padding-right: 8px;
+        /* Changed from margin to padding to prevent transparency gap */
+        flex: 0 0 40px;
+        /* 32px checkbox + 8px gap */
     }
 
     .lite-col-name {
         left: 0;
         flex: 0 0 100px;
+        padding-left: 12px;
+        /* Add space from edge/checkbox */
         padding-right: 12px;
     }
 
     /* Selection mode offset */
     .is-selection-mode .lite-col-name {
         left: 40px;
+        /* Align with checkbox end */
         box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.15);
     }
 

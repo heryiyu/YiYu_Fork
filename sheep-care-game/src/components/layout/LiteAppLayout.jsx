@@ -34,6 +34,7 @@ export const LiteAppLayout = ({
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilterId, setActiveFilterId] = useState('ALL');
+    const [selectedSheepId, setSelectedSheepId] = useState(null);
 
     // Muted filters
     const hiddenFilterIds = useMemo(() => new Set(settings?.hiddenFilters || []), [settings?.hiddenFilters]);
@@ -203,15 +204,17 @@ export const LiteAppLayout = ({
                 ) : activeView === 'SCHEDULE' ? (
                     <LiteSchedulePage onClose={() => setActiveView('DASHBOARD')} />
                 ) : activeView === 'DETAIL' && selectedSheepId ? (
-                    <LiteSheepDetailPage
-                        target={sheep.find(s => s.id === selectedSheepId)}
-                        onClose={() => {
-                            setActiveView('DASHBOARD');
-                            // If there was an internal selection state it needs to be cleared
-                        }}
-                    />
+                    <div className="lite-page-slide-in">
+                        <LiteSheepDetailPage
+                            target={sheep.find(s => s.id === selectedSheepId)}
+                            onClose={() => {
+                                setActiveView('DASHBOARD');
+                                setSelectedSheepId(null);
+                            }}
+                        />
+                    </div>
                 ) : (
-                    <>
+                    <div className="lite-page-slide-in">
                         <div className="lite-content-toolbar">
                             <div className="lite-search-box">
                                 <input
@@ -322,8 +325,8 @@ export const LiteAppLayout = ({
                                     if (isSelectionMode) {
                                         toggleSelection(id);
                                     } else {
-                                        const s = sheep.find(item => item.id === id);
-                                        if (onSelectSheep && s) onSelectSheep(s);
+                                        setSelectedSheepId(id);
+                                        setActiveView('DETAIL');
                                     }
                                 }}
                                 isSelectionMode={isSelectionMode}
@@ -334,7 +337,7 @@ export const LiteAppLayout = ({
                                 isAllSelected={isAllSelected}
                             />
                         </div>
-                    </>
+                    </div>
                 )}
             </main>
 
