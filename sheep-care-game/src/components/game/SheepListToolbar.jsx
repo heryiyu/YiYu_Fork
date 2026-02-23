@@ -34,7 +34,8 @@ export const SheepListToolbar = ({
     filterMenuAnchorRef,
     toggleFilterVisibility,
     setShowTagManagerModal,
-    effectiveFilterStatus
+    effectiveFilterStatus,
+    isForcedExpand
 }) => {
     const { settings, updateSetting } = useGame();
     const viewMode = settings.sheepListViewMode || 'card';
@@ -169,51 +170,55 @@ export const SheepListToolbar = ({
 
                         <div className="dock-toolbar-divider" />
 
-                        <Tooltip content={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'} side="bottom">
-                            <button
-                                type="button"
-                                className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
-                                onClick={toggleViewMode}
-                                style={{
-                                    opacity: isCollapsed ? 0.6 : 1,
-                                    minWidth: 'unset',
-                                    padding: '0 10px',
-                                    height: '36px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    background: 'rgba(255, 255, 255, 0.8)',
-                                    borderColor: 'var(--border-subtle)'
-                                }}
-                                aria-label={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'}
-                            >
-                                {viewMode === 'card' ? <List size={18} strokeWidth={2.5} /> : <LayoutGrid size={18} strokeWidth={2.5} />}
-                            </button>
-                        </Tooltip>
+                        {!isForcedExpand && (
+                            <>
+                                <Tooltip content={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'} side="bottom">
+                                    <button
+                                        type="button"
+                                        className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
+                                        onClick={toggleViewMode}
+                                        style={{
+                                            opacity: isCollapsed ? 0.6 : 1,
+                                            minWidth: 'unset',
+                                            padding: '0 10px',
+                                            height: '36px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: 'rgba(255, 255, 255, 0.8)',
+                                            borderColor: 'var(--border-subtle)'
+                                        }}
+                                        aria-label={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'}
+                                    >
+                                        {viewMode === 'card' ? <List size={18} strokeWidth={2.5} /> : <LayoutGrid size={18} strokeWidth={2.5} />}
+                                    </button>
+                                </Tooltip>
 
-                        <Tooltip content={isExpanded ? '收合列表' : '全螢幕呈現'} side="bottom">
-                            <button
-                                type="button"
-                                className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
-                                onClick={toggleExpansion}
-                                style={{
-                                    opacity: isCollapsed ? 0.6 : 1,
-                                    minWidth: 'unset',
-                                    padding: '0 10px',
-                                    height: '36px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    background: 'rgba(255, 255, 255, 0.8)',
-                                    borderColor: 'var(--border-subtle)'
-                                }}
-                                aria-label={isExpanded ? '收合列表' : '全螢幕呈現'}
-                            >
-                                {isExpanded ? <Minimize2 size={18} strokeWidth={2.5} /> : <Maximize2 size={18} strokeWidth={2.5} />}
-                            </button>
-                        </Tooltip>
+                                <Tooltip content={isExpanded ? '收合列表' : '全螢幕呈現'} side="bottom">
+                                    <button
+                                        type="button"
+                                        className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
+                                        onClick={toggleExpansion}
+                                        style={{
+                                            opacity: isCollapsed ? 0.6 : 1,
+                                            minWidth: 'unset',
+                                            padding: '0 10px',
+                                            height: '36px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: 'rgba(255, 255, 255, 0.8)',
+                                            borderColor: 'var(--border-subtle)'
+                                        }}
+                                        aria-label={isExpanded ? '收合列表' : '全螢幕呈現'}
+                                    >
+                                        {isExpanded ? <Minimize2 size={18} strokeWidth={2.5} /> : <Maximize2 size={18} strokeWidth={2.5} />}
+                                    </button>
+                                </Tooltip>
 
-                        <div className="dock-toolbar-divider" />
+                                <div className="dock-toolbar-divider" />
+                            </>
+                        )}
 
                         {searchBarEl}
 

@@ -69,28 +69,53 @@ export const SettingsModal = ({ onClose }) => {
                         {activeTab === 'DISPLAY' && (
                             <div className="modal-content" style={{ padding: '10px' }}>
                                 <div className="form-group">
-                                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>畫面顯示小羊數量</span>
-                                        <span style={{ color: 'var(--palette-blue-action)' }}>{settings.maxVisibleSheep} 隻</span>
+                                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                        <span>簡約資訊模式</span>
+                                        <div
+                                            className={`toggle-switch ${settings.liteMode ? 'active' : ''}`}
+                                            onClick={() => updateSetting('liteMode', !settings.liteMode)}
+                                            style={{
+                                                width: '44px', height: '24px', background: settings.liteMode ? 'var(--palette-blue-action)' : 'var(--border-subtle)',
+                                                borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s'
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '20px', height: '20px', background: 'white', borderRadius: '50%',
+                                                position: 'absolute', top: '2px', left: settings.liteMode ? '22px' : '2px',
+                                                transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                                            }} />
+                                        </div>
                                     </label>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-light)', display: 'block', marginBottom: '15px' }}>
+                                        隱藏花草農場與動畫，專注於大版面的純文字管理列表。
+                                    </span>
 
-                                    <Slider
-                                        min={10}
-                                        max={50}
-                                        step={5}
-                                        value={settings.maxVisibleSheep}
-                                        onChange={handleChange}
-                                        ariaLabel="畫面顯示小羊數量"
-                                    />
+                                    {!settings.liteMode && (
+                                        <>
+                                            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>畫面顯示小羊數量</span>
+                                                <span style={{ color: 'var(--palette-blue-action)' }}>{settings.maxVisibleSheep} 隻</span>
+                                            </label>
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted-light)', marginTop: '5px' }}>
-                                        <span>10 (效能)</span>
-                                        <span>50 (豐富)</span>
-                                    </div>
+                                            <Slider
+                                                min={10}
+                                                max={50}
+                                                step={5}
+                                                value={settings.maxVisibleSheep}
+                                                onChange={handleChange}
+                                                ariaLabel="畫面顯示小羊數量"
+                                            />
 
-                                    <ModalHint className="modal-info-box" style={{ marginTop: '10px' }}>
-                                        當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
-                                    </ModalHint>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted-light)', marginTop: '5px' }}>
+                                                <span>10 (效能)</span>
+                                                <span>50 (豐富)</span>
+                                            </div>
+
+                                            <ModalHint className="modal-info-box" style={{ marginTop: '10px' }}>
+                                                當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
+                                            </ModalHint>
+                                        </>
+                                    )}
                                 </div>
 
                                 <button className="modal-btn-primary" onClick={onClose} style={{ marginTop: '20px' }}>

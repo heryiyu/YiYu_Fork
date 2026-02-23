@@ -56,10 +56,10 @@ export const GameProvider = ({ children }) => {
     const [settings, setSettings] = useState(() => {
         try {
             const saved = localStorage.getItem('sheep_game_settings');
-            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card' };
+            const defaults = { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card', liteMode: false };
             return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
         } catch {
-            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card' };
+            return { maxVisibleSheep: 15, notify: false, pinnedSheepIds: [], hiddenFilters: [], sheepListViewMode: 'card', liteMode: false };
         }
     });
 

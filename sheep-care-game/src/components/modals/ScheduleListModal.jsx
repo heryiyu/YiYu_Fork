@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, Calendar, Plus, Clock, MapPin, ChevronLeft, ChevronRight, User, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useGameState, useGameActions } from '../../context/GameContext/useGame';
 import { CloseButton } from '../ui/CloseButton';

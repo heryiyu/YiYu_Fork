@@ -6,7 +6,7 @@ import { Checkbox } from '../ui/Checkbox';
 export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, onClose, anchorRef }) => {
     const menuRef = useRef(null);
     const scrollRef = useRef(null);
-    const [position, setPosition] = useState({ bottom: 0, right: 0 });
+    const [position, setPosition] = useState({ bottom: 0, right: 0, top: 'auto' });
     const [showFadeOverlay, setShowFadeOverlay] = useState(false);
 
     const checkScrollState = useCallback(() => {
@@ -35,8 +35,11 @@ export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManag
         const updatePosition = () => {
             if (anchorRef?.current) {
                 const rect = anchorRef.current.getBoundingClientRect();
+                const isUpperHalf = rect.top < window.innerHeight / 2;
+
                 setPosition({
-                    bottom: window.innerHeight - rect.top + 8,
+                    top: isUpperHalf ? rect.bottom + 8 : 'auto',
+                    bottom: isUpperHalf ? 'auto' : window.innerHeight - rect.top + 8,
                     right: window.innerWidth - rect.right
                 });
             }
@@ -66,6 +69,7 @@ export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManag
             className="filter-settings-menu"
             style={{
                 position: 'fixed',
+                top: position.top,
                 bottom: position.bottom,
                 right: position.right,
                 minWidth: '200px',

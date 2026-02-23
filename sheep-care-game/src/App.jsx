@@ -21,7 +21,7 @@ import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react'
 
 function App() {
   // Use specialized hooks to prevent unnecessary rerenders from high-frequency game state (like sheep movement)
-  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus } = useUserAuth();
+  const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus, settings } = useUserAuth();
   const { toggleNotification, markIntroWatched } = useGameActions();
   const { message, weather, showIntroVideo } = useGameState();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
@@ -72,7 +72,7 @@ function App() {
 
 
   return (
-    <div className="game-container" key={currentUser} data-theme={weather?.timeStatus || 'day'}>
+    <div className={`game-container ${settings.liteMode ? 'lite-mode' : ''}`} key={currentUser} data-theme={weather?.timeStatus || 'day'}>
       <Toast key={message || 'toast'} message={message} />
 
       {/* --- Unified Top Left Widget --- */}
@@ -157,13 +157,14 @@ function App() {
         </div>
       </div>
 
-      <Field onSelectSheep={handleSelectSheep} />
+      {!settings.liteMode && <Field onSelectSheep={handleSelectSheep} />}
 
 
 
-      {/* Permanent Foreground Dock */}
+      {/* Permanent Foreground Dock / Main View in Lite Mode */}
       <SheepList
         onSelect={handleSelectFromList}
+        forcedViewMode={settings.liteMode ? 'text' : null}
       />
 
       {selectedSheepId && (
