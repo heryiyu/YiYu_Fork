@@ -43,6 +43,15 @@ function App() {
     setShowSchedule(false);
   }
 
+  // Synchronize Lite Mode class to document.body for Portal compatibility
+  useEffect(() => {
+    if (settings?.liteMode) {
+      document.body.classList.add('lite-mode');
+    } else {
+      document.body.classList.remove('lite-mode');
+    }
+  }, [settings?.liteMode]);
+
   // Handlers (Moved up to satisfy Rules of Hooks)
   const handleSelectSheep = React.useCallback((sheep) => {
     setSelectedSheepId(sheep.id);

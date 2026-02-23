@@ -307,9 +307,18 @@
     .sheep-list-lite-container {
         margin: 0;
         border-radius: 0;
-        /* Thinner borders on mobile to maximize space */
         border-left: none;
         border-right: none;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sheep-lite-header,
+    .sheep-lite-row {
+        width: max-content;
+        min-width: 100%;
+        padding: 10px 12px;
     }
 
     .sheep-lite-header {
@@ -322,8 +331,46 @@
         font-size: 0.85rem;
     }
 
+    .lite-col-checkbox,
     .lite-col-name {
-        flex: 0 0 90px;
+        position: sticky;
+        z-index: 5;
+        background: #ffffff;
+        /* Default background for row */
+    }
+
+    .lite-col-checkbox {
+        left: 0;
+        margin-right: 8px;
+        flex: 0 0 32px;
+    }
+
+    .lite-col-name {
+        left: 40px;
+        flex: 0 0 100px;
+        padding-right: 12px;
+        box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Solid backgrounds to cover content during scroll */
+    .is-lite-mode .sheep-lite-row:nth-child(even) .lite-col-checkbox,
+    .is-lite-mode .sheep-lite-row:nth-child(even) .lite-col-name {
+        background: #f8f9fa;
+    }
+
+    .is-lite-mode .sheep-lite-header .lite-col-checkbox,
+    .is-lite-mode .sheep-lite-header .lite-col-name {
+        background: #f8f9fa;
+    }
+
+    .is-game-mode .sheep-lite-header .lite-col-checkbox,
+    .is-game-mode .sheep-lite-header .lite-col-name {
+        background: #F9F3E8;
+    }
+
+    .sheep-lite-header :not(.lite-col-checkbox)+.lite-col-name,
+    .sheep-lite-row :not(.lite-col-checkbox)+.lite-col-name {
+        left: 0;
     }
 
     .lite-col-health {
@@ -336,13 +383,13 @@
     }
 
     .lite-col-maturity {
-        /* Hide maturity on very small screens to save space, relies on health and note */
-        flex: 0 0 45px;
-        font-size: 0.8rem;
+        display: none;
     }
 
     .lite-col-needs {
-        padding-left: 10px;
+        flex: 0 0 240px;
+        padding-left: 12px;
+        white-space: normal;
     }
 
     .lite-status-tag {
