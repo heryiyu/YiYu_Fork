@@ -583,24 +583,6 @@
   margin-bottom: 12px;
 }
 
-/* Make the name input match the select and tag inputs visually */
-.sheep-detail-basic .form-group input[type="text"] {
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 1rem;
-  background: white;
-  width: 100%;
-  box-sizing: border-box;
-  color: var(--text-body);
-  transition: border-color 0.2s;
-}
-
-.sheep-detail-basic .form-group input[type="text"]:focus {
-  border-color: var(--palette-blue-action);
-  outline: none;
-}
-
 .spiritual-plan-container {
   display: flex;
   flex-direction: column;
@@ -1252,16 +1234,19 @@
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px;
-  border: 2px solid var(--border-subtle);
-  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   font-size: 1rem;
   box-sizing: border-box;
   background: white;
   color: var(--text-body);
+  transition: border-color 0.2s;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: var(--palette-blue-action);
   outline: none;
 }

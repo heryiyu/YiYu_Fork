@@ -16,61 +16,103 @@ class SkinManagerService {
 
     /**
      * Download and merge the manifest.json into ASSETS.
-     * Called on App initialization.
+     * Called on App initialization. Uses LocalStorage caching for high performance.
      */
     async loadManifest() {
+        const CACHE_KEY = 'sheep_game_skin_manifest';
+        const CACHE_TIME_KEY = 'sheep_game_skin_manifest_timestamp';
+        const CACHE_VALID_MS = 1000 * 60 * 60; // 1 Hour
+
         try {
-            // Include cache-busting timestamp to always get the latest manifest
-            const timestamp = new Date().getTime();
-            const { data, error } = await supabase.storage
-                .from(BUCKET_NAME)
-                .download(`${MANIFEST_FILE}?t=${timestamp}`);
+            // 1. Check LocalStorage Cache
+            const cachedManifestStr = localStorage.getItem(CACHE_KEY);
+            const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+            const now = Date.now();
 
-            if (error) {
-                if (error.status === 404 || error.name === 'StorageApiError') {
-                    // It's normal if it doesn't exist yet, we just start with empty
-                    console.log('No custom skin manifest found yet. Starting fresh.');
-                    return {};
+            let useCache = false;
+            let currentManifest = {};
+
+            if (cachedManifestStr && cachedTime) {
+                if (now - parseInt(cachedTime, 10) < CACHE_VALID_MS) {
+                    useCache = true;
+                    currentManifest = JSON.parse(cachedManifestStr);
+                    console.log('[Skin Manager] Loaded manifest from fast cache');
+                    this._injectManifestIntoAssets(currentManifest);
                 }
-                console.error('Error downloading skin manifest:', error);
-                return {};
             }
 
-            const text = await data.text();
-            const manifest = JSON.parse(text);
+            // 2. Fetch latest from Supabase (InBackground if using cache)
+            const fetchPromise = (async () => {
+                const timestamp = new Date().getTime(); // Cache busting
+                const { data, error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .download(`${MANIFEST_FILE}?t=${timestamp}`);
 
-            // Dynamically inject into ASSETS
-            if (manifest && typeof manifest === 'object') {
-                Object.keys(manifest).forEach(id => {
-                    const skinData = manifest[id];
-
-                    // 1. Add to SHEEP_VARIANTS
-                    ASSETS.SHEEP_VARIANTS[id] = {
-                        HEALTHY: this.getPublicUrl(skinData.healthyPath),
-                        SICK: skinData.sickPath ? this.getPublicUrl(skinData.sickPath) : this.getPublicUrl(skinData.healthyPath),
-                    };
-
-                    // 2. Add to VARIANT_OPTIONS if not already there
-                    const exists = ASSETS.VARIANT_OPTIONS.find(opt => opt.id === id);
-                    if (!exists) {
-                        ASSETS.VARIANT_OPTIONS.push({
-                            id: id,
-                            label: skinData.name || id
-                        });
-                    } else {
-                        // Update label if it changed
-                        exists.label = skinData.name || id;
+                if (error) {
+                    if (error.status === 404 || error.name === 'StorageApiError') {
+                        return {};
                     }
-                });
-                console.log('Successfully loaded and injected Custom Skins:', Object.keys(manifest).length);
+                    throw error;
+                }
+
+                const text = await data.text();
+                const freshManifest = JSON.parse(text);
+
+                // Update Cache
+                localStorage.setItem(CACHE_KEY, JSON.stringify(freshManifest));
+                localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+
+                // If we didn't use cache, inject it now
+                if (!useCache) {
+                    this._injectManifestIntoAssets(freshManifest);
+                    console.log('Successfully loaded fresh Custom Skins:', Object.keys(freshManifest).length);
+                }
+
+                return freshManifest;
+            })();
+
+            // If we have valid cache, return immediately, let fetchPromise complete in background
+            if (useCache) {
+                // Ignore background errors
+                fetchPromise.catch(e => console.warn("Background manifest update failed:", e));
+                return currentManifest;
             }
 
-            return manifest;
+            // Otherwise await the fetch
+            return await fetchPromise;
 
         } catch (err) {
             console.error('Failed to parse loadManifest:', err);
             return {};
         }
+    }
+
+    /**
+     * Internal helper to inject manifest data into ASSETS registry
+     */
+    _injectManifestIntoAssets(manifest) {
+        if (!manifest || typeof manifest !== 'object') return;
+
+        Object.keys(manifest).forEach(id => {
+            const skinData = manifest[id];
+
+            // 1. Add to SHEEP_VARIANTS
+            ASSETS.SHEEP_VARIANTS[id] = {
+                HEALTHY: this.getPublicUrl(skinData.healthyPath),
+                SICK: skinData.sickPath ? this.getPublicUrl(skinData.sickPath) : this.getPublicUrl(skinData.healthyPath),
+            };
+
+            // 2. Add to VARIANT_OPTIONS if not already there
+            const exists = ASSETS.VARIANT_OPTIONS.find(opt => opt.id === id);
+            if (!exists) {
+                ASSETS.VARIANT_OPTIONS.push({
+                    id: id,
+                    label: skinData.name || id
+                });
+            } else {
+                exists.label = skinData.name || id;
+            }
+        });
     }
 
     /**

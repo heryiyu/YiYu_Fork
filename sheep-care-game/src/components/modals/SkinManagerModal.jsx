@@ -101,7 +101,7 @@ export const SkinManagerModal = ({ onClose }) => {
                         <CloseButton onClick={onClose} ariaLabel="關閉" />
                     </div>
 
-                    <div className="modal-form" style={{ padding: '20px' }}>
+                    <div className="modal-form skin-manager-form" style={{ padding: '20px' }}>
 
                         <div style={{ background: '#eef2ff', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #c7d2fe' }}>
                             <h4 style={{ margin: '0 0 10px 0', color: '#3730a3' }}>➕ 新增外觀</h4>

@@ -181,100 +181,105 @@ export const GameProvider = ({ children }) => {
             const urlSuffix = (supabaseUrl || '').split('.').shift()?.slice(-4) || 'fixed';
             const shadowPass = `p@ss_${lineIdVal}_${urlSuffix}`.toLowerCase();
 
-            // Perform Shadow Auth, Game Data load, and Tag load in PARALLEL
-            const [authResult, gameData, tagsData, assignmentsData] = await Promise.race([
-                Promise.all([
-                    (async () => {
-                        try {
-                            // --- Precise Identity Recognition Strategy ---
-                            // 1. Pre-check: Does this line_id exist in our data records?
-                            const { data: existingUser } = await supabase
-                                .from('users')
-                                .select('id')
-                                .eq('line_id', lineIdVal)
-                                .single();
+            // 2. Perform Shadow Auth SEQUENTIALLY first to ensure RLS permissions
+            const authTask = (async () => {
+                try {
+                    // --- Precise Identity Recognition Strategy ---
+                    // 1. Pre-check: Does this line_id exist in our data records?
+                    const { data: existingUser } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('line_id', lineIdVal)
+                        .single();
 
-                            const isOldFriend = !!existingUser;
-                            console.log(`[Auth] Identity: ${isOldFriend ? 'Existing User' : 'New User'}. Suffix: ${urlSuffix}`);
+                    const isOldFriend = !!existingUser;
+                    console.log(`[Auth] Identity: ${isOldFriend ? 'Existing User' : 'New User'}. Suffix: ${urlSuffix}`);
 
-                            // Attempt 1: New Standard
-                            let { error: authError } = await supabase.auth.signInWithPassword({
+                    // Attempt 1: New Standard
+                    let { error: authError } = await supabase.auth.signInWithPassword({
+                        email: shadowEmail,
+                        password: shadowPass
+                    });
+
+                    // Attempt 2: Compatibility救援 (Only if Attempt 1 fails)
+                    if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
+                        console.log("[Auth] Standard pass failed, trying compatibility mode...");
+                        const legacyPasses = [
+                            `p@ss_${lineIdVal}_${urlSuffix}`,
+                            `p@ss_${lineIdVal}_fixed`.toLowerCase(),
+                        ];
+
+                        for (const legacyPass of legacyPasses) {
+                            if (legacyPass === shadowPass) continue;
+                            const { error: retryError } = await supabase.auth.signInWithPassword({
                                 email: shadowEmail,
-                                password: shadowPass
+                                password: legacyPass
+                            });
+                            if (!retryError) {
+                                console.log("[Auth] Legacy login success! Auto-upgrading password...");
+                                await supabase.auth.updateUser({ password: shadowPass });
+                                authError = null;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Attempt 3: Strict Branching
+                    if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
+                        if (isOldFriend) {
+                            // CRITICAL PROTECTION: If you are an old friend, but all passwords failed,
+                            // WE DO NOT SIGN UP. We block entry to protect your current data.
+                            console.error("[Auth] SECURITY ALERT: Password mismatch for existing user. Blocking entry to prevent data corruption.");
+                            throw new Error("身分驗證失敗：舊帳號密碼不符。請聯繫管理員或確認部署環境。");
+                        } else {
+                            // Only new users get to sign up
+                            console.log("[Auth] New user detected. Performing secure signup...");
+                            const { error: signUpError } = await supabase.auth.signUp({
+                                email: shadowEmail, password: shadowPass,
+                                options: { data: { display_name: displayName } }
                             });
 
-                            // Attempt 2: Compatibility救援 (Only if Attempt 1 fails)
-                            if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                console.log("[Auth] Standard pass failed, trying compatibility mode...");
-                                const legacyPasses = [
-                                    `p@ss_${lineIdVal}_${urlSuffix}`,
-                                    `p@ss_${lineIdVal}_fixed`.toLowerCase(),
-                                ];
-
-                                for (const legacyPass of legacyPasses) {
-                                    if (legacyPass === shadowPass) continue;
-                                    const { error: retryError } = await supabase.auth.signInWithPassword({
-                                        email: shadowEmail,
-                                        password: legacyPass
-                                    });
-                                    if (!retryError) {
-                                        console.log("[Auth] Legacy login success! Auto-upgrading password...");
-                                        await supabase.auth.updateUser({ password: shadowPass });
-                                        authError = null;
-                                        break;
-                                    }
-                                }
+                            if (signUpError) {
+                                console.error("[Auth] Signup failed:", signUpError.message);
+                                throw signUpError;
+                            } else {
+                                const { error: finalSignInError } = await supabase.auth.signInWithPassword({
+                                    email: shadowEmail, password: shadowPass
+                                });
+                                if (!finalSignInError) authError = null;
                             }
-
-                            // Attempt 3: Strict Branching
-                            if (authError && (authError.message.includes('Invalid') || authError.status === 400)) {
-                                if (isOldFriend) {
-                                    // CRITICAL PROTECTION: If you are an old friend, but all passwords failed,
-                                    // WE DO NOT SIGN UP. We block entry to protect your current data.
-                                    console.error("[Auth] SECURITY ALERT: Password mismatch for existing user. Blocking entry to prevent data corruption.");
-                                    throw new Error("身分驗證失敗：舊帳號密碼不符。請聯繫管理員或確認部署環境。");
-                                } else {
-                                    // Only new users get to sign up
-                                    console.log("[Auth] New user detected. Performing secure signup...");
-                                    const { error: signUpError } = await supabase.auth.signUp({
-                                        email: shadowEmail, password: shadowPass,
-                                        options: { data: { display_name: displayName } }
-                                    });
-
-                                    if (signUpError) {
-                                        console.error("[Auth] Signup failed:", signUpError.message);
-                                        throw signUpError;
-                                    } else {
-                                        const { error: finalSignInError } = await supabase.auth.signInWithPassword({
-                                            email: shadowEmail, password: shadowPass
-                                        });
-                                        if (!finalSignInError) authError = null;
-                                    }
-                                }
-                            }
-
-                            if (authError) throw authError;
-                            console.log("[Auth] Identity verified successfully.");
-                            return true;
-                        } catch (e) {
-                            console.error("[Auth] Verification Error:", e.message);
-                            throw e;
                         }
-                    })(),
-                    gameState.loadGame(lineIdVal, { displayName, pictureUrl }),
-                    tagService.loadTags(lineIdVal),
-                    tagService.loadTagAssignments(lineIdVal),
+                    }
+
+                    if (authError) throw authError;
+                    console.log("[Auth] Identity verified successfully.");
+                    return true;
+                } catch (e) {
+                    console.error("[Auth] Verification Error:", e.message);
+                    throw e;
+                }
+            })();
+
+            // Wait for authentication to finish (protected by timeout)
+            const authResult = await Promise.race([authTask, timeoutPromise]);
+
+            // 3. ONLY AFTER auth is successful, load Game Data and Tags in PARALLEL
+            const [gameDataParams, manifestData] = await Promise.race([
+                Promise.all([
+                    // Strategy A: Extreme performance RPC call (Batch user, sheep, tags)
+                    gameState.loadGameDataRPC(lineIdVal, { displayName, pictureUrl }),
+                    // Strategy B: Cached skin manifest load (Near instant if cached)
                     skinManagerService.loadManifest()
                 ]),
                 timeoutPromise
             ]);
 
-            // 3. Process Results
+            // 4. Process Results
             setCurrentUser(displayName);
             setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
 
-            if (gameData && gameData.user) {
-                const { user, sheep: loadedSheep } = gameData;
+            if (gameDataParams && gameDataParams.user) {
+                const { user, sheep: loadedSheep, tags, assignments } = gameDataParams;
                 setSheep(loadedSheep);
                 sheepTickerstore.syncWithLogicalState(loadedSheep);
                 setUserId(user.id);
@@ -289,15 +294,13 @@ export const GameProvider = ({ children }) => {
                     }
                 }
 
-                setTags(tagsData || []);
-                setTagAssignmentsBySheep(assignmentsData || {});
+                setTags(tags || []);
+                setTagAssignmentsBySheep(assignments || {});
                 setIsDataLoaded(true);
                 setLoginStatus('SUCCESS');
                 showMessage(`歡迎回來，${effectiveNickname}! 👋`);
             } else {
-                // Fallback for missing user data
-                setTags(tagsData || []);
-                setTagAssignmentsBySheep(assignmentsData || {});
+                // Fallback for missing user data (Should be rare with RPC)
                 setIsDataLoaded(true);
                 setLoginStatus('SUCCESS');
             }
