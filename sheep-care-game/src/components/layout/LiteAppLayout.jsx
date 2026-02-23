@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
-import { Settings, BookOpen, Calendar, Menu, User, Plus, LogOut, Trash2, RotateCcw, CheckSquare, X } from 'lucide-react';
+import { Settings, BookOpen, Calendar, Menu, User, Plus, Trash2, RotateCcw, CheckSquare, X } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import { useConfirm } from '../../context/ConfirmContext';
 import { SheepListTextView } from '../game/SheepListTextView';
@@ -137,12 +137,6 @@ export const LiteAppLayout = ({
         }
     };
 
-    const handleSignOut = () => {
-        if (window.confirm('確定要登出嗎？')) {
-            signOut();
-        }
-    };
-
     return (
         <div className="lite-app-layout">
             <header className="lite-navbar">
@@ -186,9 +180,6 @@ export const LiteAppLayout = ({
                                 </button>
                                 <button className="lite-dropdown-item is-mobile" onClick={() => { setActiveView('SETTINGS'); setIsMenuOpen(false); }}>
                                     <Settings size={16} /> 系統設定
-                                </button>
-                                <button className="lite-dropdown-item danger" onClick={handleSignOut}>
-                                    <LogOut size={16} /> 登出
                                 </button>
                             </div>
                         )}
