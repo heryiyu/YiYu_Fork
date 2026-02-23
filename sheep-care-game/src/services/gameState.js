@@ -119,8 +119,122 @@ export const gameState = {
             .then(() => console.log("Last login updated in background"));
 
         return { user: profile, sheep: updatedSheepList, isNewUser: false };
+    },
 
-        return { user: profile, sheep: updatedSheepList, isNewUser: false };
+    // New Highly Optimized Loading Method using Supabase RPC
+    // Returns { user, sheep, tags, assignments, isNewUser, isFallback }
+    async loadGameDataRPC(userId, lineProfile = {}) {
+        if (!userId) return null;
+
+        const { displayName, pictureUrl } = lineProfile;
+        const defaultNickname = (displayName && String(displayName).trim()) || 'Shepherd';
+
+        try {
+            // SINGLE NETWORK REQUEST to get User, Sheep, Tags, and Assignments
+            console.log("[Data Load] Attempting high-performance RPC load...");
+            const { data, error } = await supabase.rpc('get_user_full_gamedata', { p_line_id: userId });
+
+            // If RPC doesn't exist yet (not migrated) or fails, fallback to standard load
+            if (error || !data) {
+                console.warn("[Data Load] RPC missing or failed, falling back to standard loads.", error?.message);
+                const gameResult = await this.loadGame(userId, lineProfile);
+                return { ...gameResult, tags: null, assignments: null, isFallback: true };
+            }
+
+            // 1. Handle New User Scenario
+            if (data.isNewUser) {
+                console.log("[Data Load] RPC identified new user, creating profile...");
+                const insertPayload = {
+                    line_id: userId,
+                    nickname: defaultNickname,
+                    name: displayName && String(displayName).trim() ? displayName : null,
+                    avatar: pictureUrl && String(pictureUrl).trim() ? pictureUrl : null,
+                    coins: 0
+                };
+                const { data: newProfile, error: creationError } = await supabase
+                    .from('users')
+                    .insert([insertPayload])
+                    .select()
+                    .single();
+
+                if (creationError) {
+                    console.error('Error creating profile after RPC hint:', creationError);
+                    return { user: { line_id: userId, nickname: defaultNickname, name: displayName, avatar: pictureUrl }, sheep: [], tags: [], assignments: {}, isNewUser: true, isFallback: false };
+                }
+                return { user: newProfile, sheep: [], tags: [], assignments: {}, isNewUser: true, isFallback: false };
+            }
+
+            // 2. Returning User Data Processing
+            let profile = data.user;
+
+            // Check for profile updates (Background)
+            const updates = {};
+            if ((!profile.name || !profile.name.trim()) && displayName && String(displayName).trim()) {
+                updates.name = displayName;
+            }
+            if ((!profile.avatar || !profile.avatar.trim()) && pictureUrl && String(pictureUrl).trim()) {
+                updates.avatar = pictureUrl;
+            }
+            if ((!profile.nickname || !profile.nickname.trim()) && defaultNickname !== 'Shepherd') {
+                updates.nickname = defaultNickname;
+            }
+
+            if (Object.keys(updates).length > 0) {
+                supabase.from('users').update(updates).eq('line_id', userId).then(() => {
+                    console.log("[Data Load] Profile sync in background");
+                });
+                profile = { ...profile, ...updates };
+            }
+
+            // 3. Process Sheep with Offline Decay
+            const now = new Date();
+            const updatedSheepList = (data.sheep || []).map(s => {
+                let sheep = this._fromDbSheep(s);
+                const rawCol = s.sheep_data || s.Spiritual_Journey_Planning || s.visual_attrs || {};
+                const { plan, ...instanceVisuals } = rawCol;
+                sheep.visual = instanceVisuals || {};
+                sheep.plan = plan || {};
+
+                const lastTime = new Date(sheep.updated_at || profile.last_login || now);
+                const diffHours = (now - lastTime) / (1000 * 60 * 60);
+
+                if (diffHours > 0.1 && !isSleeping(sheep)) {
+                    sheep = calculateOfflineDecay(sheep, diffHours);
+                }
+                return sanitizeSheep(sheep);
+            });
+
+            // 4. Update Last Login (BACKGROUND)
+            supabase.from('users')
+                .update({ last_login: this._getLocalISOString() })
+                .eq('line_id', userId)
+                .then(() => console.log("Last login updated in background"));
+
+            // 5. Structure Assignments
+            const bySheep = {};
+            (data.assignments || []).forEach(({ sheep_id, tag_id, order_index }) => {
+                if (!bySheep[sheep_id]) bySheep[sheep_id] = [];
+                bySheep[sheep_id].push({ tagId: tag_id, orderIndex: order_index });
+            });
+            Object.keys(bySheep).forEach(sid => {
+                bySheep[sid].sort((a, b) => a.orderIndex - b.orderIndex);
+            });
+
+            return {
+                user: profile,
+                sheep: updatedSheepList,
+                tags: data.tags || [],
+                assignments: bySheep,
+                isNewUser: false,
+                isFallback: false
+            };
+
+        } catch (e) {
+            console.error("RPC Load Error:", e);
+            // Complete failure, fallback
+            const gameResult = await this.loadGame(userId, lineProfile);
+            return { ...gameResult, tags: null, assignments: null, isFallback: true };
+        }
     },
 
     // Helper: Map Sheep to DB (camel -> snake)

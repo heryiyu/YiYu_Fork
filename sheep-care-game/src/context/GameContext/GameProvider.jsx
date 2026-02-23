@@ -264,22 +264,22 @@ export const GameProvider = ({ children }) => {
             const authResult = await Promise.race([authTask, timeoutPromise]);
 
             // 3. ONLY AFTER auth is successful, load Game Data and Tags in PARALLEL
-            const [gameData, tagsData, assignmentsData] = await Promise.race([
+            const [gameDataParams, manifestData] = await Promise.race([
                 Promise.all([
-                    gameState.loadGame(lineIdVal, { displayName, pictureUrl }),
-                    tagService.loadTags(lineIdVal),
-                    tagService.loadTagAssignments(lineIdVal),
+                    // Strategy A: Extreme performance RPC call (Batch user, sheep, tags)
+                    gameState.loadGameDataRPC(lineIdVal, { displayName, pictureUrl }),
+                    // Strategy B: Cached skin manifest load (Near instant if cached)
                     skinManagerService.loadManifest()
                 ]),
                 timeoutPromise
             ]);
 
-            // 3. Process Results
+            // 4. Process Results
             setCurrentUser(displayName);
             setUserAvatarUrl(pictureUrl && String(pictureUrl).trim() ? pictureUrl : null);
 
-            if (gameData && gameData.user) {
-                const { user, sheep: loadedSheep } = gameData;
+            if (gameDataParams && gameDataParams.user) {
+                const { user, sheep: loadedSheep, tags, assignments } = gameDataParams;
                 setSheep(loadedSheep);
                 sheepTickerstore.syncWithLogicalState(loadedSheep);
                 setUserId(user.id);
@@ -294,15 +294,13 @@ export const GameProvider = ({ children }) => {
                     }
                 }
 
-                setTags(tagsData || []);
-                setTagAssignmentsBySheep(assignmentsData || {});
+                setTags(tags || []);
+                setTagAssignmentsBySheep(assignments || {});
                 setIsDataLoaded(true);
                 setLoginStatus('SUCCESS');
                 showMessage(`歡迎回來，${effectiveNickname}! 👋`);
             } else {
-                // Fallback for missing user data
-                setTags(tagsData || []);
-                setTagAssignmentsBySheep(assignmentsData || {});
+                // Fallback for missing user data (Should be rare with RPC)
                 setIsDataLoaded(true);
                 setLoginStatus('SUCCESS');
             }
