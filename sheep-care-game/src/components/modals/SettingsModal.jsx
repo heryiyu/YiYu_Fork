@@ -159,6 +159,12 @@ export const SettingsModal = ({ onClose }) => {
                                     <li><strong>提醒時刻:</strong> 早上 8:00、中午 12:00、晚上 18:30。</li>
                                 </ul>
 
+                                <h4>7. 外觀更換規則</h4>
+                                <ul>
+                                    <li><strong>關懷度解鎖:</strong> 當該隻小羊的累積關懷度大於 <strong>100</strong> 時，便能解鎖更換外觀的功能 (若該羊種有額外外觀)。</li>
+                                    <li><strong>管理員權限:</strong> 系統管理員不受此限，可隨時替換任意小羊的外觀。</li>
+                                </ul>
+
                                 <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>
                                     <em>"信心若沒有行為就是死的。"</em>
                                 </p>
