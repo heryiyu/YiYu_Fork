@@ -5,22 +5,31 @@
  * - 優化了桌面版的高效閱讀與手機版的彈性適配
  */
 
+.is-lite-mode.sheep-list-lite-container {
+    background: rgba(254, 254, 254, 0.95);
+    border-radius: 12px;
+    margin: 0 16px;
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+    border-bottom: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+
+.is-game-mode.sheep-list-lite-container {
+    background: #FFFFFF;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
 .sheep-list-lite-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    /* Clean transparent white for a modern app feel */
-    background: rgba(254, 254, 254, 0.95);
-    border-radius: 12px;
-    margin: 0 16px;
-    overflow: hidden;
-    /* Thinner, more subtle border compared to original game style */
-    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
-    border-bottom: none;
     height: 100%;
     min-height: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
 }
 
 .list-content-wrapper--expanded .sheep-list-lite-container {
@@ -30,15 +39,34 @@
     box-shadow: none;
 }
 
+.is-lite-mode .sheep-lite-header {
+    background: #f8f9fa;
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.is-game-mode .sheep-lite-header {
+    background: #F9F3E8;
+    color: #8D6E63;
+    border-bottom: 1px solid #F3EDE4;
+    border-radius: 0;
+    text-shadow: none;
+}
+
 .sheep-lite-header {
     display: flex;
-    /* Soft neutral background for the header row */
-    background: #f8f9fa;
     padding: 12px 16px;
     font-weight: 600;
     font-size: 0.85rem;
-    color: #495057;
-    border-bottom: 2px solid #e9ecef;
+}
+
+.is-lite-mode .sheep-lite-body {
+    background: #ffffff;
+}
+
+.is-game-mode .sheep-lite-body {
+    background: #ffffff;
+    padding: 0;
 }
 
 .sheep-lite-body {
@@ -46,15 +74,31 @@
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #adb5bd transparent;
-    background: #ffffff;
+}
+
+.is-lite-mode .sheep-lite-row {
+    color: #212529;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.is-game-mode .sheep-lite-row {
+    color: #7B5B33;
+    border-bottom: 1px solid #F3EDE4;
+    background: transparent;
+}
+
+.is-game-mode .sheep-lite-row:hover {
+    background: #FDFBF7;
+}
+
+.is-game-mode .sheep-lite-row.is-selected {
+    background: #FFF8EB;
 }
 
 .sheep-lite-row {
     display: flex;
     padding: 14px 16px;
     font-size: 0.9rem;
-    color: #212529;
-    border-bottom: 1px solid #f1f3f5;
     cursor: pointer;
     transition: background-color 0.2s ease, padding-left 0.2s ease;
     align-items: center;
@@ -86,7 +130,9 @@
 
 /* Columns */
 .lite-col-name {
-    flex: 0 0 120px;
+    flex: 1;
+    /* Allow flexible growth */
+    min-width: 100px;
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
@@ -97,10 +143,68 @@
     color: #343a40;
 }
 
-.lite-col-health {
-    flex: 0 0 140px;
+.lite-col-checkbox {
+    flex: 0 0 32px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.lite-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #adb5bd;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: #fff;
+    cursor: pointer;
+}
+
+.lite-checkbox.checked {
+    background: var(--palette-blue-action, #5385db);
+    border-color: var(--palette-blue-action, #5385db);
+    color: #fff;
+    font-size: 12px;
+}
+
+.sheep-lite-row.is-selection-mode:hover {
+    padding-left: 16px;
+    /* No indent during selection mode to keep checkbox stable */
+}
+
+.is-game-mode .lite-col-name {
+    flex: 0 0 100px;
+    color: #7B5B33;
+    font-size: 0.95rem;
+}
+
+.is-game-mode .lite-col-maturity {
+    flex: 0 0 100px;
+    color: #7B5B33;
+    font-weight: normal;
+    text-align: left;
+}
+
+.is-game-mode .lite-col-needs {
+    flex: 1;
+    color: #7B5B33;
+}
+
+.is-game-mode .lite-text-muted {
+    color: #C7B9A3;
+    font-style: normal;
+    font-size: 0.95rem;
+}
+
+.lite-col-health {
+    flex: 0 0 80px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 /* Cleaner health percentage visualization */
@@ -123,18 +227,20 @@
 }
 
 .lite-status-tag {
-    margin-left: auto;
-    padding: 3px 8px;
+    /* removed margin-left: auto */
+    padding: 2px 6px;
     border-radius: 4px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     white-space: nowrap;
     letter-spacing: 0.02em;
+    opacity: 0.85;
+    /* Make it less prominent */
 }
 
 .lite-col-maturity {
     flex: 0 0 60px;
-    text-align: center;
+    text-align: left;
     font-weight: 500;
     color: #6c757d;
 }
@@ -151,13 +257,20 @@
     color: #adb5bd;
 }
 
+.is-lite-mode .lite-col-needs {
+    color: #495057;
+}
+
+.is-game-mode .lite-col-needs {
+    color: var(--palette-sheep-brown);
+}
+
 .lite-col-needs {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     padding-left: 16px;
-    color: #495057;
 }
 
 .pinned-indicator {
@@ -227,5 +340,14 @@
 
     .lite-col-needs {
         padding-left: 10px;
+    }
+
+    .lite-status-tag {
+        font-size: 0.6rem;
+        padding: 1px 4px;
+        max-width: 45px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 0.75;
     }
 }

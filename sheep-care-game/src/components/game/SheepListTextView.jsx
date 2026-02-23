@@ -7,7 +7,8 @@ export const SheepListTextView = ({
     onSelect,
     isSelectionMode,
     tags = [],
-    tagAssignmentsBySheep = {}
+    tagAssignmentsBySheep = {},
+    isLiteMode = true
 }) => {
     if (!sheepList || sheepList.length === 0) {
         return (
@@ -17,14 +18,22 @@ export const SheepListTextView = ({
         );
     }
 
+    const containerClass = isLiteMode ? 'sheep-list-lite-container is-lite-mode' : 'sheep-list-lite-container is-game-mode';
+
     return (
-        <div className="sheep-list-lite-container">
+        <div className={containerClass}>
             <div className="sheep-lite-header">
                 <div className="lite-col-name">名字</div>
-                <div className="lite-col-health">狀態與健康</div>
                 <div className="lite-col-maturity">靈程</div>
-                <div className="lite-col-pray">禱告/喚醒</div>
-                <div className="lite-col-needs">代禱需要</div>
+                {isLiteMode ? (
+                    <>
+                        <div className="lite-col-health">狀況</div>
+                        <div className="lite-col-pray">禱告/喚醒</div>
+                        <div className="lite-col-needs">代禱需要</div>
+                    </>
+                ) : (
+                    <div className="lite-col-needs">代禱需要</div>
+                )}
             </div>
             <div className="sheep-lite-body">
                 {sheepList.map(sheep => {
@@ -32,7 +41,6 @@ export const SheepListTextView = ({
                     const isPinned = sheep.isPinned;
 
                     const currentStatus = sheep.status;
-                    const currentHealth = sheep.health;
                     const currentIsSleeping = currentStatus === 'sleeping' || currentStatus === 'dead';
                     const currentIsSick = currentStatus === 'sick';
                     const assigned = (tagAssignmentsBySheep[sheep.id] || []);
@@ -47,32 +55,42 @@ export const SheepListTextView = ({
                     return (
                         <div
                             key={sheep.id}
-                            className={`sheep-lite-row ${isSelected ? 'is-selected' : ''}`}
+                            className={`sheep-lite-row ${isSelected ? 'is-selected' : ''} ${isSelectionMode ? 'is-selection-mode' : ''}`}
                             onClick={() => onSelect(sheep.id)}
-                            style={isSelected ? { borderLeft: '4px solid var(--palette-blue-action)' } : { borderLeft: '4px solid transparent' }}
                         >
+                            {isSelectionMode && (
+                                <div className="lite-col-checkbox">
+                                    <div className={`lite-checkbox ${isSelected ? 'checked' : ''}`}>
+                                        {isSelected && <span>✓</span>}
+                                    </div>
+                                </div>
+                            )}
                             <div className="lite-col-name">
                                 {sheep.name}
                                 {isPinned && <span className="pinned-indicator">📌</span>}
                             </div>
-                            <div className="lite-col-health">
-                                <div className="lite-health-indicator">
-                                    <span className="lite-health-heart">♥</span>
-                                    <span className="lite-health-percent">{Math.ceil(currentHealth || 0)}%</span>
-                                </div>
-                                <span className="lite-status-tag" style={{ background: tagBg, color: tagText }}>
-                                    {tagLabel}
-                                </span>
-                            </div>
                             <div className="lite-col-maturity">
-                                {sheep.spiritualMaturity || 0}
+                                {sheep.spiritualMaturity || '0'}
                             </div>
-                            <div className={`lite-col-pray ${currentIsSleeping ? 'is-sleeping' : ''}`}>
-                                {currentIsSleeping ? `🕯️ 喚醒 ${getAwakeningProgress(sheep)}/5` : `🙏 禱告 ${sheep.prayedCount || 0}/3`}
-                            </div>
-                            <div className="lite-col-needs">
-                                {sheep.note || <span className="lite-text-muted">無內容</span>}
-                            </div>
+                            {isLiteMode ? (
+                                <>
+                                    <div className="lite-col-health">
+                                        <span className="lite-status-tag" style={{ background: tagBg, color: tagText }}>
+                                            {tagLabel}
+                                        </span>
+                                    </div>
+                                    <div className={`lite-col-pray ${currentIsSleeping ? 'is-sleeping' : ''}`}>
+                                        {currentIsSleeping ? `🕯️ 喚醒 ${getAwakeningProgress(sheep)}/5` : `🙏 禱告 ${sheep.prayedCount || 0}/3`}
+                                    </div>
+                                    <div className="lite-col-needs">
+                                        {sheep.note || <span className="lite-text-muted">無內容</span>}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="lite-col-needs">
+                                    {sheep.note || <span className="lite-text-muted">無內容</span>}
+                                </div>
+                            )}
                         </div>
                     );
                 })}

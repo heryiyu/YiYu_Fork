@@ -396,8 +396,8 @@ export const SheepList = ({ onSelect, forcedViewMode }) => {
                                     }
                                 }}
                                 isSelectionMode={isSelectionMode}
-                                tags={tags}
                                 tagAssignmentsBySheep={tagAssignmentsBySheep}
+                                isLiteMode={false}
                             />
                         ) : (
                             <div

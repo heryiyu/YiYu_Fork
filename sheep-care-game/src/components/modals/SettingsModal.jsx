@@ -1,18 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
-import { ModalHint } from './ModalHint';
-import { CloseButton } from '../ui/CloseButton';
-import { Slider } from '../ui/Slider';
-import { Tag } from '../ui/Tag';
-
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { CloseButton } from '../ui/CloseButton';
+import { SettingsContent } from '../../pages/LiteSettings/SettingsContent';
 
 export const SettingsModal = ({ onClose }) => {
-    const { tags } = useGameState();
-    const { updateSetting } = useGameActions();
-    const { settings } = useUserAuth();
     const closeBtnRef = useRef(null);
     const isMobile = useIsMobile();
+    const [activeTab, setActiveTab] = React.useState('DISPLAY');
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -28,12 +22,6 @@ export const SettingsModal = ({ onClose }) => {
         }
     }, [isMobile]);
 
-    const handleChange = (e) => {
-        updateSetting('maxVisibleSheep', parseInt(e.target.value));
-    };
-
-    const [activeTab, setActiveTab] = React.useState('DISPLAY'); // DISPLAY | GUIDE | ABOUT
-
     return (
         <div className="debug-editor-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
@@ -43,179 +31,11 @@ export const SettingsModal = ({ onClose }) => {
                 </div>
 
                 <div className="modal-form">
-                    {/* Tabs */}
-                    <div className="modal-tabs">
-                        <button
-                            className={`modal-tab ${activeTab === 'DISPLAY' ? 'modal-tab-active' : ''}`}
-                            onClick={() => setActiveTab('DISPLAY')}
-                        >
-                            🖥️ 顯示
-                        </button>
-                        <button
-                            className={`modal-tab ${activeTab === 'GUIDE' ? 'modal-tab-active' : ''}`}
-                            onClick={() => setActiveTab('GUIDE')}
-                        >
-                            📖 手冊
-                        </button>
-                        <button
-                            className={`modal-tab ${activeTab === 'ABOUT' ? 'modal-tab-active' : ''}`}
-                            onClick={() => setActiveTab('ABOUT')}
-                        >
-                            ℹ️ 關於
-                        </button>
-                    </div>
-
-                    <div className="modal-scroll" style={{ marginTop: '0' }}>
-                        {activeTab === 'DISPLAY' && (
-                            <div className="modal-content" style={{ padding: '10px' }}>
-                                <div className="form-group">
-                                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                        <span>簡約資訊模式</span>
-                                        <div
-                                            className={`toggle-switch ${settings.liteMode ? 'active' : ''}`}
-                                            onClick={() => updateSetting('liteMode', !settings.liteMode)}
-                                            style={{
-                                                width: '44px', height: '24px', background: settings.liteMode ? 'var(--palette-blue-action)' : 'var(--border-subtle)',
-                                                borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s'
-                                            }}
-                                        >
-                                            <div style={{
-                                                width: '20px', height: '20px', background: 'white', borderRadius: '50%',
-                                                position: 'absolute', top: '2px', left: settings.liteMode ? '22px' : '2px',
-                                                transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                                            }} />
-                                        </div>
-                                    </label>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-light)', display: 'block', marginBottom: '15px' }}>
-                                        隱藏花草農場與動畫，專注於大版面的純文字管理列表。
-                                    </span>
-
-                                    {!settings.liteMode && (
-                                        <>
-                                            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span>畫面顯示小羊數量</span>
-                                                <span style={{ color: 'var(--palette-blue-action)' }}>{settings.maxVisibleSheep} 隻</span>
-                                            </label>
-
-                                            <Slider
-                                                min={10}
-                                                max={50}
-                                                step={5}
-                                                value={settings.maxVisibleSheep}
-                                                onChange={handleChange}
-                                                ariaLabel="畫面顯示小羊數量"
-                                            />
-
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted-light)', marginTop: '5px' }}>
-                                                <span>10 (效能)</span>
-                                                <span>50 (豐富)</span>
-                                            </div>
-
-                                            <ModalHint className="modal-info-box" style={{ marginTop: '10px' }}>
-                                                當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
-                                            </ModalHint>
-                                        </>
-                                    )}
-                                </div>
-
-                                <button className="modal-btn-primary" onClick={onClose} style={{ marginTop: '20px' }}>
-                                    確定
-                                </button>
-                            </div>
-                        )}
-
-                        {activeTab === 'GUIDE' && (
-                            <div className="modal-content guide-modal-content" style={{
-                                color: 'var(--text-body)',
-                                padding: '16px',
-                                background: 'var(--bg-content-subtle)',
-                                borderRadius: '12px',
-                                border: '2px solid var(--border-subtle)',
-                                fontSize: '0.95rem',
-                                lineHeight: '1.6'
-                            }}>
-                                <h4>1. 每日照顧 (Daily Care)</h4>
-                                <p>每天透過禱告來關心您的小羊：</p>
-                                <ul>
-                                    <li><strong>禱告 (Prayer):</strong> 每隻小羊每天最多 <strong>3 次</strong> (每次恢復 <strong>+6 健康度</strong>)。</li>
-                                    <li><strong>健康度 (Health):</strong> 代表小羊的生命狀態，越高越有活力。</li>
-                                </ul>
-
-                                <h4>2. 小羊標籤 (Tags)</h4>
-                                <p>您可自訂標籤來分類小羊，在小羊詳情中選擇「標籤」並點「管理標籤」新增。卡片上會顯示您為該小羊設定的第一個標籤。</p>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
-                                {tags && tags.length > 0 ? (
-                                    <div style={{ marginTop: '8px' }}>
-                                        <p style={{ marginBottom: '6px', fontWeight: 600 }}>您目前的標籤：</p>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                            {tags.map(t => (
-                                                <Tag key={t.id} name={t.name} color={t.color} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
-                                )}
-
-                                <h4>3. 離線與自然衰退</h4>
-                                <p>即使不在線上，時間仍在流動：</p>
-                                <ul>
-                                    <li><strong>離線機制:</strong> 健康度會自然流失 (每天約 <strong>13%</strong>)。</li>
-                                    <li><strong>守望保護:</strong> 當日有被禱告的小羊，流失大幅減緩至約 <strong>6%</strong>！</li>
-                                </ul>
-
-                                <h4>4. 沉睡與甦醒 (Miracle)</h4>
-                                <p>沉睡不是終點，信心能喚回生命：</p>
-                                <ul>
-                                    <li><strong>甦醒儀式:</strong> 對已沉睡的小羊連續 <strong>5 天</strong> 進行「喚醒禱告」(每天1次)。</li>
-                                    <li><strong>奇蹟:</strong> 第 5 次禱告後，小羊將甦醒！(保留姓名與靈程，重置為健康小羊)。</li>
-                                    <li><strong>中斷歸零:</strong> 若中斷一天沒禱告，進度將歸零重來。</li>
-                                </ul>
-
-                                <h4>5. 標籤與資料管理</h4>
-                                <ul>
-                                    <li><strong>標籤 (Tags):</strong> 可自訂標籤來分類小羊，在小羊詳情中管理。</li>
-                                    <li><strong>使用說明:</strong> 請使用 LINE 帳號登入，系統會自動備份您的羊群資料。</li>
-                                </ul>
-
-                                <h4>6. 提醒與通知 (Bell)</h4>
-                                <ul>
-                                    <li><strong>鈴鐺按鈕 (右上方):</strong> 點擊鈴鐺可開啟/關閉牧羊提醒。</li>
-                                    <li><strong>提醒時刻:</strong> 早上 8:00、中午 12:00、晚上 18:30。</li>
-                                </ul>
-
-                                <h4>7. 外觀更換規則</h4>
-                                <ul>
-                                    <li><strong>關懷度解鎖:</strong> 當該隻小羊的累積關懷度大於 <strong>100</strong> 時，便能解鎖更換外觀的功能 (若該羊種有額外外觀)。</li>
-                                    <li><strong>管理員權限:</strong> 系統管理員不受此限，可隨時替換任意小羊的外觀。</li>
-                                </ul>
-
-                                <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>
-                                    <em>"信心若沒有行為就是死的。"</em>
-                                </p>
-                            </div>
-                        )}
-
-                        {activeTab === 'ABOUT' && (
-                            <div className="modal-content" style={{ padding: '16px' }}>
-                                <div style={{
-                                    textAlign: 'center',
-                                    padding: '20px 0',
-                                    marginBottom: '20px',
-                                    borderBottom: '1px solid var(--border-subtle)'
-                                }}>
-                                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🐑</div>
-                                    <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>小羊牧場</h4>
-                                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>版本 v1.0.1 (Beta)</p>
-                                </div>
-
-                                <div style={{ marginTop: '20px', fontSize: '0.85rem', color: 'var(--text-muted-light)', textAlign: 'center' }}>
-                                    <p>Designed for NLCIT Ministry</p>
-                                    <p>&copy; 2024 Sheep Care Project</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <SettingsContent
+                        activeTab={activeTab}
+                        onChangeTab={setActiveTab}
+                        onSave={onClose}
+                    />
                 </div>
             </div>
         </div>

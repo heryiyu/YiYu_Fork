@@ -1,0 +1,702 @@
+/* 
+ * LiteAppLayout.css
+ * True Dashboard Style for text-only mode
+ */
+
+.lite-app-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    background-color: #f1f3f5;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #343a40;
+    overflow: hidden;
+}
+
+/* Navbar */
+.lite-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    padding: 0 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    z-index: 10;
+}
+
+.lite-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lite-logo {
+    font-size: 1.5rem;
+}
+
+.lite-nav-brand h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #495057;
+    letter-spacing: 0.02em;
+}
+
+.lite-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.lite-nav-menu {
+    display: flex;
+    gap: 8px;
+}
+
+.lite-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lite-nav-btn:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+.lite-nav-btn.primary {
+    background: var(--palette-blue-action, #5385db);
+    color: white;
+}
+
+.lite-nav-btn.primary:hover {
+    background: #416eb8;
+}
+
+.lite-nav-user {
+    position: relative;
+    border-left: 1px solid #dee2e6;
+    padding-left: 16px;
+    margin-left: 8px;
+}
+
+.lite-user-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.lite-user-dropdown-trigger:hover {
+    background: #e9ecef;
+}
+
+.lite-user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+    min-width: 150px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.lite-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: #495057;
+}
+
+.lite-dropdown-item:hover {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+.lite-dropdown-item.danger {
+    color: #e03131;
+    border-top: 1px solid #f1f3f5;
+}
+
+.lite-dropdown-item.danger:hover {
+    background: #fff5f5;
+}
+
+.lite-dropdown-item.is-mobile {
+    display: none;
+}
+
+/* Main Content */
+.lite-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    gap: 20px;
+    overflow: hidden;
+    /* Prevent body scroll, list handles its own scrolling */
+}
+
+/* Hide massive stats container */
+.lite-stats-container {
+    display: none;
+}
+
+.lite-stat-card {
+    flex: 1;
+    min-width: 120px;
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.lite-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.lite-stat-card.active {
+    border-color: var(--palette-blue-action, #5385db);
+    border-width: 2px;
+    padding: 15px 19px;
+    /* offset bold border */
+}
+
+.lite-stat-card.healthy.active {
+    border-color: #40c057;
+}
+
+.lite-stat-card.sick.active {
+    border-color: #ff7193;
+}
+
+.lite-stat-card.sleeping.active {
+    border-color: #adb5bd;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #212529;
+    line-height: 1;
+}
+
+/* Content Toolbar */
+.lite-content-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+}
+
+.lite-search-box input {
+    width: 220px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+    transition: all 0.2s;
+}
+
+.lite-search-box input:focus {
+    outline: none;
+    border-color: var(--palette-blue-action, #5385db);
+    box-shadow: 0 0 0 3px rgba(83, 133, 219, 0.15);
+}
+
+.lite-toolbar-divider {
+    width: 1px;
+    height: 18px;
+    background: #dee2e6;
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+.lite-tag-group-divider {
+    width: 1px;
+    height: 14px;
+    background: #dee2e6;
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+.lite-tags-filter-bar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: none;
+    /* Hide scrollbar for cleaner look */
+}
+
+.lite-tags-filter-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.lite-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.lite-tag-filter-btn {
+    padding: 2px 10px;
+    border-radius: 99px;
+    border: 1.5px solid #ced4da;
+    background: #fff;
+    color: #495057;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    opacity: 0.9;
+}
+
+.lite-tag-filter-btn.system {
+    border-color: #dee2e6;
+    background: #f1f3f5;
+}
+
+.lite-tag-filter-btn.system.active {
+    background: #495057;
+    border-color: #495057;
+    color: #fff;
+}
+
+.lite-tag-filter-btn.system.healthy {
+    color: #2f9e44;
+}
+
+.lite-tag-filter-btn.system.healthy.active {
+    background: #2f9e44;
+    border-color: #2f9e44;
+    color: #fff;
+}
+
+.lite-tag-filter-btn.system.sick {
+    color: #e03131;
+}
+
+.lite-tag-filter-btn.system.sick.active {
+    background: #e03131;
+    border-color: #e03131;
+    color: #fff;
+}
+
+.lite-tag-filter-btn.system.sleeping {
+    color: #868e96;
+}
+
+.lite-tag-filter-btn.system.sleeping.active {
+    background: #868e96;
+    border-color: #868e96;
+    color: #fff;
+}
+
+.lite-tag-filter-btn:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    filter: brightness(0.95);
+}
+
+.lite-tag-filter-btn.active {
+    opacity: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
+}
+
+.lite-action-btn {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    background: white;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    font-size: 0.8rem;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.lite-action-btn.active {
+    background: #e7f5ff;
+    border-color: #339af0;
+    color: #1c7ed6;
+}
+
+.lite-action-btn:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+/* List Wrapper */
+.lite-list-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Override existing sheep-list-lite-container rules for this layout */
+.lite-list-wrapper .sheep-list-lite-container {
+    margin: 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .lite-main-content {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .lite-nav-brand h2 {
+        display: none;
+    }
+
+    .lite-navbar {
+        padding: 0 16px;
+    }
+
+    .lite-nav-menu.is-desktop {
+        display: none;
+    }
+
+    .lite-dropdown-item.is-mobile {
+        display: flex;
+    }
+
+    .btn-label {
+        display: none;
+    }
+
+    .lite-stats-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .lite-stat-card {
+        padding: 12px 14px;
+        min-width: auto;
+    }
+
+    .lite-stat-card.active {
+        padding: 11px 13px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .lite-content-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .lite-search-box input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+/* ==========================================================================
+ * Modal Overrides for Lite Mode
+ * When .lite-mode is active, we strip the 'game-like' appearance of all Modals 
+ * (orange headers, heavily rounded corners, thick buttons) and make them 
+ * look like professional Dashboard dialogs.
+ * ========================================================================== */
+
+.lite-mode .modal-card {
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.1));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    animation: fadeInScale 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateZ(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateZ(0);
+    }
+}
+
+/* Clean up the header */
+.lite-mode .modal-header {
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 12px 12px 0 0;
+    padding: 16px 20px;
+}
+
+.lite-mode .modal-header h3 {
+    color: #343a40;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+/* Close button on light background */
+.lite-mode .modal-header .close-btn {
+    color: #868e96;
+}
+
+.lite-mode .modal-header .close-btn:hover {
+    background: #f1f3f5;
+    color: #495057;
+}
+
+/* Clean up the primary action buttons */
+.lite-mode .modal-btn-primary {
+    background: var(--palette-blue-action, #5385db);
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.lite-mode .modal-btn-primary:hover {
+    background: #416eb8;
+}
+
+.lite-mode .modal-btn-secondary {
+    background: #ffffff;
+    color: #495057;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    font-weight: 500;
+}
+
+.lite-mode .modal-btn-secondary:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+/* Modern Tabs for Modals */
+.lite-mode .modal-tabs {
+    border-bottom: 2px solid #f1f3f5;
+    padding: 0 16px;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+.lite-mode .modal-tab {
+    border-radius: 0;
+    padding: 12px 4px;
+    color: #868e96;
+    font-weight: 500;
+    margin-bottom: -2px;
+    /* Pull over border */
+}
+
+.lite-mode .modal-tab:hover {
+    color: #495057;
+    background: transparent;
+}
+
+.lite-mode .modal-tab-active {
+    background: transparent !important;
+    color: var(--palette-blue-action, #5385db) !important;
+    border-bottom: 2px solid var(--palette-blue-action, #5385db);
+    box-shadow: none;
+}
+
+/* Adjust tag chips in Setting sheep state mapping */
+.lite-mode .sheep-state-chip--sick {
+    background: #fff0f6;
+    color: #c2255c;
+    border: 1px solid #ffb2cc;
+}
+
+.lite-mode .sheep-state-chip--sleeping {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+/* Batch Action Bar */
+.lite-batch-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #343a40;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.batch-info {
+    font-size: 0.85rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    padding-right: 20px;
+    white-space: nowrap;
+}
+
+.batch-info strong {
+    color: #74c0fc;
+}
+
+.batch-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.batch-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.batch-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.batch-btn.is-danger {
+    color: #ff8787;
+}
+
+.batch-btn.is-danger:hover {
+    background: rgba(255, 135, 135, 0.15);
+}
+
+.batch-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.batch-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.batch-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .lite-batch-bar {
+        bottom: 16px;
+        width: 92%;
+        padding: 12px 16px;
+        gap: 12px;
+        flex-direction: column;
+        border-radius: 20px;
+    }
+
+    .batch-info {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-right: 0;
+        padding-bottom: 8px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .batch-actions {
+        width: 100%;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .batch-divider {
+        display: none;
+    }
+}
