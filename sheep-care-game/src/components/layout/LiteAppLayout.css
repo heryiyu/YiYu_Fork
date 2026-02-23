@@ -447,6 +447,13 @@
     .lite-content-toolbar {
         flex-direction: column;
         align-items: stretch;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .lite-toolbar-divider,
+    .lite-tag-group-divider {
+        display: none;
     }
 
     .lite-search-box input {
@@ -528,6 +535,39 @@
 .lite-mode .modal-btn-secondary:hover {
     background: #f8f9fa;
     border-color: #adb5bd;
+}
+
+/* Modals: Form Elements */
+.lite-mode .modal-form {
+    background: #ffffff;
+}
+
+.lite-mode .form-group label {
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.lite-mode .form-group input,
+.lite-mode .form-group select,
+.lite-mode .form-group textarea {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: #212529;
+    transition: all 0.2s;
+}
+
+.lite-mode .form-group input:focus,
+.lite-mode .form-group select:focus,
+.lite-mode .form-group textarea:focus {
+    background: #ffffff;
+    border-color: var(--palette-blue-action, #5385db);
+    box-shadow: 0 0 0 3px rgba(83, 133, 219, 0.15);
+    outline: none;
 }
 
 /* Modern Tabs for Modals */
