@@ -1,5 +1,5 @@
-import React from 'react';
 import './SheepListLite.css';
+import { getAwakeningProgress } from '../../utils/gameLogic';
 
 export const SheepListTextView = ({
     sheepList,
@@ -23,6 +23,7 @@ export const SheepListTextView = ({
                 <div className="lite-col-name">名字</div>
                 <div className="lite-col-health">狀態與健康</div>
                 <div className="lite-col-maturity">靈程</div>
+                <div className="lite-col-pray">禱告/喚醒</div>
                 <div className="lite-col-needs">代禱需要</div>
             </div>
             <div className="sheep-lite-body">
@@ -65,6 +66,9 @@ export const SheepListTextView = ({
                             </div>
                             <div className="lite-col-maturity">
                                 {sheep.spiritualMaturity || 0}
+                            </div>
+                            <div className={`lite-col-pray ${currentIsSleeping ? 'is-sleeping' : ''}`}>
+                                {currentIsSleeping ? `🕯️ 喚醒 ${getAwakeningProgress(sheep)}/5` : `🙏 禱告 ${sheep.prayedCount || 0}/3`}
                             </div>
                             <div className="lite-col-needs">
                                 {sheep.note || <span className="lite-text-muted">無內容</span>}

@@ -139,6 +139,18 @@
     color: #6c757d;
 }
 
+.lite-col-pray {
+    flex: 0 0 90px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--palette-sheep-brown, #8f7d67);
+    white-space: nowrap;
+}
+
+.lite-col-pray.is-sleeping {
+    color: #adb5bd;
+}
+
 .lite-col-needs {
     flex: 1;
     overflow: hidden;
@@ -200,6 +212,11 @@
 
     .lite-col-health {
         flex: 0 0 100px;
+    }
+
+    .lite-col-pray {
+        flex: 0 0 75px;
+        font-size: 0.75rem;
     }
 
     .lite-col-maturity {
