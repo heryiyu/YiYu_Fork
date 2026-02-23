@@ -312,17 +312,28 @@
         border-left: none;
         border-right: none;
         width: 100%;
-        overflow-x: auto;
+        height: 100%;
+        overflow: auto;
+        /* Centralize all scrolls here */
         -webkit-overflow-scrolling: touch;
     }
 
-    .is-lite-mode .sheep-lite-body,
-    .is-game-mode .sheep-lite-body {
-        overflow-x: visible;
-        /* Prevent inner clip so sticky works */
+    .sheep-lite-body {
+        overflow: visible !important;
+        /* Disable independent body scroll to eliminate double scroll */
+        display: block;
+        /* Ensure it follows container's scroll */
     }
 
-    .sheep-lite-header,
+    .sheep-lite-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        /* Higher than sticky columns */
+        width: max-content;
+        min-width: 100%;
+    }
+
     .sheep-lite-row {
         width: max-content;
         min-width: 100%;
@@ -349,13 +360,13 @@
         padding-right: 12px;
     }
 
-    /* Shift name if checkbox is present */
+    /* Selection mode offset */
     .is-selection-mode .lite-col-name {
         left: 40px;
         box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.15);
     }
 
-    /* Background overrides for different modes and stripes */
+    /* Fixed Column Backgrounds */
     .is-lite-mode .sheep-lite-header .lite-col-checkbox,
     .is-lite-mode .sheep-lite-header .lite-col-name {
         background-color: #f8f9fa !important;
