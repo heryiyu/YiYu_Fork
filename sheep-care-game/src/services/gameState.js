@@ -403,13 +403,23 @@ export const gameState = {
 
     // NUCLEAR OPTION: Synchronous XHR for absolute reliability on close
     // Reliable Save on Exit (Using fetch with keepalive)
-    // Reliable Save on Exit (Using fetch with keepalive)
-    saveGameSync(lineId, userId, sheepList, userProfile) {
+    async saveGameSync(lineId, userId, sheepList, userProfile) {
         if (!lineId) return;
+
+        // Try to get active session token for RLS
+        let accessToken = supabaseKey; // fallback to anon key
+        try {
+            const { data } = await supabase.auth.getSession();
+            if (data?.session?.access_token) {
+                accessToken = data.session.access_token;
+            }
+        } catch (e) {
+            console.error("Could not fetch session token for saveGameSync", e);
+        }
 
         const headers = {
             'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal' // Don't need response
         };
@@ -429,7 +439,6 @@ export const gameState = {
                     else if (!mapped.user_id) mapped.user_id = lineId;
                     return mapped;
                 });
-                // ...
 
                 const url = `${supabaseUrl}/rest/v1/sheep`;
                 fetch(url, {

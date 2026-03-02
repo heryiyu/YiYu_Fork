@@ -36,14 +36,22 @@ export const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true
     );
 
     const clear = useCallback(
-        (event, shouldTriggerClick = true) => {
+        () => {
             timeout.current && clearTimeout(timeout.current);
+            target.current = undefined;
+        },
+        []
+    );
+
+    const handleClick = useCallback(
+        (event) => {
             // Click should ONLY trigger if NO long press happened AND NO significant movement occurred
-            if (shouldTriggerClick && !longPressTriggered && !isMoved.current && onClick) {
+            if (!longPressTriggered && !isMoved.current && onClick) {
                 onClick(event);
             }
+            // Reset for safety, though start() also resets
             setLongPressTriggered(false);
-            target.current = undefined;
+            isMoved.current = false;
         },
         [longPressTriggered, onClick]
     );
@@ -59,28 +67,32 @@ export const useLongPress = (onLongPress, onClick, { shouldPreventDefault = true
         },
         onMouseUp: (e) => {
             if (isTouch.current) return;
-            clear(e);
+            clear();
         },
         onMouseLeave: (e) => {
             if (isTouch.current) return;
-            clear(e, false);
+            clear();
+            isMoved.current = true; // prevent click if leaving
         },
         onTouchMove: (e) => {
-            // Check for significant movement (> 10px) before cancelling click
+            // Check for significant movement (> 15px) before cancelling click
             if (!isMoved.current && e.touches && e.touches[0]) {
                 const x = e.touches[0].clientX;
                 const y = e.touches[0].clientY;
                 const dx = Math.abs(x - startPos.current.x);
                 const dy = Math.abs(y - startPos.current.y);
-                if (dx > 10 || dy > 10) {
+                if (dx > 15 || dy > 15) {
                     isMoved.current = true; // Mark as moved only if threshold exceeded
-                    clear(e, false);
+                    clear();
                 }
             } else if (!e.touches) {
                 isMoved.current = true;
-                clear(e, false);
+                clear();
             }
         },
-        onTouchEnd: (e) => clear(e)
+        onTouchEnd: (e) => {
+            clear();
+        },
+        onClick: handleClick
     };
 };

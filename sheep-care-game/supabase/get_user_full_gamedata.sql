@@ -31,7 +31,7 @@ BEGIN
     FROM (
         SELECT *
         FROM sheep
-        WHERE user_id = v_user.id OR user_id = p_line_id
+        WHERE user_id = v_user.id
     ) s;
 
     -- 3. Fetch all custom Tags for this user
