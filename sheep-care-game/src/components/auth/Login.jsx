@@ -16,8 +16,8 @@ export const Login = () => {
     const { loginWithLine, loginAsAdmin, isLoading, message, isInClient } = useGame();
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    // Default to LINE Login (Standard for all users)
-    const [showAdminLogin, setShowAdminLogin] = useState(false);
+    // Default to LINE Login for prod, Admin Login for local
+    const [showAdminLogin, setShowAdminLogin] = useState(isLocal);
     const [adminUser, setAdminUser] = useState(''); // Restored to fix ReferenceError
     // const [adminPass, setAdminPass] = useState(''); // Kept if needed later, but commented out if unused to avoid lint errors? No, user asked to restore it. 
     // Actually, looking at the code, adminPass isn't used in handleAdminLogin. But I'll define it to be safe or just define adminUser.
@@ -125,15 +125,17 @@ export const Login = () => {
                                             登入
                                         </button>
                                     </div>
-                                    <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowAdminLogin(false)}
-                                            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
-                                        >
-                                            切換至 LINE 登入
-                                        </button>
-                                    </div>
+                                    {!isLocal && (
+                                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAdminLogin(false)}
+                                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+                                            >
+                                                切換至 LINE 登入
+                                            </button>
+                                        </div>
+                                    )}
                                 </form>
                             )}
                         </div>

@@ -1,20 +1,63 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { generateScene } from '../../utils/SceneGenerator';
 import '../../styles/design-tokens.css';
 
-const mountainSvgCache = new Map();
-const mountainTintCache = new Map();
-const cloudSvgCache = new Map();
-const cloudTintCache = new Map();
+// Reusable scrolling layer for infinite horizontal panning
+const ScrollingLayer = ({ speed, children, style = {}, reverse = false }) => {
+    return (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', ...style }}>
+            <motion.div
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '200%', // Double width to hold two copies
+                    height: '100%',
+                    display: 'flex',
+                    willChange: 'transform', // Explicitly hint to the browser
+                    transform: 'translate3d(0, 0, 0)' // Initialize hardware layer
+                }}
+                animate={{
+                    x: reverse ? ['-50%', '0%'] : ['0%', '-50%']
+                }}
+                transition={{
+                    duration: speed,
+                    repeat: Infinity,
+                    ease: 'linear'
+                }}
+            >
+                {/* Map two identical blocks side-by-side representing 100% viewport each */}
+                <div style={{ width: '50%', height: '100%', position: 'relative' }}>
+                    {children}
+                </div>
+                <div style={{ width: '50%', height: '100%', position: 'relative' }}>
+                    {children}
+                </div>
+            </motion.div>
+        </div >
+    );
+};
+
+const getLightingFilter = (timeStatus, isCloud = false) => {
+    if (timeStatus === 'day') return 'none';
+    if (timeStatus === 'evening') {
+        return isCloud
+            ? 'brightness(0.9) sepia(0.3) saturate(1.5) hue-rotate(-10deg)'
+            : 'brightness(0.8) sepia(0.5) saturate(2) hue-rotate(-20deg)';
+    }
+    if (timeStatus === 'night') {
+        return isCloud
+            ? 'brightness(0.4) sepia(0.2) saturate(0.5) hue-rotate(180deg)'
+            : 'brightness(0.3) sepia(0.4) saturate(0.8) hue-rotate(180deg)';
+    }
+    return 'none';
+};
 
 export const AssetBackground = React.memo(({ userId, weather }) => {
-    // Generate the deterministic scene for this user
     const scene = useMemo(() => generateScene(userId), [userId]);
     const timeStatus = weather?.timeStatus || 'day';
-    const [tintedMountains, setTintedMountains] = useState({});
-    const [tintedClouds, setTintedClouds] = useState({});
 
     const getBushVariantSrc = (src) => {
         if (!src.includes('/assets/decorations/bushes/')) return src;
@@ -26,104 +69,6 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
         }
         return src;
     };
-
-    useEffect(() => {
-        if (timeStatus === 'day') return;
-        const desiredFill =
-            timeStatus === 'evening'
-                ? '#EFC786'
-                : timeStatus === 'night'
-                    ? '#262E49'
-                    : null;
-        if (!desiredFill) return;
-
-        const mountainSrcs = Array.from(
-            new Set(scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => m.src))
-        );
-        if (mountainSrcs.length === 0) return;
-
-        let isMounted = true;
-        const loadMountainVariants = async () => {
-            const updates = {};
-
-            await Promise.all(
-                mountainSrcs.map(async (src) => {
-                    const cacheKey = `${src}|${timeStatus}`;
-                    if (mountainTintCache.has(cacheKey)) {
-                        updates[src] = mountainTintCache.get(cacheKey);
-                        return;
-                    }
-
-                    let svgText = mountainSvgCache.get(src);
-                    if (!svgText) {
-                        const response = await fetch(src);
-                        if (!response.ok) return;
-                        svgText = await response.text();
-                        mountainSvgCache.set(src, svgText);
-                    }
-
-                    const tintedSvg = svgText.replace(/#C2DBFA/gi, desiredFill);
-                    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(tintedSvg)}`;
-                    mountainTintCache.set(cacheKey, dataUri);
-                    updates[src] = dataUri;
-                })
-            );
-
-            if (!isMounted || Object.keys(updates).length === 0) return;
-            setTintedMountains((prev) => ({ ...prev, ...updates }));
-        };
-
-        loadMountainVariants();
-        return () => {
-            isMounted = false;
-        };
-    }, [scene, timeStatus]);
-
-    useEffect(() => {
-        if (timeStatus !== 'night') return;
-        const desiredFill = '#4E5364';
-        const cloudSrcs = Array.from(new Set(scene.clouds.map(c => c.src)));
-        if (cloudSrcs.length === 0) return;
-
-        let isMounted = true;
-        const loadCloudVariants = async () => {
-            const updates = {};
-
-            await Promise.all(
-                cloudSrcs.map(async (src) => {
-                    const cacheKey = `${src}|night`;
-                    if (cloudTintCache.has(cacheKey)) {
-                        updates[src] = cloudTintCache.get(cacheKey);
-                        return;
-                    }
-
-                    let svgText = cloudSvgCache.get(src);
-                    if (!svgText) {
-                        const response = await fetch(src);
-                        if (!response.ok) return;
-                        svgText = await response.text();
-                        cloudSvgCache.set(src, svgText);
-                    }
-
-                    const tintedSvg = svgText.replace(
-                        /fill="(white|#fff|#ffffff)"/gi,
-                        `fill="${desiredFill}"`
-                    );
-                    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(tintedSvg)}`;
-                    cloudTintCache.set(cacheKey, dataUri);
-                    updates[src] = dataUri;
-                })
-            );
-
-            if (!isMounted || Object.keys(updates).length === 0) return;
-            setTintedClouds((prev) => ({ ...prev, ...updates }));
-        };
-
-        loadCloudVariants();
-        return () => {
-            isMounted = false;
-        };
-    }, [scene, timeStatus]);
 
     // Viewport anchors: horizon at 33%, grass-bushes at 66%. Content = 40% of canvas at 30%, 30%.
     // Canvas coords: horizon 43.33%, grass-bushes 56.67%
@@ -141,71 +86,85 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
         }}>
             {/* --- 1. SKY: top 0 to horizon (43.33%) - via root background --- */}
 
-            {/* --- 2. CONTENT: 40% x 40% at 30%, 30% - clouds, mountains, trees */}
-            <div style={{
-                position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
-                overflow: 'visible', zIndex: 5
-            }}>
-                <div className="cloud-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
-                    {scene.clouds.map((cloud, i) => (
-                        <motion.img
-                            key={`cloud-${i}`}
-                            src={timeStatus === 'night' ? (tintedClouds[cloud.src] || cloud.src) : cloud.src}
+            {/* --- 2. CONTENT: mountains, trees, horizon grass, field grass */}
+            {/* Split out specific depths into their own ScrollingLayers for parallax */}
+
+            {/* Parallax Layer 1: Mountains (Slowest) */}
+            <ScrollingLayer speed={300} style={{ zIndex: 1 }}>
+                <div style={{ position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%', overflow: 'visible' }}>
+                    {scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => (
+                        <img
+                            key={m.id}
+                            src={m.src}
                             style={{
                                 position: 'absolute',
-                                top: `${cloud.y}%`,
-                                left: `${cloud.x}%`,
-                                width: `${10 * cloud.scale}%`,
-                                opacity: 0.8
-                            }}
-                            initial={{ x: 0 }}
-                            animate={{ x: ['-10%', '10%'] }}
-                            transition={{
-                                duration: cloud.duration,
-                                repeat: Infinity,
-                                repeatType: 'reverse',
-                                ease: 'easeInOut'
+                                left: `${m.x}%`,
+                                bottom: `${m.y}%`,
+                                transform: `translate(-50%, 20%) scale(${m.scale})`,
+                                filter: getLightingFilter(timeStatus, false),
+                                opacity: 0.9,
+                                transition: 'filter 2s ease'
                             }}
                         />
                     ))}
                 </div>
+            </ScrollingLayer>
 
-                {scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => (
-                    <img
-                        key={m.id}
-                        src={timeStatus === 'day' ? m.src : (tintedMountains[m.src] || m.src)}
-                        style={{
-                            position: 'absolute',
-                            left: `${m.x}%`,
-                            bottom: `${m.y}%`,
-                            transform: `translate(-50%, 20%) scale(${m.scale})`,
-                            zIndex: 1,
-                            opacity: 0.9
-                        }}
-                    />
-                ))}
+            {/* Parallax Layer 2: Trees (Medium Slow) */}
+            <ScrollingLayer speed={200} style={{ zIndex: 2 }}>
+                <div style={{ position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%', overflow: 'visible' }}>
+                    {scene.elements.filter(e => e.type === 'TREE').map(t => (
+                        <motion.img
+                            key={t.id}
+                            src={t.src}
+                            style={{
+                                position: 'absolute',
+                                left: `${t.x}%`,
+                                bottom: `calc(${t.y}% - ${(150 * t.scale) * 0.1}px)`,
+                                height: `${150 * t.scale}px`,
+                                transformOrigin: 'bottom center',
+                                filter: getLightingFilter(timeStatus, false),
+                                transition: 'filter 2s ease'
+                            }}
+                        // Removed rotate animation to save GPU/CPU layout thrashing while layer is scrolling
+                        />
+                    ))}
+                </div>
+            </ScrollingLayer>
 
-                {scene.elements.filter(e => e.type === 'TREE').map(t => (
-                    <motion.img
-                        key={t.id}
-                        src={t.src}
-                        style={{
-                            position: 'absolute',
-                            left: `${t.x}%`,
-                            bottom: `calc(${t.y}% - ${(150 * t.scale) * 0.1}px)`,
-                            height: `${150 * t.scale}px`,
-                            zIndex: 2,
-                            transformOrigin: 'bottom center'
-                        }}
-                        animate={{ rotate: [-2, 2, -2] }}
-                        transition={{
-                            duration: t.duration,
-                            repeat: Infinity,
-                            ease: 'easeInOut'
-                        }}
-                    />
-                ))}
-            </div>
+            {/* Parallax Layer 3: Clouds (Independent, mostly drifting but also scrolling slightly?)
+                We'll leave clouds as independent motion (they have their own animate) but put them in a slow scrolling container too.
+            */}
+            <ScrollingLayer speed={375} style={{ zIndex: 5, pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%', overflow: 'visible' }}>
+                    <div className="cloud-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
+                        {scene.clouds.map((cloud, i) => (
+                            <motion.img
+                                key={`cloud-${i}`}
+                                src={cloud.src}
+                                style={{
+                                    position: 'absolute',
+                                    top: `${cloud.y}%`,
+                                    left: `${cloud.x}%`,
+                                    width: `${10 * cloud.scale}%`,
+                                    filter: getLightingFilter(timeStatus, true),
+                                    opacity: 0.8,
+                                    transition: 'filter 2s ease'
+                                }}
+                                initial={{ x: 0 }}
+                                animate={{ x: ['-10%', '10%'] }}
+                                transition={{
+                                    duration: cloud.duration,
+                                    repeat: Infinity,
+                                    repeatType: 'reverse',
+                                    ease: 'easeInOut'
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </ScrollingLayer>
+
 
             {/* --- 3. GRASS BASE: covers mountain/tree bases; zIndex > content --- */}
             <div style={{
@@ -215,41 +174,37 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
                 zIndex: 10
             }} />
 
-            {/* --- 4. HORIZON GRASS + FIELD GRASS: inside content, aligned to grass band --- */}
-            <div style={{
-                position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
-                overflow: 'visible', zIndex: 11, pointerEvents: 'none'
-            }}>
-                {scene.elements.filter(e => e.type === 'HORIZON_GRASS').map(g => (
-                    <img
-                        key={g.id}
-                        src={g.src}
-                        style={{
-                            position: 'absolute',
-                            left: `${g.x}em`,
-                            bottom: '66.67%', // Horizon = top of grass = 33% from content top
-                            width: g.width || '20px',
-                            zIndex: 4,
-                            pointerEvents: 'none'
-                        }}
-                    />
-                ))}
+            {/* Parallax Layer 4: Field Grass / Horizon Edge (Medium Speed) */}
+            <ScrollingLayer speed={125} style={{ zIndex: 11, pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', left: '0', top: '30%', width: '100%', height: '40%', overflow: 'visible' }}>
 
-                {scene.elements.filter(e => e.type === 'GRASS').map(d => (
-                    <img
-                        key={d.id}
-                        src={d.src}
-                        style={{
-                            position: 'absolute',
-                            left: `${d.x}%`,
-                            bottom: `${d.y}%`,
-                            width: '1.2em',
-                            transform: `scale(${d.scale})`,
-                            zIndex: Math.floor(100 - d.y)
-                        }}
-                    />
-                ))}
-            </div>
+                    {/* Removed ugly repeating border image, relying on natural color seaming */}
+                    <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        bottom: '66.67%', // Horizon = top of grass = 33% from content top
+                        width: '100%',
+                        height: '24px', // Approx 2-3em depending on screen
+                        zIndex: 4,
+                        pointerEvents: 'none'
+                    }} />
+
+                    {scene.elements.filter(e => e.type === 'GRASS').map(d => (
+                        <img
+                            key={d.id}
+                            src={d.src}
+                            style={{
+                                position: 'absolute',
+                                left: `${d.x}%`,
+                                bottom: `${d.y}%`,
+                                width: '1.2em',
+                                transform: `scale(${d.scale})`,
+                                zIndex: Math.floor(100 - d.y)
+                            }}
+                        />
+                    ))}
+                </div>
+            </ScrollingLayer>
 
             {/* --- 5. BUSHES: root-level, full canvas width, extends downward (56.67%-100%) --- */}
             <div style={{
@@ -264,37 +219,52 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
                     background: scene.foreground.baseColor
                 }} />
 
-                {scene.elements.filter(e => e.type === 'FOREGROUND_SEAM_ITEM').map(item => (
-                    <img
-                        key={item.id}
-                        src={item.subType === 'BUSH' ? getBushVariantSrc(item.src) : item.src}
-                        style={{
-                            position: 'absolute',
-                            left: `${item.x}em`,
-                            bottom: '100%', // Seam at grass-bushes boundary (top of bushes layer)
-                            width: item.width,
-                            transform: `scale(${item.scale}) ${item.subType === 'BUSH' ? 'translateY(20%)' : ''}`,
-                            transformOrigin: 'bottom center',
-                            zIndex: 101,
-                            pointerEvents: 'none'
-                        }}
-                    />
-                ))}
+                {/* Parallax Layer 5: Foreground Bushes + Grass (Fastest Speed) */}
+                <ScrollingLayer speed={75} style={{ zIndex: 101, pointerEvents: 'none' }}>
 
-                {scene.foreground.decorations.filter(d => d.type === 'GRASS').map(g => (
-                    <img
-                        key={g.id}
-                        src={g.src}
-                        style={{
-                            position: 'absolute',
-                            left: `${g.x}%`,
-                            bottom: `${g.y}%`,
-                            width: '1.2em',
-                            transform: `scale(${g.scale})`,
-                            zIndex: 102
-                        }}
-                    />
-                ))}
+                    {/* Removed ugly repeating border image, relying on natural color seaming */}
+                    <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        bottom: '100%', // Seam boundary
+                        width: '100%',
+                        height: '40px', // Roughly bush/grass height
+                        zIndex: 1,
+                        pointerEvents: 'none' // The actual bushes can still render if needed but grass is flat
+                    }} />
+
+                    {/* Only render actual bushes independently to keep variety without spamming grass nodes */}
+                    {scene.elements.filter(e => e.type === 'FOREGROUND_SEAM_ITEM' && e.subType === 'BUSH').map(item => (
+                        <img
+                            key={item.id}
+                            src={getBushVariantSrc(item.src)}
+                            style={{
+                                position: 'absolute',
+                                left: `${item.x}em`,
+                                bottom: '100%', // Seam at grass-bushes boundary (top of bushes layer)
+                                width: item.width,
+                                transform: `scale(${item.scale}) translateY(20%)`,
+                                transformOrigin: 'bottom center',
+                                pointerEvents: 'none',
+                                zIndex: 2
+                            }}
+                        />
+                    ))}
+
+                    {scene.foreground.decorations.filter(d => d.type === 'GRASS').map(g => (
+                        <img
+                            key={g.id}
+                            src={g.src}
+                            style={{
+                                position: 'absolute',
+                                left: `${g.x}%`,
+                                bottom: `${g.y}%`,
+                                width: '1.2em',
+                                transform: `scale(${g.scale})`
+                            }}
+                        />
+                    ))}
+                </ScrollingLayer>
             </div>
         </div>
     );

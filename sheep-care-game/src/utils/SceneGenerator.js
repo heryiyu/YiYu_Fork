@@ -53,7 +53,9 @@ export const generateScene = (userId = 'guest') => {
     // --- 1. MOUNTAIN ZONE (Deep Background) ---
     // y: Horizon at 33% from top of viewport = 67% from bottom of content
     const HORIZON_Y = 67;
-    const numMountains = Math.floor(rng.range(2, 4));
+    // Parallax scrolling layers require a much wider generation base to avoid blank spots
+    // We expand the generation bounds to [-100, 200] so it fills the 200% scrolling container
+    const numMountains = Math.floor(rng.range(5, 8)); // Increased count for wider area
     const mountainAssets = ASSETS.ENVIRONMENT.MOUNTAINS.BG;
     for (let i = 0; i < numMountains; i++) {
         // Pick random variant from array
@@ -63,7 +65,8 @@ export const generateScene = (userId = 'guest') => {
             id: `mtn-${i}`,
             type: 'MOUNTAIN',
             src: src,
-            x: rng.range(0, 100),
+            // Evenly distribute them across the super-wide range rather than purely random
+            x: -100 + (300 / numMountains) * i + rng.range(-15, 15),
             y: HORIZON_Y,
             scale: rng.range(2, 3),
             zIndex: 0
@@ -72,7 +75,7 @@ export const generateScene = (userId = 'guest') => {
 
     // --- 2. HORIZON ZONE (Trees) ---
     // A. Tree Groups (Sparse)
-    const numGroups = Math.floor(rng.range(1, 2)); // 1 group max
+    const numGroups = Math.floor(rng.range(2, 4));
     const trees = [];
 
     const placeTree = (type, assetList, count, scaleRange) => {
@@ -82,8 +85,9 @@ export const generateScene = (userId = 'guest') => {
             let x = 0;
             let valid = false;
             while (attempts < 20 && !valid) {
-                x = rng.range(-5, 105);
-                if (!isColliding(x, HORIZON_Y, trees, 12)) { // Wide berth
+                // Wide spawn bounding to fill 200% scroller
+                x = -100 + (300 / count) * i + rng.range(-20, 20);
+                if (!isColliding(x, HORIZON_Y, trees, 15)) { // Wide berth
                     valid = true;
                 }
                 attempts++;
@@ -106,45 +110,22 @@ export const generateScene = (userId = 'guest') => {
     placeTree('tree-group', ASSETS.DECORATIONS.TREES_GROUP, numGroups, [0.8, 1.2]);
 
     // B. Single Trees (Slightly fewer)
-    const numSingles = Math.floor(rng.range(5, 8));
+    const numSingles = Math.floor(rng.range(8, 14));
     placeTree('tree-single', ASSETS.DECORATIONS.TREES_SINGLE, numSingles, [0.6, 1.0]);
 
     elements.push(...trees);
 
     // --- 3. HORIZON EDGE (Grass Strip - Continuous) ---
-    // y: ~65% (Seam). Continuous placement with 0.4em (4px) gap.
-    const edges = [];
-
-    // Width map (In EM units relative to base 10px)
-    const getEdgeWidthVal = (src) => {
-        if (src.includes('edge_01')) return 2.5;
-        if (src.includes('edge_02')) return 8;
-        if (src.includes('edge_03')) return 3;
-        if (src.includes('edge_04')) return 0.5;
-        return 2.0;
-    };
-
-    const MIN_X = -125; // Extend left for pan/zoom; symmetric buffer
-    const MAX_WIDTH = 250; // Cover ~2500px equivalent
-    let currentX = MIN_X;
-
-    while (currentX < MAX_WIDTH) {
-        const src = getRandomAsset(ASSETS.DECORATIONS.GRASS_EDGES);
-        const w = getEdgeWidthVal(src);
-
-        edges.push({
-            id: `horizon-grass-${currentX}`,
-            type: 'HORIZON_GRASS',
-            src: src,
-            x: currentX, // Now in EM
-            y: 64,
-            width: `${w}em`,
-            scale: 1,
-            zIndex: 6
-        });
-
-        currentX += (w + 0.4); // Width + 0.4em gap
-    }
+    // Since we now use CSS repeat-x for the horizon grass, we only need to provide ONE random grass src to the scene
+    const edges = [{
+        id: `horizon-grass-base`,
+        type: 'HORIZON_GRASS',
+        src: getRandomAsset(ASSETS.DECORATIONS.GRASS_EDGES),
+        x: 0,
+        y: 64,
+        scale: 1,
+        zIndex: 6
+    }];
     elements.push(...edges);
 
     // --- 4. PLAY ZONE (The Field) ---
@@ -178,54 +159,36 @@ export const generateScene = (userId = 'guest') => {
     elements.push(...fieldItems);
 
     // --- 5. FOREGROUND SEAM (Y: ~33%) ---
-    // Continuous line of Edges + Bushes
-    const fgSeamWith = [];
+    // Provide ONE base grass src for the repetitive background
+    const fgSeamWith = [{
+        id: `fg-seam-base`,
+        type: 'FOREGROUND_SEAM_ITEM',
+        subType: 'HORIZON_GRASS', // Marks it as the grass texture
+        src: getRandomAsset(ASSETS.DECORATIONS.GRASS_EDGES),
+        x: 0,
+        y: 33,
+        scale: 1,
+        zIndex: 101
+    }];
 
-    // Width map for Bushes (em)
-    const getBushWidthVal = (src) => {
-        if (src.includes('bush_01')) return 12;
-        if (src.includes('bush_02')) return 10;
-        if (src.includes('bush_03')) return 8;
-        return 10;
-    };
-
-    let fgCurrentX = MIN_X; // Symmetric with horizon for pan/zoom
-    const FG_Y = 33; // 1/3 height from bottom context
-
-    while (fgCurrentX < MAX_WIDTH) {
-        // Randomly decide: Edge or Bush?
-        // Bushes should be less frequent than edges to look nice
-        const isBush = rng.next() > 0.7; // 30% chance of bush
-
-        let src, w, type;
-
-        if (isBush) {
-            src = getRandomAsset(ASSETS.DECORATIONS.BUSHES);
-            w = getBushWidthVal(src);
-            type = 'BUSH';
-        } else {
-            src = getRandomAsset(ASSETS.DECORATIONS.GRASS_EDGES);
-            w = getEdgeWidthVal(src);
-            type = 'HORIZON_GRASS'; // We reuse the edge asset type name or create new
-        }
-
+    // Generate a sparse number of random bushes
+    const numBushes = Math.floor(rng.range(6, 12));
+    for (let i = 0; i < numBushes; i++) {
+        // Distribute them evenly over the 300% parallax window
+        const bushX = -100 + (300 / numBushes) * i + rng.range(-15, 15);
         fgSeamWith.push({
-            id: `fg-seam-${fgCurrentX}`,
-            type: 'FOREGROUND_SEAM_ITEM', // New type identifier
-            subType: type, // To know which asset class it is
-            src: src,
-            x: fgCurrentX,
-            y: FG_Y,
-            width: `${w}em`,
-            scale: isBush ? rng.range(0.9, 1.1) : 1, // Slight variation for bushes
+            id: `fg-bush-${i}`,
+            type: 'FOREGROUND_SEAM_ITEM',
+            subType: 'BUSH',
+            src: getRandomAsset(ASSETS.DECORATIONS.BUSHES),
+            x: bushX,
+            y: 33,
+            width: rng.range(8, 12) + 'em',
+            scale: rng.range(0.9, 1.1),
             zIndex: 101
         });
-
-        fgCurrentX += (w + 0.4); // Gap 0.4em consistent with horizon
     }
 
-    // Add to specific 'foregroundSeam' list in output, or main elements
-    // We'll add to elements with high Z-index, but distinctive ID
     elements.push(...fgSeamWith);
 
     // --- 6. FOREGROUND DECOR (Scattered Grass ONLY) ---
@@ -248,7 +211,8 @@ export const generateScene = (userId = 'guest') => {
     // Explicitly place clouds to avoid overlap
     const clouds = [];
     const cloudAssets = ASSETS.ENVIRONMENT.CLOUDS;
-    const numClouds = Math.floor(rng.range(3, 5));
+    // Scale up the cloud count because the scrolling area is 300% wide (-100 to 200)
+    const numClouds = Math.floor(rng.range(9, 15));
 
     for (let i = 0; i < numClouds; i++) {
         let attempts = 0;
@@ -256,7 +220,8 @@ export const generateScene = (userId = 'guest') => {
         let valid = false;
         // Check collision against other clouds
         while (attempts < 20 && !valid) {
-            x = rng.range(0, 90);
+            // Span across the entire parallax scrolling length
+            x = rng.range(-100, 200);
             y = rng.range(5, 25);
             let collision = false;
             for (let c of clouds) {

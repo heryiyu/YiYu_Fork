@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Eye } from 'lucide-react';
 import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { isSleeping } from '../../utils/gameLogic';
@@ -46,56 +46,107 @@ export const Field = ({ onSelectSheep }) => {
     const sleepingSheep = useMemo(() => sheep.filter(s => isSleeping(s)), [sheep]);
 
     // --- 2. Living Sheep Rotation (Existing Logic) ---
-    // --- 2. Visibility Logic (Pinned > Random) ---
-    // Consolidated Living + Dead limit enforcement
+    // --- 2. Visibility Logic & Formation Slots (Pinned > Random) ---
+    // User requested max 10 sheep in a mobile-game-style formation (2 rows of 5 or 3/4/3)
+    // We'll define 10 slots with {x, y} percentage coordinates on the field map
+    const FORMATION_SLOTS = useMemo(() => [
+        // Back Row: High up the green field, just below the horizon
+        { x: 20, y: 60 }, { x: 50, y: 60 }, { x: 80, y: 60 },
+        // Middle Row: Center of the green field.
+        { x: 15, y: 48 }, { x: 38, y: 48 }, { x: 62, y: 48 }, { x: 85, y: 48 },
+        // Front Row: Safely above the bottom UI cards.
+        { x: 20, y: 36 }, { x: 50, y: 36 }, { x: 80, y: 36 }
+    ], []);
+
     const [visibleIds, setVisibleIds] = useState(new Set());
+    const slotAssignments = useRef(new Map());
 
     useEffect(() => {
         const updateVisible = () => {
             if (!sheep || sheep.length === 0) return;
-            const max = settings?.maxVisibleSheep || 15;
+            // Force max 10 sheep
+            const max = typeof settings?.maxVisibleSheep === 'number' ? Math.min(settings.maxVisibleSheep, 10) : 10;
             const pinnedIds = settings?.pinnedSheepIds || [];
 
             // 1. Separate Favorites and Others (Living + Dead mixed)
-            // We want to verify ID existence in current sheep list
             const currentSheepIds = new Set(sheep.map(s => s.id));
             const activePinnedIds = pinnedIds.filter(id => currentSheepIds.has(id));
 
             let finalIds = [];
 
             // 2. Add Favorites (Up to Max)
-            // If user favorites more than max, we slice to max (Performance Safety)
-            // They should increase Max setting if they want to see more.
             const pinnedToTake = activePinnedIds.slice(0, max);
+            // Must be living to be put in formation slots, sleeping are ghosts
             finalIds = [...pinnedToTake];
 
             // 3. Fill Remaining Slots
             const slotsRemaining = max - finalIds.length;
             if (slotsRemaining > 0) {
-                // Get all unpinned sheep
-                const unpinnedSheep = sheep.filter(s => !finalIds.includes(s.id));
+                // Determine missing unpinned by checking existing assignments to avoid shuffling
+                const currentUnpinned = sheep.filter(s => !finalIds.includes(s.id));
+                // Prioritize ones that were already visible to maintain stability
+                const alreadyVisible = currentUnpinned.filter(s => visibleIds.has(s.id));
+                const newlyVisible = currentUnpinned.filter(s => !visibleIds.has(s.id)).sort(() => 0.5 - Math.random());
 
-                if (unpinnedSheep.length > 0) {
-                    // Shuffle and Pick
-                    const shuffled = [...unpinnedSheep].sort(() => 0.5 - Math.random());
-                    const selected = shuffled.slice(0, slotsRemaining);
-                    finalIds = [...finalIds, ...selected.map(s => s.id)];
-                }
+                const toAdd = [...alreadyVisible, ...newlyVisible].slice(0, slotsRemaining);
+                finalIds = [...finalIds, ...toAdd.map(s => s.id)];
             }
 
+            // Reconcile slot assignments
+            const newAssignments = new Map();
+            let availableSlots = Array.from({ length: 10 }, (_, i) => i);
+
+            // First, keep existing slots if possible
+            finalIds.forEach(id => {
+                if (slotAssignments.current.has(id)) {
+                    const existingSlot = slotAssignments.current.get(id);
+                    if (availableSlots.includes(existingSlot)) {
+                        newAssignments.set(id, existingSlot);
+                        availableSlots = availableSlots.filter(s => s !== existingSlot);
+                    }
+                }
+            });
+
+            // Assign remaining
+            finalIds.forEach(id => {
+                if (!newAssignments.has(id) && availableSlots.length > 0) {
+                    newAssignments.set(id, availableSlots.shift());
+                }
+            });
+
+            slotAssignments.current = newAssignments;
             setVisibleIds(new Set(finalIds));
         };
 
         updateVisible();
         const interval = setInterval(updateVisible, 60000); // 60s Rotation
         return () => clearInterval(interval);
-    }, [settings?.maxVisibleSheep, settings?.pinnedSheepIds, sheep.length]); // Re-run if count changes
+    }, [settings?.maxVisibleSheep, settings?.pinnedSheepIds, sheep.length]); // Dropped FORMATION_SLOTS to avoid unnecessary re-triggers
 
-    // Derived Lists for Rendering
-    const visibleLiving = useMemo(() => {
+    const visibleLivingRaw = useMemo(() => {
         return sheep.filter(s => !isSleeping(s) && visibleIds.has(s.id));
     }, [sheep, visibleIds]);
 
+    const visibleLiving = useMemo(() => {
+        return visibleLivingRaw.map(s => {
+            const slotIdx = slotAssignments.current.get(s.id);
+            if (slotIdx === undefined) return s;
+            const slot = FORMATION_SLOTS[slotIdx % FORMATION_SLOTS.length];
+            return {
+                ...s,
+                formationConstraint: {
+                    centerX: slot.x,
+                    centerY: slot.y,
+                    radiusLeft: 2.5,
+                    radiusRight: 2.5,
+                    radiusTop: 1.0,
+                    radiusBottom: 1.0,
+                }
+            };
+        });
+    }, [visibleLivingRaw, FORMATION_SLOTS]);
+
+    // Derived Lists for Rendering
     const visibleSleeping = useMemo(() => {
         return sheep.filter(s => isSleeping(s) && visibleIds.has(s.id));
     }, [sheep, visibleIds]);
@@ -139,15 +190,21 @@ export const Field = ({ onSelectSheep }) => {
         return sheep.find(s => s.id === focusedSheepId);
     }, [sheep, focusedSheepId]);
 
-    // Force visibility of focused sheep
+    // Force visibility of focused sheep (and its slot)
     const finalVisibleLiving = useMemo(() => {
         if (!focusedSheepId) return visibleLiving;
         // If focused sheep is already visible, return as is
-        if (visibleLiving.find(s => s.id === focusedSheepId)) return visibleLiving;
+        let existing = visibleLiving.find(s => s.id === focusedSheepId);
+        if (existing) return visibleLiving;
+
         // If not, add it (temporarily exceed max count if needed)
         const target = sheep.find(s => s.id === focusedSheepId);
         if (target && !isSleeping(target)) {
-            return [...visibleLiving, target];
+            // Assign a temporary slot to the center screen if it wasn't in formation
+            return [...visibleLiving, {
+                ...target,
+                formationConstraint: { centerX: 50, centerY: 50, radiusLeft: 3, radiusRight: 3, radiusTop: 2, radiusBottom: 2 }
+            }];
         }
         return visibleLiving;
     }, [visibleLiving, focusedSheepId, sheep]);
