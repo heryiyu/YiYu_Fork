@@ -477,21 +477,23 @@
   overflow-x: hidden;
 }
 
+.sheep-detail-modal-form .modal-tabs {
+  padding: 12px 20px 6px;
+}
+
 /* UI Tabs System */
 .modal-tabs {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px;
-  /* 增加橫向 Padding 以容納陰影與焦點環 */
+  padding: 6px 4px;
   margin-bottom: 12px;
   width: auto;
   /* Allow items to define width */
-  margin-left: -16px;
-  /* Offset parent padding if necessary */
-  margin-right: -16px;
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: hidden;
+  /* Force hide vertical scroll */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -533,12 +535,13 @@
 /* Mobile Specific Adjustments for Tabs */
 @media (max-width: 480px) {
   .modal-tabs {
-    gap: 4px;
+    gap: 6px;
     justify-content: space-between;
+    padding: 6px 4px;
   }
 
   .modal-tab {
-    padding: 8px 10px;
+    padding: 8px 6px;
     font-size: 0.85rem;
     flex: 1;
     text-align: center;
