@@ -50,12 +50,12 @@ export const Field = ({ onSelectSheep }) => {
     // User requested max 10 sheep in a mobile-game-style formation (2 rows of 5 or 3/4/3)
     // We'll define 10 slots with {x, y} percentage coordinates on the field map
     const FORMATION_SLOTS = useMemo(() => [
-        // Back Row: High up the green field, just below the horizon
-        { x: 20, y: 60 }, { x: 50, y: 60 }, { x: 80, y: 60 },
-        // Middle Row: Center of the green field.
+        // Back Row (3 sheep): High up the green field, just below the horizon
+        { x: 25, y: 60 }, { x: 50, y: 60 }, { x: 75, y: 60 },
+        // Middle Row (4 sheep): Center of the green field.
         { x: 15, y: 48 }, { x: 38, y: 48 }, { x: 62, y: 48 }, { x: 85, y: 48 },
-        // Front Row: Safely above the bottom UI cards.
-        { x: 20, y: 36 }, { x: 50, y: 36 }, { x: 80, y: 36 }
+        // Front Row (3 sheep): Safely above the bottom UI cards.
+        { x: 25, y: 36 }, { x: 50, y: 36 }, { x: 75, y: 36 }
     ], []);
 
     const [visibleIds, setVisibleIds] = useState(new Set());
@@ -64,13 +64,12 @@ export const Field = ({ onSelectSheep }) => {
     useEffect(() => {
         const updateVisible = () => {
             if (!sheep || sheep.length === 0) return;
-            // 1. Get Pinned Ids (limit to 10 max)
-            const pinnedIds = (settings?.pinnedSheepIds || []).slice(0, 10);
+            // 1. Get Pinned Ids, but filter out deleted sheep FIRST before slicing to limit
             const currentSheepIds = new Set(sheep.map(s => s.id));
+            const pinnedIds = (settings?.pinnedSheepIds || []).filter(id => currentSheepIds.has(id)).slice(0, 10);
 
-            // 2. Only strictly use living sheep that are selected
-            const activePinnedIds = pinnedIds.filter(id => currentSheepIds.has(id));
-            const finalIds = [...activePinnedIds];
+            // 2. The filtered slice is our final list
+            const finalIds = [...pinnedIds];
 
             // Reconcile slot assignments
             const newAssignments = new Map();
@@ -103,21 +102,21 @@ export const Field = ({ onSelectSheep }) => {
         return () => clearInterval(interval);
     }, [settings?.pinnedSheepIds, sheep]); // React to list changes
 
-    const visibleLivingRaw = useMemo(() => {
-        return sheep.filter(s => !isSleeping(s) && visibleIds.has(s.id));
+    const visibleFormationRaw = useMemo(() => {
+        return sheep.filter(s => visibleIds.has(s.id));
     }, [sheep, visibleIds]);
 
-    const visibleLiving = useMemo(() => {
-        const isLonely = visibleLivingRaw.length > 0 && visibleLivingRaw.length < 3;
+    const visibleFormation = useMemo(() => {
+        const isLonely = visibleFormationRaw.length > 0 && visibleFormationRaw.length < 3;
 
-        return visibleLivingRaw.map((s, idx) => {
+        return visibleFormationRaw.map((s, idx) => {
             const slotIdx = slotAssignments.current.get(s.id);
             if (slotIdx === undefined) return s;
             const slot = FORMATION_SLOTS[slotIdx % FORMATION_SLOTS.length];
             return {
                 ...s,
                 // Add lonely message if there are less than 3 sheep in the whole farm field
-                message: (isLonely && idx === 0) ? "好孤單喔... 來設定多一點小羊吧！" : s.message,
+                message: (isLonely && idx === 0 && !isSleeping(s)) ? "好孤單喔... 來設定多一點小羊吧！" : s.message,
                 formationConstraint: {
                     centerX: slot.x,
                     centerY: slot.y,
@@ -128,44 +127,7 @@ export const Field = ({ onSelectSheep }) => {
                 }
             };
         });
-    }, [visibleLivingRaw, FORMATION_SLOTS]);
-
-    // Derived Lists for Rendering
-    const visibleSleeping = useMemo(() => {
-        return sheep.filter(s => isSleeping(s) && visibleIds.has(s.id));
-    }, [sheep, visibleIds]);
-
-    // --- 3. Ghost Sheep Positioning (Random Roam Simulation) ---
-    // Since sleeping sheep are no longer graveyard bound, we give them random positions
-    // In a real physics system, they would trigger 'move' updates.
-    // Here we just map them to static random float positions if they lack coordinates.
-    // Or we rely on the fact that they MIGHT have last known coordinates? 
-    // Let's assign them a random float position that changes periodically? 
-    // No, simple is stable: Assign random X/Y based on ID hash if X/Y is missing/zero.
-
-    // Seeded random for Ghosts
-    const ghostSheep = useMemo(() => {
-        return visibleSleeping.map(s => {
-            // If sheep has coordinates, use them (maybe they died there).
-            // But we want them to float around.
-            // Let's override X/Y with a "Ghost Position".
-            // We can use the seeded random based on ID + Time? No, just ID for stability.
-            // Seeded random for Ghosts
-            const seed = simpleHash(s.id);
-            const rand = (offset) => {
-                const x = Math.sin(seed + offset) * 10000;
-                return x - Math.floor(x);
-            };
-
-            return {
-                ...s,
-                // Float in the air (Screen Y 20-60%)
-                x: Math.floor(rand(1) * 90) + 5,
-                y: Math.floor(rand(2) * 50) + 20,
-                zIndex: 200 // Above ground items, below UI
-            };
-        });
-    }, [visibleSleeping]);
+    }, [visibleFormationRaw, FORMATION_SLOTS]);
 
 
 
@@ -175,23 +137,23 @@ export const Field = ({ onSelectSheep }) => {
     }, [sheep, focusedSheepId]);
 
     // Force visibility of focused sheep (and its slot)
-    const finalVisibleLiving = useMemo(() => {
-        if (!focusedSheepId) return visibleLiving;
+    const finalVisibleFormation = useMemo(() => {
+        if (!focusedSheepId) return visibleFormation;
         // If focused sheep is already visible, return as is
-        let existing = visibleLiving.find(s => s.id === focusedSheepId);
-        if (existing) return visibleLiving;
+        let existing = visibleFormation.find(s => s.id === focusedSheepId);
+        if (existing) return visibleFormation;
 
         // If not, add it (temporarily exceed max count if needed)
         const target = sheep.find(s => s.id === focusedSheepId);
-        if (target && !isSleeping(target)) {
+        if (target) {
             // Assign a temporary slot to the center screen if it wasn't in formation
-            return [...visibleLiving, {
+            return [...visibleFormation, {
                 ...target,
                 formationConstraint: { centerX: 50, centerY: 50, radiusLeft: 3, radiusRight: 3, radiusTop: 2, radiusBottom: 2 }
             }];
         }
-        return visibleLiving;
-    }, [visibleLiving, focusedSheepId, sheep]);
+        return visibleFormation;
+    }, [visibleFormation, focusedSheepId, sheep]);
 
 
     // Calculate Zoom Transform
@@ -283,15 +245,8 @@ export const Field = ({ onSelectSheep }) => {
                             position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%',
                             pointerEvents: 'none'
                         }}>
-                        {/* 1. Ghosts (Floaty) */}
-                        {ghostSheep.map(s => (
-                            <div key={s.id} style={{ pointerEvents: 'auto' }}>
-                                <Sheep sheep={s} onPray={prayForSheep} onSelect={onSelectSheep} containerSize={containerSize} />
-                            </div>
-                        ))}
-
-                        {/* 2. Living Sheep (Grounded) */}
-                        {finalVisibleLiving.map(s => (
+                        {/* 1. All Formation Sheep (Grounded / Floating based on type inside Sheep.jsx) */}
+                        {finalVisibleFormation.map(s => (
                             <div key={s.id} style={{ pointerEvents: 'auto' }}>
                                 <Sheep
                                     sheep={s}
@@ -308,20 +263,7 @@ export const Field = ({ onSelectSheep }) => {
 
             {/* Message / HUD Overlay usually goes here via App.jsx, but if Field owns some: */}
 
-            {/* Count Overlay: Show if Total Sheep > Currently Shown */}
-            {sheep.length > visibleIds.size && !focusedSheepId && (
-                <div style={{
-                    position: 'absolute', top: '80px', right: '10px',
-                    background: 'var(--color-primary-cream)', color: 'var(--color-text-brown)',
-                    padding: '8px 16px', borderRadius: 'var(--radius-btn)',
-                    fontSize: '0.85rem', pointerEvents: 'none', zIndex: 500,
-                    boxShadow: 'var(--shadow-soft)', fontWeight: 'bold',
-                    display: 'flex', alignItems: 'center', gap: '6px'
-                }}>
-                    <Eye size={14} strokeWidth={2} style={{ opacity: 0.8 }} />
-                    {visibleIds.size} / {sheep.length}
-                </div>
-            )}
+            {/* Count Overlay has been removed at user request */}
 
             {/* Call Focus Overlay Cancel Hint */}
             {focusedSheepId && (

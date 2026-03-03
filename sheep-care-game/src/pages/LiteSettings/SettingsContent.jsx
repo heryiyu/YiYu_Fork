@@ -9,12 +9,14 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
     const { updateSetting, togglePin } = useGameActions();
     const { settings } = useUserAuth();
 
+    // Filter out deleted sheep to get accurate count
+    const activePinnedCount = (settings?.pinnedSheepIds || []).filter(id => sheep.some(s => s.id === id)).length;
+
     const handleToggleSheep = (sheepId, isCurrentlySelected) => {
         if (isCurrentlySelected) {
             togglePin(sheepId);
         } else {
-            const currentCount = settings.pinnedSheepIds?.length || 0;
-            if (currentCount < 10) {
+            if (activePinnedCount < 10) {
                 togglePin(sheepId);
             }
         }
@@ -53,7 +55,7 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                             </h4>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted-light)', marginBottom: '12px', lineHeight: '1.4' }}>
                                 請挑選 1 到 10 隻最愛的小羊，牠們將會出現在主畫面的草地上排隊散步。<br />
-                                <strong>目前已選：<span style={{ color: (settings?.pinnedSheepIds?.length >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{settings?.pinnedSheepIds?.length || 0} / 10</span></strong>
+                                <strong>目前已選：<span style={{ color: (activePinnedCount >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{activePinnedCount} / 10</span></strong>
                             </p>
 
                             <div className="sheep-selection-list" style={{
@@ -68,7 +70,7 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                                 ) : (
                                     sheep.map(s => {
                                         const isSelected = settings?.pinnedSheepIds?.includes(s.id);
-                                        const atLimit = (settings?.pinnedSheepIds?.length || 0) >= 10;
+                                        const atLimit = activePinnedCount >= 10;
 
                                         return (
                                             <label key={s.id} style={{
