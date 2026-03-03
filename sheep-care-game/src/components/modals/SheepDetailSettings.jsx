@@ -130,7 +130,6 @@ export const SheepDetailSettings = ({
                 <select
                     value={target?.spiritualMaturity || ''}
                     onChange={(e) => handleBasicAutoSave('spiritualMaturity', e.target.value)}
-                    disabled={isSleepingState}
                 >
                     <option value="">未設定</option>
                     <option value="新朋友">新朋友</option>

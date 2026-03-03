@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useGame } from '../../context/GameContext';
+import { useGame, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
 import { ASSETS } from '../../utils/AssetRegistry';
 import { User } from 'lucide-react';
 
 export const UserProfile = () => {
     const { nickname, sheep, weather, location, updateNickname, currentUser, userAvatarUrl } = useGame();
+    const { updateSetting } = useGameActions();
+    const { settings } = useUserAuth();
     const [expanded, setExpanded] = useState(false);
     const [name, setName] = useState(nickname || '');
     const [isEditing, setIsEditing] = useState(false);
@@ -132,6 +134,33 @@ export const UserProfile = () => {
                             <img src={ASSETS.SHEEP_VARIANTS.CLASSIC_WHITE.HEALTHY} alt="" width={24} height={24} style={{ display: 'block', objectFit: 'contain' }} />
                         </span>
                         <span className="text-label">目前擁有 {sheep?.length || 0} 隻小羊</span>
+                    </div>
+
+                    <div style={{ height: '1px', background: 'rgba(0,0,0,0.1)', margin: '5px 0' }}></div>
+
+                    {/* Lite Mode Toggle */}
+                    <div className="widget-header" style={{ justifyContent: 'space-between', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="icon">📝</span>
+                            <span className="text-label">清單模式</span>
+                        </div>
+                        <div
+                            className={`toggle-switch ${settings?.liteMode ? 'active' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation(); // prevent collapsing the widget immediately
+                                updateSetting('liteMode', !settings?.liteMode);
+                            }}
+                            style={{
+                                width: '36px', height: '20px', background: settings?.liteMode ? 'var(--palette-blue-action)' : 'var(--border-subtle)',
+                                borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s'
+                            }}
+                        >
+                            <div style={{
+                                width: '16px', height: '16px', background: 'white', borderRadius: '50%',
+                                position: 'absolute', top: '2px', left: settings?.liteMode ? '18px' : '2px',
+                                transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                            }} />
+                        </div>
                     </div>
                 </div>
             )}

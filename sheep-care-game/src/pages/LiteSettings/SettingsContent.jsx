@@ -5,12 +5,19 @@ import { Slider } from '../../components/ui/Slider';
 import { Tag } from '../../components/ui/Tag';
 
 export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
-    const { tags } = useGameState();
-    const { updateSetting } = useGameActions();
+    const { tags, sheep } = useGameState();
+    const { updateSetting, togglePin } = useGameActions();
     const { settings } = useUserAuth();
 
-    const handleChange = (e) => {
-        updateSetting('maxVisibleSheep', parseInt(e.target.value));
+    const handleToggleSheep = (sheepId, isCurrentlySelected) => {
+        if (isCurrentlySelected) {
+            togglePin(sheepId);
+        } else {
+            const currentCount = settings.pinnedSheepIds?.length || 0;
+            if (currentCount < 10) {
+                togglePin(sheepId);
+            }
+        }
     };
 
     return (
@@ -41,53 +48,68 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                 {activeTab === 'DISPLAY' && (
                     <div className="modal-content" style={{ padding: '10px' }}>
                         <div className="form-group">
-                            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                <span>簡約資訊模式</span>
-                                <div
-                                    className={`toggle-switch ${settings.liteMode ? 'active' : ''}`}
-                                    onClick={() => updateSetting('liteMode', !settings.liteMode)}
-                                    style={{
-                                        width: '44px', height: '24px', background: settings.liteMode ? 'var(--palette-blue-action)' : 'var(--border-subtle)',
-                                        borderRadius: '12px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s'
-                                    }}
-                                >
-                                    <div style={{
-                                        width: '20px', height: '20px', background: 'white', borderRadius: '50%',
-                                        position: 'absolute', top: '2px', left: settings.liteMode ? '22px' : '2px',
-                                        transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                                    }} />
-                                </div>
-                            </label>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted-light)', display: 'block', marginBottom: '15px' }}>
-                                隱藏花草農場與動畫，專注於大版面的純文字管理列表。
-                            </span>
+                            <h4 style={{ marginBottom: '8px', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                🐑 陣型管理 (指定列隊小羊)
+                            </h4>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted-light)', marginBottom: '12px', lineHeight: '1.4' }}>
+                                請挑選 1 到 10 隻最愛的小羊，牠們將會出現在主畫面的草地上排隊散步。<br />
+                                <strong>目前已選：<span style={{ color: (settings?.pinnedSheepIds?.length >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{settings?.pinnedSheepIds?.length || 0} / 10</span></strong>
+                            </p>
 
-                            {!settings.liteMode && (
-                                <>
-                                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>畫面顯示小羊數量</span>
-                                        <span style={{ color: 'var(--palette-blue-action)' }}>{settings.maxVisibleSheep} 隻</span>
-                                    </label>
-
-                                    <Slider
-                                        min={10}
-                                        max={50}
-                                        step={5}
-                                        value={settings.maxVisibleSheep}
-                                        onChange={handleChange}
-                                        ariaLabel="畫面顯示小羊數量"
-                                    />
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted-light)', marginTop: '5px' }}>
-                                        <span>10 (效能)</span>
-                                        <span>50 (豐富)</span>
+                            <div className="sheep-selection-list" style={{
+                                maxHeight: '250px', overflowY: 'auto',
+                                border: '1px solid var(--border-subtle)', borderRadius: '8px',
+                                background: 'white'
+                            }}>
+                                {sheep.length === 0 ? (
+                                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        牧場裡還沒有小羊喔！
                                     </div>
+                                ) : (
+                                    sheep.map(s => {
+                                        const isSelected = settings?.pinnedSheepIds?.includes(s.id);
+                                        const atLimit = (settings?.pinnedSheepIds?.length || 0) >= 10;
 
-                                    <ModalHint className="modal-info-box" style={{ marginTop: '10px' }}>
-                                        當小羊總數超過此設定時，系統會每分鐘<b>隨機輪播</b>，讓不同的小羊輪流出來透氣，同時保持畫面流暢不卡頓。
-                                    </ModalHint>
-                                </>
-                            )}
+                                        return (
+                                            <label key={s.id} style={{
+                                                display: 'flex', alignItems: 'center', padding: '12px',
+                                                borderBottom: '1px solid var(--border-subtle)',
+                                                cursor: (atLimit && !isSelected) ? 'not-allowed' : 'pointer',
+                                                opacity: (atLimit && !isSelected) ? 0.5 : 1,
+                                                transition: 'background 0.2s'
+                                            }}
+                                                onMouseEnter={(e) => {
+                                                    if (!(atLimit && !isSelected)) e.currentTarget.style.background = 'var(--bg-content-subtle)';
+                                                }}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!isSelected}
+                                                    onChange={() => handleToggleSheep(s.id, isSelected)}
+                                                    disabled={atLimit && !isSelected}
+                                                    style={{
+                                                        marginRight: '12px', width: '20px', height: '20px',
+                                                        accentColor: 'var(--palette-blue-action)', cursor: 'inherit'
+                                                    }}
+                                                />
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: isSelected ? 'bold' : 'normal', color: 'var(--text-body)' }}>
+                                                        {s.name || '未命名小羊'}
+                                                    </span>
+                                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                        健康度: {s.health}%
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            <ModalHint className="modal-info-box" style={{ marginTop: '12px' }}>
+                                提示：如果您選擇的小於 3 隻，草地上的小羊會覺得孤單喔！
+                            </ModalHint>
                         </div>
 
                         {onSave && (

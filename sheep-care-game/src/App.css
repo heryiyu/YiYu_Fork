@@ -1795,6 +1795,43 @@ input[type="range"]::-moz-range-thumb:hover {
   white-space: nowrap;
 }
 
+/* --- Lite Mode Overrides for Profile HUD --- */
+.lite-mode .profile-hud-widget {
+  top: 5px;
+  left: 20px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  z-index: 20;
+  /* above the navbar */
+}
+
+/* Hide the sheep count info in normal view since it breaks navbar height */
+.lite-mode .profile-hud-widget:not(.expanded) .widget-collapsed-info {
+  display: none;
+}
+
+.lite-mode .profile-hud-widget:not(.expanded):hover {
+  background: #f8f9fa;
+  /* Subtle flat hover effect */
+}
+
+.lite-mode .profile-hud-widget.expanded {
+  top: 5px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+/* Also ensure the extra info is visible when expanded */
+.lite-mode .profile-hud-widget.expanded .widget-collapsed-info {
+  display: flex;
+}
+
 /* --- Sheep Dock (Responsive) --- */
 .sheep-dock-container {
   position: absolute;

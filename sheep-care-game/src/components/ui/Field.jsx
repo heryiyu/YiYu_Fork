@@ -64,39 +64,19 @@ export const Field = ({ onSelectSheep }) => {
     useEffect(() => {
         const updateVisible = () => {
             if (!sheep || sheep.length === 0) return;
-            // Force max 10 sheep
-            const max = typeof settings?.maxVisibleSheep === 'number' ? Math.min(settings.maxVisibleSheep, 10) : 10;
-            const pinnedIds = settings?.pinnedSheepIds || [];
-
-            // 1. Separate Favorites and Others (Living + Dead mixed)
+            // 1. Get Pinned Ids (limit to 10 max)
+            const pinnedIds = (settings?.pinnedSheepIds || []).slice(0, 10);
             const currentSheepIds = new Set(sheep.map(s => s.id));
+
+            // 2. Only strictly use living sheep that are selected
             const activePinnedIds = pinnedIds.filter(id => currentSheepIds.has(id));
-
-            let finalIds = [];
-
-            // 2. Add Favorites (Up to Max)
-            const pinnedToTake = activePinnedIds.slice(0, max);
-            // Must be living to be put in formation slots, sleeping are ghosts
-            finalIds = [...pinnedToTake];
-
-            // 3. Fill Remaining Slots
-            const slotsRemaining = max - finalIds.length;
-            if (slotsRemaining > 0) {
-                // Determine missing unpinned by checking existing assignments to avoid shuffling
-                const currentUnpinned = sheep.filter(s => !finalIds.includes(s.id));
-                // Prioritize ones that were already visible to maintain stability
-                const alreadyVisible = currentUnpinned.filter(s => visibleIds.has(s.id));
-                const newlyVisible = currentUnpinned.filter(s => !visibleIds.has(s.id)).sort(() => 0.5 - Math.random());
-
-                const toAdd = [...alreadyVisible, ...newlyVisible].slice(0, slotsRemaining);
-                finalIds = [...finalIds, ...toAdd.map(s => s.id)];
-            }
+            const finalIds = [...activePinnedIds];
 
             // Reconcile slot assignments
             const newAssignments = new Map();
             let availableSlots = Array.from({ length: 10 }, (_, i) => i);
 
-            // First, keep existing slots if possible
+            // Keep existing slots if possible to avoid shuffling
             finalIds.forEach(id => {
                 if (slotAssignments.current.has(id)) {
                     const existingSlot = slotAssignments.current.get(id);
@@ -119,21 +99,25 @@ export const Field = ({ onSelectSheep }) => {
         };
 
         updateVisible();
-        const interval = setInterval(updateVisible, 60000); // 60s Rotation
+        const interval = setInterval(updateVisible, 60000); // 60s Rotation (keeps it fresh if sheep status changes)
         return () => clearInterval(interval);
-    }, [settings?.maxVisibleSheep, settings?.pinnedSheepIds, sheep.length]); // Dropped FORMATION_SLOTS to avoid unnecessary re-triggers
+    }, [settings?.pinnedSheepIds, sheep]); // React to list changes
 
     const visibleLivingRaw = useMemo(() => {
         return sheep.filter(s => !isSleeping(s) && visibleIds.has(s.id));
     }, [sheep, visibleIds]);
 
     const visibleLiving = useMemo(() => {
-        return visibleLivingRaw.map(s => {
+        const isLonely = visibleLivingRaw.length > 0 && visibleLivingRaw.length < 3;
+
+        return visibleLivingRaw.map((s, idx) => {
             const slotIdx = slotAssignments.current.get(s.id);
             if (slotIdx === undefined) return s;
             const slot = FORMATION_SLOTS[slotIdx % FORMATION_SLOTS.length];
             return {
                 ...s,
+                // Add lonely message if there are less than 3 sheep in the whole farm field
+                message: (isLonely && idx === 0) ? "好孤單喔... 來設定多一點小羊吧！" : s.message,
                 formationConstraint: {
                     centerX: slot.x,
                     centerY: slot.y,

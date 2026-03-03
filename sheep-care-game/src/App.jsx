@@ -85,14 +85,15 @@ function App() {
     <div className={`game-container ${settings.liteMode ? 'lite-mode' : ''}`} key={currentUser} data-theme={weather?.timeStatus || 'day'}>
       <Toast key={message || 'toast'} message={message} />
 
+      {/* --- Unified Top Left Widget matches both modes --- */}
+      <UserProfile />
+
       {settings.liteMode ? (
         <LiteAppLayout
           onSelectSheep={handleSelectFromList}
         />
       ) : (
         <>
-          {/* --- Unified Top Left Widget --- */}
-          <UserProfile />
 
           {/* --- HUD: Top Right System Buttons (Lucide icons) --- */}
           <div className="hud-right">
