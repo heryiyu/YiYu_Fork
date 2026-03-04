@@ -2,21 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useGameState, useGameActions, useUserAuth } from './context/GameContext/useGame';
 import { Field } from './components/ui/Field';
 
-import { SheepDetailModal } from './components/modals/SheepDetailModal';
-import { Guide } from './components/game/Guide';
-import { Login } from './components/auth/Login';
-import { NicknameSetup } from './components/auth/NicknameSetup';
 import { SheepList } from './components/game/SheepList';
-import { SettingsModal } from './components/modals/SettingsModal';
 import { UserProfile } from './components/auth/UserProfile';
 import { Toast } from './components/ui/Toast';
 import { Tooltip } from './components/ui/Tooltip';
 import { ConnectionErrorOverlay } from './components/ui/ConnectionErrorOverlay';
 import './App.css';
 
+import { Suspense, lazy } from 'react';
+const SheepDetailModal = lazy(() => import('./components/modals/SheepDetailModal').then(module => ({ default: module.SheepDetailModal })));
+const Guide = lazy(() => import('./components/game/Guide').then(module => ({ default: module.Guide })));
+const SettingsModal = lazy(() => import('./components/modals/SettingsModal').then(module => ({ default: module.SettingsModal })));
+const ScheduleListModal = lazy(() => import('./components/modals/ScheduleListModal').then(module => ({ default: module.ScheduleListModal })));
+const IntroVideo = lazy(() => import('./components/game/IntroVideo').then(module => ({ default: module.IntroVideo })));
+
+import { Login } from './components/auth/Login';
+import { NicknameSetup } from './components/auth/NicknameSetup';
 import { AssetPreloader } from './components/game/AssetPreloader';
-import { IntroVideo } from './components/game/IntroVideo';
-import { ScheduleListModal } from './components/modals/ScheduleListModal';
 import { LiteAppLayout } from './components/layout/LiteAppLayout';
 import { Bell, BellOff, BookOpen, Settings, Menu, Calendar } from 'lucide-react';
 
@@ -179,41 +181,43 @@ function App() {
         </>
       )}
 
-      {selectedSheepId && !settings.liteMode && (
-        <SheepDetailModal
-          selectedSheepId={selectedSheepId}
-          initialPlanId={selectedPlanId}
-          onClose={() => {
-            setSelectedSheepId(null);
-            setSelectedPlanId(null);
-          }}
-        />
-      )}
+      <Suspense fallback={null}>
+        {selectedSheepId && !settings.liteMode && (
+          <SheepDetailModal
+            selectedSheepId={selectedSheepId}
+            initialPlanId={selectedPlanId}
+            onClose={() => {
+              setSelectedSheepId(null);
+              setSelectedPlanId(null);
+            }}
+          />
+        )}
 
-      {showGuide && !settings.liteMode && (
-        <Guide onClose={() => setShowGuide(false)} />
-      )}
+        {showGuide && !settings.liteMode && (
+          <Guide onClose={() => setShowGuide(false)} />
+        )}
 
-      {showSettings && !settings.liteMode && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
-      )}
+        {showSettings && !settings.liteMode && (
+          <SettingsModal onClose={() => setShowSettings(false)} />
+        )}
 
-      {showSchedule && (
-        <ScheduleListModal
-          onClose={() => setShowSchedule(false)}
-          onSelectSheep={(sheepId, planId) => {
-            setSelectedSheepId(sheepId);
-            if (planId) setSelectedPlanId(planId);
-          }}
-        />
-      )}
+        {showSchedule && (
+          <ScheduleListModal
+            onClose={() => setShowSchedule(false)}
+            onSelectSheep={(sheepId, planId) => {
+              setSelectedSheepId(sheepId);
+              if (planId) setSelectedPlanId(planId);
+            }}
+          />
+        )}
 
-      {showIntroVideo && (
-        <IntroVideo
-          onClose={markIntroWatched}
-          onComplete={markIntroWatched}
-        />
-      )}
+        {showIntroVideo && (
+          <IntroVideo
+            onClose={markIntroWatched}
+            onComplete={markIntroWatched}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
