@@ -47,72 +47,53 @@ export const Field = ({ onSelectSheep }) => {
 
     // --- 2. Living Sheep Rotation (Existing Logic) ---
     // --- 2. Visibility Logic & Formation Slots (Pinned > Random) ---
-    // User requested max 10 sheep in a mobile-game-style formation (2 rows of 5 or 3/4/3)
-    // We'll define 10 slots with {x, y} percentage coordinates on the field map
-    const FORMATION_SLOTS = useMemo(() => [
-        // Back Row (3 sheep): High up the green field, just below the horizon
-        { x: 25, y: 60 }, { x: 50, y: 60 }, { x: 75, y: 60 },
-        // Middle Row (4 sheep): Center of the green field.
-        { x: 15, y: 48 }, { x: 38, y: 48 }, { x: 62, y: 48 }, { x: 85, y: 48 },
-        // Front Row (3 sheep): Safely above the bottom UI cards.
-        { x: 25, y: 36 }, { x: 50, y: 36 }, { x: 75, y: 36 }
-    ], []);
-
-    const [visibleIds, setVisibleIds] = useState(new Set());
-    const slotAssignments = useRef(new Map());
-
-    useEffect(() => {
-        const updateVisible = () => {
-            if (!sheep || sheep.length === 0) return;
-            // 1. Get Pinned Ids, but filter out deleted sheep FIRST before slicing to limit
-            const currentSheepIds = new Set(sheep.map(s => s.id));
-            const pinnedIds = (settings?.pinnedSheepIds || []).filter(id => currentSheepIds.has(id)).slice(0, 10);
-
-            // 2. The filtered slice is our final list
-            const finalIds = [...pinnedIds];
-
-            // Reconcile slot assignments
-            const newAssignments = new Map();
-            let availableSlots = Array.from({ length: 10 }, (_, i) => i);
-
-            // Keep existing slots if possible to avoid shuffling
-            finalIds.forEach(id => {
-                if (slotAssignments.current.has(id)) {
-                    const existingSlot = slotAssignments.current.get(id);
-                    if (availableSlots.includes(existingSlot)) {
-                        newAssignments.set(id, existingSlot);
-                        availableSlots = availableSlots.filter(s => s !== existingSlot);
-                    }
-                }
-            });
-
-            // Assign remaining
-            finalIds.forEach(id => {
-                if (!newAssignments.has(id) && availableSlots.length > 0) {
-                    newAssignments.set(id, availableSlots.shift());
-                }
-            });
-
-            slotAssignments.current = newAssignments;
-            setVisibleIds(new Set(finalIds));
+    // User requested different formations based on the number of selected sheep (1 to 10)
+    // We define coordinate layouts (x, y percentages) for each possible count to ensure symmetry
+    const DYNAMIC_FORMATIONS = useMemo(() => {
+        return {
+            1: [{ x: 50, y: 48 }], // 1: Center
+            2: [{ x: 35, y: 48 }, { x: 65, y: 48 }], // 2: Side by side
+            3: [{ x: 50, y: 60 }, { x: 30, y: 40 }, { x: 70, y: 40 }], // 3: Triangle (1 back, 2 front)
+            4: [{ x: 35, y: 56 }, { x: 65, y: 56 }, { x: 35, y: 40 }, { x: 65, y: 40 }], // 4: Box 2x2
+            5: [{ x: 35, y: 56 }, { x: 65, y: 56 }, { x: 25, y: 40 }, { x: 50, y: 40 }, { x: 75, y: 40 }], // 5: 2 back, 3 front
+            6: [{ x: 25, y: 56 }, { x: 50, y: 56 }, { x: 75, y: 56 }, { x: 25, y: 40 }, { x: 50, y: 40 }, { x: 75, y: 40 }], // 6: 3 back, 3 front
+            7: [{ x: 25, y: 60 }, { x: 50, y: 60 }, { x: 75, y: 60 }, { x: 15, y: 44 }, { x: 38, y: 44 }, { x: 62, y: 44 }, { x: 85, y: 44 }], // 7: 3 back, 4 front
+            8: [{ x: 35, y: 62 }, { x: 65, y: 62 }, { x: 15, y: 48 }, { x: 50, y: 48 }, { x: 85, y: 48 }, { x: 25, y: 34 }, { x: 50, y: 34 }, { x: 75, y: 34 }], // 8: 2-3-3
+            9: [{ x: 25, y: 62 }, { x: 50, y: 62 }, { x: 75, y: 62 }, { x: 15, y: 48 }, { x: 50, y: 48 }, { x: 85, y: 48 }, { x: 25, y: 34 }, { x: 50, y: 34 }, { x: 75, y: 34 }], // 9: 3-3-3
+            10: [
+                { x: 25, y: 60 }, { x: 50, y: 60 }, { x: 75, y: 60 }, // Back 3
+                { x: 15, y: 48 }, { x: 38, y: 48 }, { x: 62, y: 48 }, { x: 85, y: 48 }, // Middle 4
+                { x: 25, y: 36 }, { x: 50, y: 36 }, { x: 75, y: 36 }  // Front 3
+            ]
         };
+    }, []);
 
-        updateVisible();
-        const interval = setInterval(updateVisible, 60000); // 60s Rotation (keeps it fresh if sheep status changes)
-        return () => clearInterval(interval);
-    }, [settings?.pinnedSheepIds, sheep]); // React to list changes
+    const visibleIds = useMemo(() => {
+        if (!sheep || sheep.length === 0) return new Set();
+        // 1. Get Pinned Ids, but filter out deleted sheep FIRST before slicing to limit
+        const currentSheepIds = new Set(sheep.map(s => s.id));
+        const pinnedIds = (settings?.pinnedSheepIds || []).filter(id => currentSheepIds.has(id)).slice(0, 10);
+        return new Set(pinnedIds);
+    }, [settings?.pinnedSheepIds, sheep]);
 
     const visibleFormationRaw = useMemo(() => {
         return sheep.filter(s => visibleIds.has(s.id));
     }, [sheep, visibleIds]);
 
     const visibleFormation = useMemo(() => {
-        const isLonely = visibleFormationRaw.length > 0 && visibleFormationRaw.length < 3;
+        const count = visibleFormationRaw.length;
+        const isLonely = count > 0 && count < 3;
+        const currentFormation = DYNAMIC_FORMATIONS[count] || DYNAMIC_FORMATIONS[10];
 
-        return visibleFormationRaw.map((s, idx) => {
-            const slotIdx = slotAssignments.current.get(s.id);
-            if (slotIdx === undefined) return s;
-            const slot = FORMATION_SLOTS[slotIdx % FORMATION_SLOTS.length];
+        // Sort the raw sheep array so that the slots mapping is consistent
+        // We can sort by ID to ensure a stable assignment
+        const sortedSheep = [...visibleFormationRaw].sort((a, b) => a.id.localeCompare(b.id));
+
+        return sortedSheep.map((s, idx) => {
+            // For dynamic formations, we just use the index because the formation size perfectly matches the element count
+            const slot = currentFormation[idx];
+            if (!slot) return s; // Fallback
+
             return {
                 ...s,
                 // Add lonely message if there are less than 3 sheep in the whole farm field
@@ -120,14 +101,14 @@ export const Field = ({ onSelectSheep }) => {
                 formationConstraint: {
                     centerX: slot.x,
                     centerY: slot.y,
-                    radiusLeft: 2.5,
-                    radiusRight: 2.5,
+                    radiusLeft: 2.0, // Tighter radius for dynamic formations
+                    radiusRight: 2.0,
                     radiusTop: 1.0,
                     radiusBottom: 1.0,
                 }
             };
         });
-    }, [visibleFormationRaw, FORMATION_SLOTS]);
+    }, [visibleFormationRaw, DYNAMIC_FORMATIONS, settings?.pinnedSheepIds]);
 
 
 
@@ -275,6 +256,22 @@ export const Field = ({ onSelectSheep }) => {
                     backdropFilter: 'blur(4px)'
                 }}>
                     點擊畫面任意處取消鎖定
+                </div>
+            )}
+
+            {/* Empty Formation Hint */}
+            {sheep.length > 0 && finalVisibleFormation.length === 0 && (
+                <div style={{
+                    position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                    background: 'rgba(255, 255, 255, 0.85)', color: 'var(--text-muted)',
+                    padding: '16px 24px', borderRadius: '16px',
+                    fontSize: '0.95rem', pointerEvents: 'none', zIndex: 10,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)', textAlign: 'center',
+                    backdropFilter: 'blur(8px)', border: '1px solid rgba(0,0,0,0.05)',
+                    lineHeight: '1.6', fontWeight: 'bold'
+                }}>
+                    目前沒有設定陣型小羊 🐑<br />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 'normal' }}>請至右上角「設定」圖示挑選</span>
                 </div>
             )}
 

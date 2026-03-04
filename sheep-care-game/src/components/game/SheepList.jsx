@@ -290,7 +290,7 @@ export const SheepList = ({ onSelect, forcedViewMode }) => {
 
     // Calculate height
     const isExpanded = isForcedExpand || settings?.isSheepListExpanded;
-    let listHeight = isCollapsed && !isForcedExpand ? '0px' : (isExpanded ? 'calc(100vh - 56px)' : 'clamp(180px, 25vh, 260px)');
+    let listHeight = isCollapsed && !isForcedExpand ? '0px' : (isExpanded ? 'calc(100vh - 56px - 64px)' : 'clamp(180px, 25vh, 260px)');
 
     // In full lite mode, the dock group itself shouldn't restrict height transitions down
     if (isForcedExpand) {

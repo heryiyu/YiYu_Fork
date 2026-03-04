@@ -2342,3 +2342,24 @@ input[type="range"]::-moz-range-thumb:hover {
   color: var(--palette-blue-action);
   background: rgba(var(--color-primary-rgb), 0.03);
 }
+
+/* Prevent fullscreen modals from obscuring top UI on mobile */
+@media (max-width: 640px) {
+
+  .debug-editor-overlay,
+  .modal-overlay,
+  .winning-modal-overlay {
+    top: 64px !important;
+    height: calc(100% - 64px) !important;
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-card {
+    height: 100% !important;
+    max-height: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-bottom: none !important;
+    margin: 0 !important;
+  }
+}
