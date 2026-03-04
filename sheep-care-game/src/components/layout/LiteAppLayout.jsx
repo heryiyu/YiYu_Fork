@@ -18,11 +18,9 @@ export const LiteAppLayout = ({
     onSelectSheep
 }) => {
     const { sheep, tags, tagAssignmentsBySheep } = useGameState();
-    const { settings, nickname } = useUserAuth();
-    const { signOut, adoptSheep, deleteMultipleSheep, updateMultipleSheep } = useGameActions();
+    const { settings } = useUserAuth();
+    const { updateSetting, adoptSheep, deleteMultipleSheep, updateMultipleSheep } = useGameActions();
     const confirm = useConfirm();
-
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showTagManagerModal, setShowTagManagerModal] = useState(false);
 
@@ -140,9 +138,8 @@ export const LiteAppLayout = ({
     return (
         <div className="lite-app-layout">
             <header className="lite-navbar">
-                <div className="lite-nav-brand">
-                    <span className="lite-logo">🐑</span>
-                    <h2>認領禱告管理系統</h2>
+                <div className="lite-nav-spacer" style={{ width: '180px' }}>
+                    {/* Placeholder to make room for the absolute-positioned UserProfile widget */}
                 </div>
 
                 <div className="lite-nav-actions">
@@ -153,37 +150,27 @@ export const LiteAppLayout = ({
                         </button>
                     </Tooltip>
 
-                    <nav className="lite-nav-menu is-desktop">
-                        <button className="lite-nav-btn" onClick={() => setActiveView('SCHEDULE')} title="牧羊人週記">
-                            <Calendar size={18} />
-                        </button>
-                        <button className="lite-nav-btn" onClick={() => setActiveView('GUIDE')} title="使用說明">
-                            <BookOpen size={18} />
-                        </button>
-                        <button className="lite-nav-btn" onClick={() => setActiveView('SETTINGS')} title="系統設定">
-                            <Settings size={18} />
-                        </button>
-                    </nav>
+                    <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border-subtle)', margin: '0 8px' }}></div>
 
-                    <div className="lite-nav-user">
-                        <div className="lite-user-dropdown-trigger" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                            <User size={18} />
-                            <span className="lite-user-name">{nickname}</span>
-                        </div>
-                        {isMenuOpen && (
-                            <div className="lite-user-dropdown">
-                                <button className="lite-dropdown-item is-mobile" onClick={() => { setActiveView('SCHEDULE'); setIsMenuOpen(false); }}>
-                                    <Calendar size={16} /> 牧羊人週記
-                                </button>
-                                <button className="lite-dropdown-item is-mobile" onClick={() => { setActiveView('GUIDE'); setIsMenuOpen(false); }}>
-                                    <BookOpen size={16} /> 使用說明
-                                </button>
-                                <button className="lite-dropdown-item is-mobile" onClick={() => { setActiveView('SETTINGS'); setIsMenuOpen(false); }}>
-                                    <Settings size={16} /> 系統設定
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    <nav className="lite-nav-menu" style={{ display: 'flex', gap: '8px' }}>
+                        <Tooltip content="牧羊人週記" side="bottom">
+                            <button className="lite-nav-btn" onClick={() => setActiveView('SCHEDULE')}>
+                                <Calendar size={18} />
+                            </button>
+                        </Tooltip>
+
+                        <Tooltip content="使用說明" side="bottom">
+                            <button className="lite-nav-btn" onClick={() => setActiveView('GUIDE')}>
+                                <BookOpen size={18} />
+                            </button>
+                        </Tooltip>
+
+                        <Tooltip content="系統設定" side="bottom">
+                            <button className="lite-nav-btn" onClick={() => setActiveView('SETTINGS')}>
+                                <Settings size={18} />
+                            </button>
+                        </Tooltip>
+                    </nav>
                 </div>
             </header>
 
