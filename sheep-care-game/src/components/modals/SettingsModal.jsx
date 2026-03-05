@@ -6,7 +6,7 @@ import { SettingsContent } from '../../pages/LiteSettings/SettingsContent';
 export const SettingsModal = ({ onClose }) => {
     const closeBtnRef = useRef(null);
     const isMobile = useIsMobile();
-    const [activeTab, setActiveTab] = React.useState('DISPLAY');
+    const [activeTab, setActiveTab] = React.useState('QUEUE');
 
     useEffect(() => {
         const handleKeyDown = (e) => {

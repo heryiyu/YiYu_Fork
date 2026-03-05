@@ -398,6 +398,8 @@ export const GameProvider = ({ children }) => {
                 sheepListViewMode: 'card',
                 isSheepListExpanded: false,
                 prayedCount: 0,
+                pinnedSheepIds: [],
+                queuedSheepIds: [],
                 ...rawSettings
             };
 
@@ -641,17 +643,29 @@ export const GameProvider = ({ children }) => {
             const currentPinned = prev.pinnedSheepIds || [];
             const isCurrentlyPinned = currentPinned.includes(sheepId);
 
-            if (!isCurrentlyPinned) {
-                // Filter out deleted sheep to get accurate count
-                const activeCount = currentPinned.filter(id => sheep.some(s => s.id === id)).length;
+            const nextPinned = isCurrentlyPinned ? currentPinned.filter(id => id !== sheepId) : [...currentPinned, sheepId];
+            const newSettings = { ...prev, pinnedSheepIds: nextPinned };
+            localStorage.setItem('sheep_game_settings', JSON.stringify(newSettings));
+            saveToCloud({ settings: newSettings });
+            return newSettings;
+        });
+    }, [saveToCloud]);
+
+    const toggleQueue = useCallback((sheepId) => {
+        setSettings(prev => {
+            const currentQueued = prev.queuedSheepIds || [];
+            const isCurrentlyQueued = currentQueued.includes(sheepId);
+
+            if (!isCurrentlyQueued) {
+                const activeCount = currentQueued.filter(id => sheep.some(s => s.id === id)).length;
                 if (activeCount >= 10) {
                     showMessage("列隊小羊最多只能設定 10 隻喔！", "warning");
                     return prev;
                 }
             }
 
-            const nextPinned = isCurrentlyPinned ? currentPinned.filter(id => id !== sheepId) : [...currentPinned, sheepId];
-            const newSettings = { ...prev, pinnedSheepIds: nextPinned };
+            const nextQueued = isCurrentlyQueued ? currentQueued.filter(id => id !== sheepId) : [...currentQueued, sheepId];
+            const newSettings = { ...prev, queuedSheepIds: nextQueued };
             localStorage.setItem('sheep_game_settings', JSON.stringify(newSettings));
             saveToCloud({ settings: newSettings });
             return newSettings;
@@ -928,14 +942,14 @@ export const GameProvider = ({ children }) => {
 
     // --- 12. Context Value Composition ---
     const actions = useMemo(() => ({
-        setNickname, updateUserLocation, adoptSheep, updateSheep, updateMultipleSheep, togglePin,
+        setNickname, updateUserLocation, adoptSheep, updateSheep, updateMultipleSheep, togglePin, toggleQueue,
         loginWithLine, loginAsAdmin, logout, prayForSheep, completePlan, deleteSheep, deleteMultipleSheep,
         saveToCloud, forceLoadFromCloud, toggleNotification, updateNickname, markIntroWatched,
         updateSetting, setWeather, loadTags, createTag, updateTag, deleteTag, setSheepTags,
         fetchWeeklySchedules, notifyScheduleUpdate, findSheep, clearFocus, updatePlanFeedback,
         addSchedule, updateSchedule, deleteSchedule, addParticipantToSchedule, removeParticipantFromSchedule
     }), [
-        updateUserLocation, adoptSheep, updateSheep, updateMultipleSheep, togglePin,
+        updateUserLocation, adoptSheep, updateSheep, updateMultipleSheep, togglePin, toggleQueue,
         loginWithLine, loginAsAdmin, logout, prayForSheep, completePlan, deleteSheep,
         deleteMultipleSheep, saveToCloud, forceLoadFromCloud, toggleNotification,
         updateNickname, markIntroWatched, updateSetting, loadTags, createTag,

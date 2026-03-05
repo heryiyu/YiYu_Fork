@@ -6,18 +6,18 @@ import { Tag } from '../../components/ui/Tag';
 
 export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
     const { tags, sheep } = useGameState();
-    const { updateSetting, togglePin } = useGameActions();
+    const { updateSetting, toggleQueue } = useGameActions();
     const { settings } = useUserAuth();
 
     // Filter out deleted sheep to get accurate count
-    const activePinnedCount = (settings?.pinnedSheepIds || []).filter(id => sheep.some(s => s.id === id)).length;
+    const activeQueuedCount = (settings?.queuedSheepIds || []).filter(id => sheep.some(s => s.id === id)).length;
 
     const handleToggleSheep = (sheepId, isCurrentlySelected) => {
         if (isCurrentlySelected) {
-            togglePin(sheepId);
+            toggleQueue(sheepId);
         } else {
-            if (activePinnedCount < 10) {
-                togglePin(sheepId);
+            if (activeQueuedCount < 10) {
+                toggleQueue(sheepId);
             }
         }
     };
@@ -27,10 +27,10 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
             {/* Tabs */}
             <div className="modal-tabs">
                 <button
-                    className={`modal-tab ${activeTab === 'DISPLAY' ? 'modal-tab-active' : ''}`}
-                    onClick={() => onChangeTab('DISPLAY')}
+                    className={`modal-tab ${activeTab === 'QUEUE' ? 'modal-tab-active' : ''}`}
+                    onClick={() => onChangeTab('QUEUE')}
                 >
-                    🖥️ 顯示
+                    🏕️ 列隊
                 </button>
                 <button
                     className={`modal-tab ${activeTab === 'GUIDE' ? 'modal-tab-active' : ''}`}
@@ -47,15 +47,15 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
             </div>
 
             <div className="modal-scroll" style={{ marginTop: '0' }}>
-                {activeTab === 'DISPLAY' && (
+                {activeTab === 'QUEUE' && (
                     <div className="modal-content" style={{ padding: '10px' }}>
                         <div className="form-group">
                             <h4 style={{ marginBottom: '8px', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                🐑 陣型管理 (指定列隊小羊)
+                                🏕️ 認領名單 (指定列隊小羊)
                             </h4>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted-light)', marginBottom: '12px', lineHeight: '1.4' }}>
-                                請挑選 1 到 10 隻最愛的小羊，牠們將會出現在主畫面的草地上排隊散步。<br />
-                                <strong>目前已選：<span style={{ color: (activePinnedCount >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{activePinnedCount} / 10</span></strong>
+                                請列出你的認領名單NO.1-NO.10<br />
+                                <strong>目前已選擇：<span style={{ color: (activeQueuedCount >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{activeQueuedCount} / 10</span></strong>
                             </p>
 
                             <div className="sheep-selection-list" style={{
@@ -69,8 +69,8 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                                     </div>
                                 ) : (
                                     sheep.map(s => {
-                                        const isSelected = settings?.pinnedSheepIds?.includes(s.id);
-                                        const atLimit = activePinnedCount >= 10;
+                                        const isSelected = settings?.queuedSheepIds?.includes(s.id);
+                                        const atLimit = activeQueuedCount >= 10;
 
                                         return (
                                             <label key={s.id} style={{

@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import './LiteSettingsPage.css';
 
 export const LiteSettingsPage = ({ onClose }) => {
-    const [activeTab, setActiveTab] = React.useState('DISPLAY');
+    const [activeTab, setActiveTab] = React.useState('QUEUE');
 
     return (
         <div className="lite-page-container fade-in">
