@@ -558,8 +558,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 8px;
-  padding-right: 8px;
+  padding: 4px 20px 20px 20px;
   box-sizing: border-box;
   scrollbar-gutter: stable;
 }

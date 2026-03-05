@@ -208,7 +208,7 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
 
                         <div style={{ marginTop: '20px', fontSize: '0.85rem', color: 'var(--text-muted-light)', textAlign: 'center' }}>
                             <p>Designed for NLCIT Ministry</p>
-                            <p>&copy; 2024 Sheep Care Project</p>
+                            <p>&copy; 2025 Sheep Care Project</p>
                         </div>
                     </div>
                 )}
