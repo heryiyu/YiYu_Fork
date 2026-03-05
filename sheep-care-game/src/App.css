@@ -478,7 +478,8 @@
 }
 
 .sheep-detail-modal-form .modal-tabs {
-  padding: 12px 20px 6px;
+  padding: 12px 20px 12px;
+  /* 增加底部 padding 防止陰影裁切 */
 }
 
 /* UI Tabs System */
@@ -486,13 +487,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 4px;
+  padding: 8px 4px 12px 4px;
+  /* 增加上下 padding，防止 box-shadow 被裁切 */
   margin-bottom: 12px;
   width: auto;
   /* Allow items to define width */
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
+  /* 保留以防萬一，但依靠 padding 解決裁切 */
   /* Force hide vertical scroll */
   scrollbar-width: none;
   -ms-overflow-style: none;
