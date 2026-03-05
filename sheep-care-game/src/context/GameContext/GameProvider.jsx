@@ -639,13 +639,24 @@ export const GameProvider = ({ children }) => {
     const togglePin = useCallback((sheepId) => {
         setSettings(prev => {
             const currentPinned = prev.pinnedSheepIds || [];
-            const nextPinned = currentPinned.includes(sheepId) ? currentPinned.filter(id => id !== sheepId) : [...currentPinned, sheepId];
+            const isCurrentlyPinned = currentPinned.includes(sheepId);
+
+            if (!isCurrentlyPinned) {
+                // Filter out deleted sheep to get accurate count
+                const activeCount = currentPinned.filter(id => sheep.some(s => s.id === id)).length;
+                if (activeCount >= 10) {
+                    showMessage("列隊小羊最多只能設定 10 隻喔！", "warning");
+                    return prev;
+                }
+            }
+
+            const nextPinned = isCurrentlyPinned ? currentPinned.filter(id => id !== sheepId) : [...currentPinned, sheepId];
             const newSettings = { ...prev, pinnedSheepIds: nextPinned };
             localStorage.setItem('sheep_game_settings', JSON.stringify(newSettings));
             saveToCloud({ settings: newSettings });
             return newSettings;
         });
-    }, [saveToCloud]);
+    }, [saveToCloud, sheep, showMessage]);
 
     const updateNickname = useCallback((name) => {
         setNickname(name);

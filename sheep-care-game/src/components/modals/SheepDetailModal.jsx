@@ -56,8 +56,9 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
     const [localMsg, setLocalMsg] = useState('');
     const [showTagManager, setShowTagManager] = useState(false);
     const [showWinningModal, setShowWinningModal] = useState(false);
-    const [isEditingLabels, setIsEditingLabels] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [tempLabels, setTempLabels] = useState({});
+    const [tempStamps, setTempStamps] = useState({});
 
     // New State for PlanDetailModal
     const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -314,37 +315,66 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
             currentLabels[s.id] = s.label;
         });
         setTempLabels(currentLabels);
-        setIsEditingLabels(true);
+
+        const currentStamps = target.stamps || {};
+        let initialStamps = {};
+        if (Array.isArray(currentStamps)) {
+            currentStamps.forEach(s => { initialStamps[s] = true; });
+        } else {
+            initialStamps = { ...currentStamps };
+        }
+        setTempStamps(initialStamps);
+
+        setIsEditMode(true);
     };
 
     const handleLabelSave = () => {
-        updateSetting('stampLabels', tempLabels);
-        setIsEditingLabels(false);
+        if (isAdmin) {
+            updateSetting('stampLabels', tempLabels);
+        }
+        updateSheep(target.id, { stamps: tempStamps });
+        setIsEditMode(false);
     };
 
     const handleStampToggle = (stampId) => {
-        if (isEditingLabels) return; // Disable toggling while editing
         if (!target) return;
-        const currentStamps = target.stamps || {};
-        const isStamped = !!currentStamps[stampId];
 
-        const newStamps = { ...currentStamps };
+        if (isEditMode) {
+            const isStamped = !!tempStamps[stampId];
+            if (isStamped) {
+                const newTemp = { ...tempStamps };
+                delete newTemp[stampId];
+                setTempStamps(newTemp);
+            }
+            return;
+        }
+
+        const currentStamps = target.stamps || {};
+        const isStamped = Array.isArray(currentStamps)
+            ? currentStamps.includes(stampId)
+            : !!currentStamps[stampId];
 
         if (isStamped) {
-            delete newStamps[stampId]; // Toggle off
-        } else {
-            newStamps[stampId] = true; // Toggle on
-            // Optional: Haptic/Sound effect here
-
-            // Trigger confetti (Enabled for ALL stamps)
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                zIndex: 9999
-            });
-            setShowWinningModal(true);
+            return;
         }
+
+        let newStamps;
+        if (Array.isArray(currentStamps)) {
+            newStamps = {};
+            currentStamps.forEach(s => { newStamps[s] = true; });
+        } else {
+            newStamps = { ...currentStamps };
+        }
+
+        newStamps[stampId] = true;
+
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            zIndex: 9999
+        });
+        setShowWinningModal(true);
 
         updateSheep(target.id, { stamps: newStamps });
     };
@@ -396,12 +426,13 @@ export const SheepDetailModal = ({ selectedSheepId, initialPlanId, onClose }) =>
                         completionTarget={completionTarget}
                         STAMPS={STAMPS}
                         handleStampToggle={handleStampToggle}
-                        isEditingLabels={isEditingLabels}
+                        isEditMode={isEditMode}
                         handleLabelEditStart={handleLabelEditStart}
                         handleLabelSave={handleLabelSave}
-                        setIsEditingLabels={setIsEditingLabels}
+                        setIsEditMode={setIsEditMode}
                         tempLabels={tempLabels}
                         setTempLabels={setTempLabels}
+                        tempStamps={tempStamps}
                         handlePlanClick={handlePlanClick}
                     />
                 </div>

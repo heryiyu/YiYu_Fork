@@ -100,7 +100,7 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                                                         {s.name || '未命名小羊'}
                                                     </span>
                                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                        健康度: {s.health}%
+                                                        健康度: {Math.round(s.health)}%
                                                     </span>
                                                 </div>
                                             </label>
