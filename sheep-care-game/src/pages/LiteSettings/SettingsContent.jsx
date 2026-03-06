@@ -4,7 +4,7 @@ import { ModalHint } from '../../components/modals/ModalHint';
 import { Slider } from '../../components/ui/Slider';
 import { Tag } from '../../components/ui/Tag';
 
-export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
+export const SettingsContent = ({ activeTab, onChangeTab, onSave, isLite = false }) => {
     const { tags, sheep } = useGameState();
     const { updateSetting, toggleQueue } = useGameActions();
     const { settings } = useUserAuth();
@@ -26,12 +26,14 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
         <>
             {/* Tabs */}
             <div className="modal-tabs">
-                <button
-                    className={`modal-tab ${activeTab === 'QUEUE' ? 'modal-tab-active' : ''}`}
-                    onClick={() => onChangeTab('QUEUE')}
-                >
-                    🏕️ 列隊
-                </button>
+                {!isLite && (
+                    <button
+                        className={`modal-tab ${activeTab === 'QUEUE' ? 'modal-tab-active' : ''}`}
+                        onClick={() => onChangeTab('QUEUE')}
+                    >
+                        🏕️ 列隊
+                    </button>
+                )}
                 <button
                     className={`modal-tab ${activeTab === 'GUIDE' ? 'modal-tab-active' : ''}`}
                     onClick={() => onChangeTab('GUIDE')}
@@ -147,9 +149,11 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
 
                         <h4>🏕️ 3. 釘選與列隊</h4>
                         <ul>
-                            <li><strong>位置:</strong> 羊隻詳細資料介面的「📌 釘選」，與本設定介面中的「🏕️ 列隊」清單。</li>
-                            <li><strong>釘選:</strong> 將該小羊排在名單最上方，方便優先關注。</li>
-                            <li><strong>列隊:</strong> 您可在列隊設定中勾選最多 10 隻小羊，讓他們出現於首頁的牧場草地中(建議選擇3隻以上避免小羊孤單)。</li>
+                            <li><strong>位置:</strong> 羊隻詳細資料介面的「📌 釘選」{isLite ? '' : '，與本設定介面中的「🏕️ 列隊」清單'}。</li>
+                            <li><strong>釘選:</strong> 將該小羊排在名單最上方，方便優先關注{isLite ? '，並出現在釘選篩選中' : ''}。</li>
+                            {!isLite && (
+                                <li><strong>列隊:</strong> 您可在列隊設定中勾選最多 10 隻小羊，讓他們出現於首頁的牧場草地中(建議選擇3隻以上避免小羊孤單)。</li>
+                            )}
                         </ul>
 
                         <h4>⏰ 4. 預約排程與提醒</h4>
