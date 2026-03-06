@@ -146,6 +146,44 @@
     color: #343a40;
 }
 
+.lite-col-pin {
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.lite-col-pin .pinned-indicator {
+    cursor: pointer;
+    font-size: 1.1rem;
+    opacity: 0.2;
+    filter: grayscale(100%);
+    transition: all 0.2s ease;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.lite-col-pin .pinned-indicator:hover {
+    background: rgba(0, 0, 0, 0.05);
+    opacity: 0.6;
+}
+
+.lite-col-pin .pinned-indicator.active {
+    opacity: 1;
+    filter: none;
+}
+
+.lite-col-tag {
+    flex: 0 0 80px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
 .lite-col-checkbox {
     flex: 0 0 32px;
     display: flex;
@@ -185,11 +223,19 @@
     font-size: 0.95rem;
 }
 
+.is-game-mode .lite-col-tag {
+    color: #7B5B33;
+}
+
 .is-game-mode .lite-col-maturity {
     flex: 0 0 100px;
     color: #7B5B33;
     font-weight: normal;
     text-align: left;
+}
+
+.is-game-mode .lite-col-health {
+    color: #7B5B33;
 }
 
 .is-game-mode .lite-col-needs {
@@ -242,7 +288,7 @@
 }
 
 .lite-col-maturity {
-    flex: 0 0 60px;
+    flex: 0 0 80px;
     text-align: left;
     font-weight: 500;
     color: #6c757d;
@@ -342,6 +388,7 @@
     }
 
     .lite-col-checkbox,
+    .lite-col-pin,
     .lite-col-name {
         position: sticky;
         z-index: 10;
@@ -356,8 +403,15 @@
         /* 32px checkbox + 8px gap */
     }
 
-    .lite-col-name {
+    .lite-col-pin {
         left: 0;
+        padding-right: 4px;
+        flex: 0 0 32px;
+    }
+
+    .lite-col-name {
+        left: 32px;
+        /* if no checkbox */
         flex: 0 0 100px;
         padding-left: 12px;
         /* Add space from edge/checkbox */
@@ -365,29 +419,38 @@
     }
 
     /* Selection mode offset */
-    .is-selection-mode .lite-col-name {
+    .is-selection-mode .lite-col-pin {
         left: 40px;
+    }
+
+    .is-selection-mode .lite-col-name {
+        left: 72px;
+        /* 40 (checkbox) + 32 (pin) */
         /* Align with checkbox end */
         box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.15);
     }
 
     /* Fixed Column Backgrounds */
     .is-lite-mode .sheep-lite-header .lite-col-checkbox,
+    .is-lite-mode .sheep-lite-header .lite-col-pin,
     .is-lite-mode .sheep-lite-header .lite-col-name {
         background-color: #f8f9fa !important;
     }
 
     .is-lite-mode .sheep-lite-body .sheep-lite-row:nth-child(even) .lite-col-checkbox,
+    .is-lite-mode .sheep-lite-body .sheep-lite-row:nth-child(even) .lite-col-pin,
     .is-lite-mode .sheep-lite-body .sheep-lite-row:nth-child(even) .lite-col-name {
         background-color: #f8f9fa !important;
     }
 
     .is-game-mode .sheep-lite-header .lite-col-checkbox,
+    .is-game-mode .sheep-lite-header .lite-col-pin,
     .is-game-mode .sheep-lite-header .lite-col-name {
         background-color: #F9F3E8 !important;
     }
 
     .is-game-mode .sheep-lite-body .sheep-lite-row .lite-col-checkbox,
+    .is-game-mode .sheep-lite-body .sheep-lite-row .lite-col-pin,
     .is-game-mode .sheep-lite-body .sheep-lite-row .lite-col-name {
         background-color: #ffffff !important;
     }
@@ -404,6 +467,11 @@
 
     .lite-col-maturity {
         display: none;
+    }
+
+    .lite-col-tag {
+        display: none;
+        /* Hide custom tags on mobile to save space if needed, or adjust flex */
     }
 
     .lite-col-needs {
