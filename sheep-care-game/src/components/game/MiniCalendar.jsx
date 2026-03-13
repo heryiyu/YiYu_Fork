@@ -112,7 +112,7 @@ export const MiniCalendar = ({ schedules = [], selectedDate, onSelectDate }) => 
     };
 
     return (
-        <div style={{
+        <div className="mini-calendar" style={{
             background: 'var(--bg-card-secondary)',
             borderRadius: '16px',
             padding: '16px',

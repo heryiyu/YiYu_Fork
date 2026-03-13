@@ -70,11 +70,11 @@ export const Field = ({ onSelectSheep }) => {
 
     const visibleIds = useMemo(() => {
         if (!sheep || sheep.length === 0) return new Set();
-        // 1. Get Pinned Ids, but filter out deleted sheep FIRST before slicing to limit
+        // 1. Get Queued Ids, but filter out deleted sheep FIRST before slicing to limit
         const currentSheepIds = new Set(sheep.map(s => s.id));
-        const pinnedIds = (settings?.pinnedSheepIds || []).filter(id => currentSheepIds.has(id)).slice(0, 10);
-        return new Set(pinnedIds);
-    }, [settings?.pinnedSheepIds, sheep]);
+        const queuedIds = (settings?.queuedSheepIds || []).filter(id => currentSheepIds.has(id)).slice(0, 10);
+        return new Set(queuedIds);
+    }, [settings?.queuedSheepIds, sheep]);
 
     const visibleFormationRaw = useMemo(() => {
         return sheep.filter(s => visibleIds.has(s.id));
@@ -108,7 +108,7 @@ export const Field = ({ onSelectSheep }) => {
                 }
             };
         });
-    }, [visibleFormationRaw, DYNAMIC_FORMATIONS, settings?.pinnedSheepIds]);
+    }, [visibleFormationRaw, DYNAMIC_FORMATIONS]);
 
 
 

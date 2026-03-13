@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import './LiteSettingsPage.css';
 
 export const LiteSettingsPage = ({ onClose }) => {
-    const [activeTab, setActiveTab] = React.useState('DISPLAY');
+    const [activeTab, setActiveTab] = React.useState('GUIDE');
 
     return (
         <div className="lite-page-container fade-in">
@@ -23,6 +23,7 @@ export const LiteSettingsPage = ({ onClose }) => {
                     <SettingsContent
                         activeTab={activeTab}
                         onChangeTab={setActiveTab}
+                        isLite={true}
                     />
                 </div>
             </div>

@@ -43,12 +43,13 @@ export const SheepDetailContent = ({
     completionTarget,
     STAMPS,
     handleStampToggle,
-    isEditingLabels,
+    isEditMode,
     handleLabelEditStart,
     handleLabelSave,
-    setIsEditingLabels,
+    setIsEditMode,
     tempLabels,
     setTempLabels,
+    tempStamps,
     handlePlanClick
 }) => {
     return (
@@ -177,12 +178,13 @@ export const SheepDetailContent = ({
                         isAdmin={isAdmin}
                         STAMPS={STAMPS}
                         handleStampToggle={handleStampToggle}
-                        isEditingLabels={isEditingLabels}
+                        isEditMode={isEditMode}
                         handleLabelEditStart={handleLabelEditStart}
                         handleLabelSave={handleLabelSave}
-                        setIsEditingLabels={setIsEditingLabels}
+                        setIsEditMode={setIsEditMode}
                         tempLabels={tempLabels}
                         setTempLabels={setTempLabels}
+                        tempStamps={tempStamps}
                     />
                 )}
             </div>

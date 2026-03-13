@@ -398,6 +398,8 @@ export const SheepList = ({ onSelect, forcedViewMode }) => {
                                 isSelectionMode={isSelectionMode}
                                 tagAssignmentsBySheep={tagAssignmentsBySheep}
                                 isLiteMode={false}
+                                onTogglePin={handleTogglePin}
+                                pinnedSheepIds={settings?.pinnedSheepIds || []}
                             />
                         ) : (
                             <div

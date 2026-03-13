@@ -4,20 +4,20 @@ import { ModalHint } from '../../components/modals/ModalHint';
 import { Slider } from '../../components/ui/Slider';
 import { Tag } from '../../components/ui/Tag';
 
-export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
+export const SettingsContent = ({ activeTab, onChangeTab, onSave, isLite = false }) => {
     const { tags, sheep } = useGameState();
-    const { updateSetting, togglePin } = useGameActions();
+    const { updateSetting, toggleQueue } = useGameActions();
     const { settings } = useUserAuth();
 
     // Filter out deleted sheep to get accurate count
-    const activePinnedCount = (settings?.pinnedSheepIds || []).filter(id => sheep.some(s => s.id === id)).length;
+    const activeQueuedCount = (settings?.queuedSheepIds || []).filter(id => sheep.some(s => s.id === id)).length;
 
     const handleToggleSheep = (sheepId, isCurrentlySelected) => {
         if (isCurrentlySelected) {
-            togglePin(sheepId);
+            toggleQueue(sheepId);
         } else {
-            if (activePinnedCount < 10) {
-                togglePin(sheepId);
+            if (activeQueuedCount < 10) {
+                toggleQueue(sheepId);
             }
         }
     };
@@ -26,17 +26,19 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
         <>
             {/* Tabs */}
             <div className="modal-tabs">
-                <button
-                    className={`modal-tab ${activeTab === 'DISPLAY' ? 'modal-tab-active' : ''}`}
-                    onClick={() => onChangeTab('DISPLAY')}
-                >
-                    🖥️ 顯示
-                </button>
+                {!isLite && (
+                    <button
+                        className={`modal-tab ${activeTab === 'QUEUE' ? 'modal-tab-active' : ''}`}
+                        onClick={() => onChangeTab('QUEUE')}
+                    >
+                        🏕️ 列隊
+                    </button>
+                )}
                 <button
                     className={`modal-tab ${activeTab === 'GUIDE' ? 'modal-tab-active' : ''}`}
                     onClick={() => onChangeTab('GUIDE')}
                 >
-                    📖 手冊
+                    📖 遊戲說明書
                 </button>
                 <button
                     className={`modal-tab ${activeTab === 'ABOUT' ? 'modal-tab-active' : ''}`}
@@ -47,15 +49,15 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
             </div>
 
             <div className="modal-scroll" style={{ marginTop: '0' }}>
-                {activeTab === 'DISPLAY' && (
+                {activeTab === 'QUEUE' && (
                     <div className="modal-content" style={{ padding: '10px' }}>
                         <div className="form-group">
                             <h4 style={{ marginBottom: '8px', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                🐑 陣型管理 (指定列隊小羊)
+                                🏕️ 認領名單 (指定列隊小羊)
                             </h4>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted-light)', marginBottom: '12px', lineHeight: '1.4' }}>
-                                請挑選 1 到 10 隻最愛的小羊，牠們將會出現在主畫面的草地上排隊散步。<br />
-                                <strong>目前已選：<span style={{ color: (activePinnedCount >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{activePinnedCount} / 10</span></strong>
+                                請列出你的認領名單NO.1-NO.10<br />
+                                <strong>目前已選擇：<span style={{ color: (activeQueuedCount >= 10) ? 'var(--text-status)' : 'var(--palette-blue-action)' }}>{activeQueuedCount} / 10</span></strong>
                             </p>
 
                             <div className="sheep-selection-list" style={{
@@ -69,8 +71,8 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                                     </div>
                                 ) : (
                                     sheep.map(s => {
-                                        const isSelected = settings?.pinnedSheepIds?.includes(s.id);
-                                        const atLimit = activePinnedCount >= 10;
+                                        const isSelected = settings?.queuedSheepIds?.includes(s.id);
+                                        const atLimit = activeQueuedCount >= 10;
 
                                         return (
                                             <label key={s.id} style={{
@@ -100,7 +102,7 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                                                         {s.name || '未命名小羊'}
                                                     </span>
                                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                        健康度: {s.health}%
+                                                        健康度: {Math.round(s.health)}%
                                                     </span>
                                                 </div>
                                             </label>
@@ -132,18 +134,46 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                         fontSize: '0.95rem',
                         lineHeight: '1.6'
                     }}>
-                        <h4>1. 每日照顧 (Daily Care)</h4>
-                        <p>每天透過禱告來關心您的小羊：</p>
+                        <h4>🐑 1. 首頁牧場與名單</h4>
                         <ul>
-                            <li><strong>禱告 (Prayer):</strong> 每隻小羊每天最多 <strong>3 次</strong> (每次恢復 <strong>+6 健康度</strong>)。</li>
-                            <li><strong>健康度 (Health):</strong> 代表小羊的生命狀態，越高越有活力。</li>
+                            <li><strong>位置:</strong> 遊戲主畫面。</li>
+                            <li><strong>功能:</strong> 畫面上方為「牧場」(顯示已列隊/釘選的小羊)，下方為「認領名單」列表。點擊清單下方的 <strong>「+ 新增」</strong> 按鈕，即可將新的關懷對象加入牧場。</li>
                         </ul>
 
-                        <h4>2. 小羊標籤 (Tags)</h4>
-                        <p>您可自訂標籤來分類小羊，在小羊詳情中選擇「標籤」並點「管理標籤」新增。卡片上會顯示您為該小羊設定的第一個標籤。</p>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>若小羊尚未設定任何標籤，卡片會顯示系統預設的「已沉睡」「生病」「健康」等狀態文字作為替代，這些並非您建立的標籤，也不會出現在標籤列表中。</p>
+                        <h4>🔍 2. 羊隻互動與紀錄</h4>
+                        <ul>
+                            <li><strong>位置:</strong> 點擊牧場上的小羊，或從上方清單點選一隻羊，打開詳細資料。</li>
+                            <li><strong>互動紀錄:</strong> 可以對該羊隻<strong>寫筆記</strong>、記錄關懷狀況與代禱事項。</li>
+                            <li><strong>關懷度解鎖:</strong> 新增筆記與互動會提升關懷度。當關懷度累積達 <strong>100</strong> 時，即解鎖更換小羊外觀(造型)功能。</li>
+                        </ul>
+
+                        <h4>🏕️ 3. 釘選與列隊</h4>
+                        <ul>
+                            <li><strong>位置:</strong> 羊隻詳細資料介面的「📌 釘選」{isLite ? '' : '，與本設定介面中的「🏕️ 列隊」清單'}。</li>
+                            <li><strong>釘選:</strong> 將該小羊排在名單最上方，方便優先關注{isLite ? '，並出現在釘選篩選中' : ''}。</li>
+                            {!isLite && (
+                                <li><strong>列隊:</strong> 您可在列隊設定中勾選最多 10 隻小羊，讓他們出現於首頁的牧場草地中(建議選擇3隻以上避免小羊孤單)。</li>
+                            )}
+                        </ul>
+
+                        <h4>⏰ 4. 預約排程與提醒</h4>
+                        <ul>
+                            <li><strong>預約關懷:</strong> 羊隻詳細資料中點擊「📅 預約」，可設定下次關懷日期。</li>
+                            <li><strong>牧羊人週記:</strong> 點擊首頁右上角「🗓️ 週記」圖示，能一覽所有已排程的關懷計畫。</li>
+                            <li><strong>推播通知:</strong> 點擊首頁右上角「🔔 鈴鐺」圖示，可開啟每日 8:00、12:00、18:30 的牧羊通知。</li>
+                        </ul>
+
+                        <h4>💖 5. 健康度與甦醒</h4>
+                        <ul>
+                            <li><strong>日常禱告:</strong> 每天可關心小羊(每天最多3次，每次恢復 <strong>+6 健康度</strong>)。</li>
+                            <li><strong>自然流失:</strong> 隨時間流動健康度會自然下降(每天約13%)；當日有被照顧的羊流失率降至約6%。</li>
+                            <li><strong>甦醒儀式:</strong> 若小羊沉睡了，連續 <strong>5 天</strong> 對其進行「喚醒禱告」，第5天後小羊將甦醒並恢復為健康狀態。</li>
+                        </ul>
+
+                        <h4>🏷️ 6. 小羊標籤 (Tags)</h4>
+                        <p style={{ margin: '8px 0' }}>可自訂標籤分類小羊，在羊隻詳細資料選擇「管理標籤」新增。卡片上會顯示您為該小羊設定的第一個標籤。</p>
                         {tags && tags.length > 0 ? (
-                            <div style={{ marginTop: '8px' }}>
+                            <div style={{ marginTop: '8px', marginBottom: '16px' }}>
                                 <p style={{ marginBottom: '6px', fontWeight: 600 }}>您目前的標籤：</p>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                     {tags.map(t => (
@@ -152,40 +182,13 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                                 </div>
                             </div>
                         ) : (
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '6px', marginBottom: '16px' }}>尚無自訂標籤。點擊小羊 → 基本資料 → 管理標籤 即可新增。</p>
                         )}
 
-                        <h4>3. 離線與自然衰退</h4>
-                        <p>即使不在線上，時間仍在流動：</p>
+                        <h4>⚙️ 7. 系統設定與模式</h4>
                         <ul>
-                            <li><strong>離線機制:</strong> 健康度會自然流失 (每天約 <strong>13%</strong>)。</li>
-                            <li><strong>守望保護:</strong> 當日有被禱告的小羊，流失大幅減緩至約 <strong>6%</strong>！</li>
-                        </ul>
-
-                        <h4>4. 沉睡與甦醒 (Miracle)</h4>
-                        <p>沉睡不是終點，信心能喚回生命：</p>
-                        <ul>
-                            <li><strong>甦醒儀式:</strong> 對已沉睡的小羊連續 <strong>5 天</strong> 進行「喚醒禱告」(每天1次)。</li>
-                            <li><strong>奇蹟:</strong> 第 5 次禱告後，小羊將甦醒！(保留姓名與靈程，重置為健康小羊)。</li>
-                            <li><strong>中斷歸零:</strong> 若中斷一天沒禱告，進度將歸零重來。</li>
-                        </ul>
-
-                        <h4>5. 標籤與資料管理</h4>
-                        <ul>
-                            <li><strong>標籤 (Tags):</strong> 可自訂標籤來分類小羊，在小羊詳情中管理。</li>
-                            <li><strong>使用說明:</strong> 請使用 LINE 帳號登入，系統會自動備份您的羊群資料。</li>
-                        </ul>
-
-                        <h4>6. 提醒與通知 (Bell)</h4>
-                        <ul>
-                            <li><strong>鈴鐺按鈕 (右上方):</strong> 點擊鈴鐺可開啟/關閉牧羊提醒。</li>
-                            <li><strong>提醒時刻:</strong> 早上 8:00、中午 12:00、晚上 18:30。</li>
-                        </ul>
-
-                        <h4>7. 外觀更換規則</h4>
-                        <ul>
-                            <li><strong>關懷度解鎖:</strong> 當該隻小羊的累積關懷度大於 <strong>100</strong> 時，便能解鎖更換外觀的功能 (若該羊種有額外外觀)。</li>
-                            <li><strong>管理員權限:</strong> 系統管理員不受此限，可隨時替換任意小羊的外觀。</li>
+                            <li><strong>切換模式:</strong> 您可將應用切換為「簡潔模式 (Lite Mode)」，該模式會關閉背景動畫，介面也較適合手機單手快速瀏覽。</li>
+                            <li><strong>資料備份:</strong> 使用 LINE 帳號登入，系統會自動在雲端備份您的羊群資料。</li>
                         </ul>
 
                         <p style={{ textAlign: 'center', marginTop: '20px', color: 'var(--text-muted)' }}>
@@ -204,12 +207,12 @@ export const SettingsContent = ({ activeTab, onChangeTab, onSave }) => {
                         }}>
                             <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🐑</div>
                             <h4 style={{ margin: '0 0 5px 0', fontSize: '1.2rem' }}>小羊牧場</h4>
-                            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>版本 v1.0.1 (Beta)</p>
+                            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>版本 v1.1.0 (Beta)</p>
                         </div>
 
                         <div style={{ marginTop: '20px', fontSize: '0.85rem', color: 'var(--text-muted-light)', textAlign: 'center' }}>
                             <p>Designed for NLCIT Ministry</p>
-                            <p>&copy; 2024 Sheep Care Project</p>
+                            <p>&copy; 2025 Sheep Care Project</p>
                         </div>
                     </div>
                 )}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
-import { Settings, BookOpen, Calendar, Menu, User, Plus, Trash2, RotateCcw, CheckSquare, X } from 'lucide-react';
+import { Settings, BookOpen, Calendar, Menu, User, Plus, Trash2, RotateCcw, CheckSquare, X, SlidersHorizontal } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import { useConfirm } from '../../context/ConfirmContext';
 import { SheepListTextView } from '../game/SheepListTextView';
@@ -19,10 +19,12 @@ export const LiteAppLayout = ({
 }) => {
     const { sheep, tags, tagAssignmentsBySheep } = useGameState();
     const { settings } = useUserAuth();
-    const { updateSetting, adoptSheep, deleteMultipleSheep, updateMultipleSheep } = useGameActions();
+    const { updateSetting, adoptSheep, deleteMultipleSheep, updateMultipleSheep, togglePin } = useGameActions();
     const confirm = useConfirm();
     const [showAddModal, setShowAddModal] = useState(false);
     const [showTagManagerModal, setShowTagManagerModal] = useState(false);
+    const [showFilterMenu, setShowFilterMenu] = useState(false);
+    const filterMenuAnchorRef = React.useRef(null);
 
     // View Routing State: 'DASHBOARD' | 'SETTINGS' | 'GUIDE' | 'DETAIL' | 'SCHEDULE'
     const [activeView, setActiveView] = useState('DASHBOARD');
@@ -39,13 +41,15 @@ export const LiteAppLayout = ({
 
     // Calculate Dashboard Stats
     const stats = useMemo(() => {
-        let healthy = 0, sick = 0, sleeping = 0;
+        let healthy = 0, sick = 0, sleeping = 0, pinned = 0;
         sheep.forEach(s => {
             if (isSleeping(s)) sleeping++;
             else if (s.status === 'sick') sick++;
             else healthy++;
+
+            if (settings?.pinnedSheepIds?.includes(s.id)) pinned++;
         });
-        return { total: sheep.length, healthy, sick, sleeping };
+        return { total: sheep.length, healthy, sick, sleeping, pinned };
     }, [sheep]);
 
     // Apply Filters & Search
@@ -80,6 +84,13 @@ export const LiteAppLayout = ({
             adoptSheep(data);
         }
         setShowAddModal(false);
+    };
+
+    const toggleFilterVisibility = (filterId) => {
+        const next = new Set(hiddenFilterIds);
+        if (next.has(filterId)) next.delete(filterId);
+        else next.add(filterId);
+        updateSetting('hiddenFilters', Array.from(next));
     };
 
     const toggleSelection = (id) => {
@@ -207,51 +218,46 @@ export const LiteAppLayout = ({
 
                             <div className="lite-tags-filter-bar">
                                 {/* System Filters */}
-                                <button
-                                    className={`lite-tag-filter-btn system ${activeFilterId === 'ALL' ? 'active' : ''}`}
-                                    onClick={() => setActiveFilterId('ALL')}
-                                >
-                                    全部 ({stats.total})
-                                </button>
-                                <button
-                                    className={`lite-tag-filter-btn system healthy ${activeFilterId === 'HEALTHY' ? 'active' : ''}`}
-                                    onClick={() => setActiveFilterId('HEALTHY')}
-                                >
-                                    健康 ({stats.healthy})
-                                </button>
-                                <button
-                                    className={`lite-tag-filter-btn system sick ${activeFilterId === 'SICK' ? 'active' : ''}`}
-                                    onClick={() => setActiveFilterId('SICK')}
-                                >
-                                    需關注 ({stats.sick})
-                                </button>
-                                <button
-                                    className={`lite-tag-filter-btn system sleeping ${activeFilterId === 'SLEEPING' ? 'active' : ''}`}
-                                    onClick={() => setActiveFilterId('SLEEPING')}
-                                >
-                                    休眠 ({stats.sleeping})
-                                </button>
+                                {[
+                                    { id: 'ALL', label: '全部', count: stats.total },
+                                    { id: 'HEALTHY', label: '健康', count: stats.healthy, className: 'healthy' },
+                                    { id: 'SICK', label: '需關注', count: stats.sick, className: 'sick' },
+                                    { id: 'SLEEPING', label: '休眠', count: stats.sleeping, className: 'sleeping' },
+                                    { id: 'PINNED', label: '釘選', count: stats.pinned, className: 'pinned' }
+                                ]
+                                    .filter(f => f.id === 'ALL' || !hiddenFilterIds.has(f.id))
+                                    .map(f => (
+                                        <button
+                                            key={f.id}
+                                            className={`lite-tag-filter-btn system ${f.className || ''} ${activeFilterId === f.id ? 'active' : ''}`}
+                                            onClick={() => setActiveFilterId(f.id)}
+                                        >
+                                            {f.label} ({f.count})
+                                        </button>
+                                    ))}
 
                                 <div className="lite-tag-group-divider" />
 
                                 {/* Custom Tags */}
-                                {tags.map(tag => {
-                                    const isActive = activeFilterId === `TAG:${tag.id}`;
-                                    return (
-                                        <button
-                                            key={tag.id}
-                                            className={`lite-tag-filter-btn ${isActive ? 'active' : ''}`}
-                                            onClick={() => setActiveFilterId(isActive ? 'ALL' : `TAG:${tag.id}`)}
-                                            style={{
-                                                backgroundColor: isActive ? tag.color : 'transparent',
-                                                borderColor: tag.color,
-                                                color: isActive ? '#fff' : tag.color,
-                                            }}
-                                        >
-                                            {tag.name}
-                                        </button>
-                                    );
-                                })}
+                                {tags
+                                    .filter(tag => !hiddenFilterIds.has(`TAG:${tag.id}`))
+                                    .map(tag => {
+                                        const isActive = activeFilterId === `TAG:${tag.id}`;
+                                        return (
+                                            <button
+                                                key={tag.id}
+                                                className={`lite-tag-filter-btn ${isActive ? 'active' : ''}`}
+                                                onClick={() => setActiveFilterId(isActive ? 'ALL' : `TAG:${tag.id}`)}
+                                                style={{
+                                                    backgroundColor: isActive ? tag.color : 'transparent',
+                                                    borderColor: tag.color,
+                                                    color: isActive ? '#fff' : tag.color,
+                                                }}
+                                            >
+                                                {tag.name}
+                                            </button>
+                                        );
+                                    })}
                             </div>
 
                             <div className="lite-toolbar-actions">
@@ -265,9 +271,36 @@ export const LiteAppLayout = ({
                                     <CheckSquare size={14} style={{ marginRight: '6px' }} />
                                     選取
                                 </button>
-                                <button className="lite-action-btn" onClick={() => setShowTagManagerModal(true)}>
-                                    標籤管理
-                                </button>
+
+                                <div style={{ position: 'relative', display: 'inline-block' }} ref={filterMenuAnchorRef}>
+                                    <button
+                                        className={`lite-action-btn ${showFilterMenu ? 'active' : ''}`}
+                                        onClick={() => setShowFilterMenu(prev => !prev)}
+                                    >
+                                        <SlidersHorizontal size={14} style={{ marginRight: '6px' }} />
+                                        篩選設定
+                                    </button>
+                                    {showFilterMenu && (
+                                        <FilterSettingsMenu
+                                            filters={[
+                                                { id: 'PINNED', label: '📌釘選' },
+                                                { id: 'HEALTHY', label: '健康' },
+                                                { id: 'SICK', label: '需關注' },
+                                                { id: 'SLEEPING', label: '休眠' },
+                                                ...(tags || []).map(t => ({ id: `TAG:${t.id}`, label: t.name, color: t.color }))
+                                            ]}
+                                            hiddenFilterIds={hiddenFilterIds}
+                                            onToggle={toggleFilterVisibility}
+                                            onManageTags={() => {
+                                                setShowFilterMenu(false);
+                                                setShowTagManagerModal(true);
+                                            }}
+                                            onClose={() => setShowFilterMenu(false)}
+                                            anchorRef={filterMenuAnchorRef}
+                                            isLiteMode={true}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -313,6 +346,10 @@ export const LiteAppLayout = ({
                                 isLiteMode={true}
                                 onToggleAll={handleToggleAll}
                                 isAllSelected={isAllSelected}
+                                onTogglePin={(id) => {
+                                    if (togglePin) togglePin(id);
+                                }}
+                                pinnedSheepIds={settings?.pinnedSheepIds || []}
                             />
                         </div>
                     </div>

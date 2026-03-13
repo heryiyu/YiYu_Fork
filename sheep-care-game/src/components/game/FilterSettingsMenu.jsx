@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { CloseButton } from '../ui/CloseButton';
 import { Checkbox } from '../ui/Checkbox';
 
-export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, onClose, anchorRef }) => {
+export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManageTags, onClose, anchorRef, isLiteMode }) => {
     const menuRef = useRef(null);
     const scrollRef = useRef(null);
     const [position, setPosition] = useState({ bottom: 0, right: 0, top: 'auto' });
@@ -66,7 +66,7 @@ export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManag
     return ReactDOM.createPortal(
         <div
             ref={menuRef}
-            className="filter-settings-menu"
+            className={`filter-settings-menu ${isLiteMode ? 'is-lite-mode' : ''}`}
             style={{
                 position: 'fixed',
                 top: position.top,
@@ -76,10 +76,11 @@ export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManag
                 maxHeight: '280px',
                 display: 'flex',
                 flexDirection: 'column',
-                background: 'var(--card-inner-bg, #fff)',
+                background: isLiteMode ? '#ffffff' : 'var(--card-inner-bg, #fff)',
+                color: isLiteMode ? '#343a40' : 'var(--palette-sheep-brown)',
                 borderRadius: '12px',
-                boxShadow: 'var(--shadow-card)',
-                border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
+                boxShadow: isLiteMode ? '0 4px 12px rgba(0,0,0,0.1)' : 'var(--shadow-card)',
+                border: isLiteMode ? '1px solid #e9ecef' : '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
                 zIndex: 'var(--z-modal-overlay)'
             }}
         >
@@ -111,6 +112,7 @@ export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManag
                                     checked={!isHidden}
                                     onChange={() => onToggle(f.id)}
                                     ariaLabel={f.label}
+                                    className={isLiteMode ? 'ui-checkbox--lite' : ''}
                                 />
                                 {f.color ? (
                                     <span
@@ -136,19 +138,25 @@ export const FilterSettingsMenu = ({ filters, hiddenFilterIds, onToggle, onManag
                             left: 0,
                             right: 0,
                             height: 45,
-                            background: 'linear-gradient(to top, var(--card-inner-bg, #fff) 0%, transparent 100%)',
+                            background: `linear-gradient(to top, ${isLiteMode ? '#ffffff' : 'var(--card-inner-bg, #fff)'} 0%, transparent 100%)`,
                             pointerEvents: 'none',
                             transition: 'opacity 0.2s ease'
                         }}
                     />
                 )}
             </div>
-            <div style={{ borderTop: '1px solid rgba(0,0,0,0.1)', padding: '12px', flexShrink: 0 }}>
+            <div style={{ borderTop: isLiteMode ? '1px solid #e9ecef' : '1px solid rgba(0,0,0,0.1)', padding: '12px', flexShrink: 0 }}>
                 <button
                     type="button"
-                    className="modal-btn-secondary"
+                    className={isLiteMode ? "lite-action-btn" : "modal-btn-secondary"}
                     onClick={onManageTags}
-                    style={{ width: '100%', fontSize: '0.85rem', padding: '8px 12px' }}
+                    style={{
+                        width: '100%',
+                        fontSize: '0.85rem',
+                        padding: '8px 12px',
+                        justifyContent: 'center',
+                        border: isLiteMode ? '1px solid #ced4da' : undefined
+                    }}
                 >
                     管理標籤
                 </button>

@@ -30,7 +30,8 @@
     background: #ffffff;
     border-radius: 12px 12px 0 0;
     margin-bottom: 0;
-    padding: 16px 24px 0;
+    padding: 16px 24px 8px;
+    /* 增加底部 padding 以容納標籤陰影 */
     border: 1px solid #dee2e6;
     border-bottom: none;
 }
@@ -54,7 +55,8 @@
     .lite-sheep-detail-page-content .modal-tabs {
         border-radius: 0;
         border: none;
-        padding: 12px 16px 0;
+        padding: 12px 16px 8px;
+        /* 手機版也需要底部 padding */
     }
 
     .lite-sheep-detail-page-content .sheep-detail-scroll {
