@@ -56,14 +56,14 @@ export const SheepCard = React.memo(({
     const healthFull = Math.ceil(currentHealth || 0) >= 100;
 
     // Interaction Logic
-    const handleCardClick = () => {
+    const handleCardClick = React.useCallback(() => {
         if (isSelectionMode) onToggleSelect(s.id);
         else onSelect(s);
-    };
+    }, [isSelectionMode, onToggleSelect, s, onSelect]);
 
-    const handleCardLongPress = () => {
+    const handleCardLongPress = React.useCallback(() => {
         if (onLongPress) onLongPress(s.id);
-    };
+    }, [onLongPress, s.id]);
 
     // Use the hook
     const longPressEventHandlers = useLongPress(handleCardLongPress, handleCardClick, { delay: 500 });

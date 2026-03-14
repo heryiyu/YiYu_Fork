@@ -212,12 +212,14 @@ export const SheepList = ({ onSelect, forcedViewMode }) => {
         }
     }, [togglePin, settings?.pinnedSheepIds, filteredSheep, prefersReducedMotion]);
 
-    const toggleSelection = (id) => {
-        const newSet = new Set(selectedIds);
-        if (newSet.has(id)) newSet.delete(id);
-        else newSet.add(id);
-        setSelectedIds(newSet);
-    };
+    const toggleSelection = useCallback((id) => {
+        setSelectedIds((prevSelected) => {
+            const newSet = new Set(prevSelected);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    }, []);
 
     const handleLongPress = (id) => {
         if (!isSelectionMode) {
