@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGameState, useGameActions, useUserAuth } from '../../context/GameContext/useGame';
-import { Settings, BookOpen, Calendar, Menu, User, Plus, Trash2, RotateCcw, CheckSquare, X, SlidersHorizontal } from 'lucide-react';
+import { Settings, BookOpen, Calendar, Menu, User, Plus, Trash2, RotateCcw, CheckSquare, X, SlidersHorizontal, Bell, BellOff } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import { useConfirm } from '../../context/ConfirmContext';
 import { SheepListTextView } from '../game/SheepListTextView';
@@ -18,8 +18,8 @@ export const LiteAppLayout = ({
     onSelectSheep
 }) => {
     const { sheep, tags, tagAssignmentsBySheep } = useGameState();
-    const { settings } = useUserAuth();
-    const { updateSetting, adoptSheep, deleteMultipleSheep, updateMultipleSheep, togglePin } = useGameActions();
+    const { settings, notificationEnabled } = useUserAuth();
+    const { updateSetting, adoptSheep, deleteMultipleSheep, updateMultipleSheep, togglePin, toggleNotification } = useGameActions();
     const confirm = useConfirm();
     const [showAddModal, setShowAddModal] = useState(false);
     const [showTagManagerModal, setShowTagManagerModal] = useState(false);
@@ -164,6 +164,19 @@ export const LiteAppLayout = ({
                     <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border-subtle)', margin: '0 8px' }}></div>
 
                     <nav className="lite-nav-menu" style={{ display: 'flex', gap: '8px' }}>
+                        <Tooltip content={notificationEnabled ? "關閉提醒" : "開啟提醒"} side="bottom">
+                            <button
+                                className="lite-nav-btn"
+                                style={{
+                                    backgroundColor: notificationEnabled ? 'var(--palette-blue-action)' : 'transparent',
+                                    color: notificationEnabled ? '#fff' : 'inherit'
+                                }}
+                                onClick={() => toggleNotification()}
+                            >
+                                {notificationEnabled ? <Bell size={18} /> : <BellOff size={18} />}
+                            </button>
+                        </Tooltip>
+
                         <Tooltip content="牧羊人週記" side="bottom">
                             <button className="lite-nav-btn" onClick={() => setActiveView('SCHEDULE')}>
                                 <Calendar size={18} />

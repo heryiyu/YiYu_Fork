@@ -1,0 +1,226 @@
+.sheep-swipe-card-perspective {
+    width: clamp(300px, 85vw, 420px);
+    height: clamp(480px, 75vh, 650px);
+    perspective: 1500px; /* Provides 3D depth */
+    position: relative;
+    z-index: 2; /* Provide stacking context to prevent clipping issues during rotation */
+}
+
+/* The inner wrapper that actually rotates */
+.sheep-swipe-card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.sheep-swipe-card.is-flipped {
+    transform: rotateY(180deg);
+}
+
+/* Common face styles */
+.sheep-swipe-card-face {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box; /* Fix skew/overflow issue */
+    background-color: #FDF8F3;
+    border-radius: clamp(40px, 10vw, 80px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    padding: clamp(24px, 6vw, 40px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #4A463F;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Back face starts rotated 180deg */
+.back-face {
+    transform: rotateY(180deg);
+}
+
+.sheep-swipe-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.sheep-swipe-card-avatar-wrap {
+    width: clamp(80px, 20vw, 120px);
+    height: clamp(80px, 20vw, 120px);
+    border-radius: 50%;
+    background-color: #F0EAE1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.sheep-swipe-card-name {
+    font-size: clamp(24px, 6vw, 36px);
+    font-weight: 800;
+    color: #000000;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.sheep-swipe-card-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #FCA5A5;
+    color: #fff;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.sheep-swipe-card-info-section {
+    background-color: #F5F5F5;
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 16px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Scrollbar hiding for inner sections */
+.sheep-swipe-card-info-section::-webkit-scrollbar {
+    width: 4px;
+}
+.sheep-swipe-card-info-section::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.sheep-swipe-card-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sheep-swipe-card-body-text {
+    font-size: 1rem;
+    color: #6D6860;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.sheep-swipe-card-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+.sheep-swipe-card-btn {
+    flex: 1;
+    border-radius: 30px;
+    padding: 14px;
+    font-weight: bold;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s, filter 0.2s;
+}
+
+.sheep-swipe-card-btn:active {
+    transform: scale(0.96);
+}
+
+.sheep-swipe-card-btn-primary {
+    background-color: #000;
+    color: #fff;
+}
+
+.sheep-swipe-card-btn-secondary {
+    background-color: transparent;
+    color: #000;
+    border: 2px solid #E5E5E5;
+}
+
+/* Tags display area */
+.sheep-swipe-tags-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.sheep-swipe-tag {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #E5E5E5;
+    color: #333;
+}
+
+/* Editing interface styles */
+.sheep-swipe-edit-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.sheep-swipe-label {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #000;
+    display: block;
+}
+
+.sheep-swipe-textarea {
+    flex: 1;
+    width: 100%;
+    background: #F5F5F5;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: 16px;
+    font-size: 1rem;
+    color: #4A463F;
+    resize: none;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-top: 8px;
+}
+
+.sheep-swipe-textarea:focus {
+    border-color: #A3A3A3;
+}
+
+.sheep-swipe-tag-edit {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: transparent;
+    border: 2px solid #E5E5E5;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sheep-swipe-tag-edit:hover {
+    transform: scale(1.05);
+}
+
+.sheep-swipe-tag-edit.active {
+    border-color: transparent;
+}
