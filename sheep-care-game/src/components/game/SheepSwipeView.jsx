@@ -91,12 +91,8 @@ export const SheepSwipeView = ({
     isSelectionMode,
     toggleSelection,
     settings,
-    handleTogglePin,
-    pinFlashId,
-    handleLongPress,
     tags,
     tagAssignmentsBySheep,
-    findSheep,
     onClose // new prop to close the swipe UI
 }) => {
     const { prayForSheep } = useGameActions();
@@ -111,15 +107,22 @@ export const SheepSwipeView = ({
 
     // Motion values and leave direction logic moved inside SwipeableCardWrapper
 
-    // Initial load and filter change resync
-    useEffect(() => {
-        if (sheepList && sheepList.length > 0 && queueIds.length === 0 && sessionStats.total === 0) {
+    const initQueue = () => {
+        if (sheepList && sheepList.length > 0) {
             const todayStr = new Date().toDateString();
             const prayedCount = sheepList.filter(s => s.lastPrayedDate === todayStr).length;
             
             setQueueIds(sheepList.map(s => s.id));
             setSessionStats({ total: sheepList.length, prayed: prayedCount, skipped: 0 });
         }
+    };
+
+    // Initial load and filter change resync
+    useEffect(() => {
+        if (sheepList && sheepList.length > 0 && queueIds.length === 0 && sessionStats.total === 0) {
+            initQueue();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sheepList, queueIds.length, sessionStats.total]);
 
     const SWIPE_THRESHOLD = 80;
@@ -132,13 +135,18 @@ export const SheepSwipeView = ({
 
         if (direction === 'right' && currentSheep) {
             const todayStr = new Date().toDateString();
-            const alreadyPrayed = currentSheep.lastPrayedDate === todayStr;
+            const alreadyPrayedToday = currentSheep.lastPrayedDate === todayStr;
+            const currentPrayedCount = alreadyPrayedToday ? (currentSheep.prayedCount || 0) : 0;
+            const maxAllowed = isSleeping(currentSheep) ? 1 : 3;
+            
+            const canPray = isAdmin || currentPrayedCount < maxAllowed;
 
-            if (isSleeping(currentSheep) && alreadyPrayed && !isAdmin) {
-                // Cannot pray today
-            } else if (!alreadyPrayed) {
+            if (canPray) {
                 prayForSheep(currentSheep.id);
-                setSessionStats(prev => ({ ...prev, prayed: prev.prayed + 1 }));
+                if (!alreadyPrayedToday) {
+                    // Only increment the session statistics if it's the first prayer today for this sheep
+                    setSessionStats(prev => ({ ...prev, prayed: prev.prayed + 1 }));
+                }
             }
         } else if (direction === 'left') {
             setSessionStats(prev => ({ ...prev, skipped: prev.skipped + 1 }));
@@ -154,13 +162,7 @@ export const SheepSwipeView = ({
     };
 
     const handleRestart = () => {
-        if (sheepList && sheepList.length > 0) {
-            const todayStr = new Date().toDateString();
-            const prayedCount = sheepList.filter(s => s.lastPrayedDate === todayStr).length;
-            
-            setQueueIds(sheepList.map(s => s.id));
-            setSessionStats({ total: sheepList.length, prayed: prayedCount, skipped: 0 });
-        }
+        initQueue();
     };
 
     if (sheepList.length === 0) {
@@ -197,7 +199,7 @@ export const SheepSwipeView = ({
                     flexDirection: 'column', 
                     alignItems: 'center', 
                     textAlign: 'center', 
-                    width: 'clamp(300px, 85vw, 420px)',
+                    width: 'clamp(280px, 90vw, 420px)',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
                 }}>
                     <div style={{ fontSize: '4rem', marginBottom: '16px' }}>

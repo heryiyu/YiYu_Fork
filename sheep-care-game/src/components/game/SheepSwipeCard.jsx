@@ -22,6 +22,10 @@ export const SheepSwipeCard = ({
     const currentIsSleeping = isSleeping(sheep);
     const currentIsSick = currentStatus === 'sick';
 
+    const todayStr = new Date().toDateString();
+    const alreadyPrayedToday = sheep.lastPrayedDate === todayStr;
+    const currentPrayedCount = alreadyPrayedToday ? (sheep.prayedCount || 0) : 0;
+
     const assigned = (tagAssignmentsBySheep[sheep.id] || []);
     
     // Determine status badge
@@ -56,8 +60,8 @@ export const SheepSwipeCard = ({
                     style={{ cursor: 'pointer' }}
                 >
                     <div className="sheep-swipe-card-header">
-                        <div style={{ flex: 1 }}>
-                    <h2 className="sheep-swipe-card-name">{sheep.name}</h2>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                    <h2 className="sheep-swipe-card-name" style={{ wordBreak: 'break-word' }}>{sheep.name}</h2>
                     
                     <div className="sheep-swipe-card-status-badge" style={{ backgroundColor: statusColor, color: statusTextColor }}>
                         <StatusIcon size={14} style={{ marginRight: '6px' }} />
@@ -100,9 +104,9 @@ export const SheepSwipeCard = ({
                     {sheep.note || '目前尚無筆記。滑動卡片來記錄你們的互動吧！或是點擊下方編輯按鈕來新增代禱事項。'}
                 </p>
                 
-                {(!currentIsSleeping && sheep.prayedCount > 0) && (
+                {(!currentIsSleeping && currentPrayedCount > 0) && (
                     <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.05)', fontSize: '0.9rem', color: '#6D6860' }}>
-                        🙏 今日已禱告次數：{sheep.prayedCount}/3
+                        🙏 今日已禱告次數：{currentPrayedCount}/3
                     </div>
                 )}
             </div>

@@ -1,6 +1,6 @@
 .sheep-swipe-card-perspective {
-    width: clamp(300px, 85vw, 420px);
-    height: clamp(480px, 75vh, 650px);
+    width: clamp(280px, 90vw, 420px);
+    height: clamp(440px, 75vh, 650px);
     perspective: 1500px; /* Provides 3D depth */
     position: relative;
     z-index: 2; /* Provide stacking context to prevent clipping issues during rotation */
@@ -27,9 +27,9 @@
     height: 100%;
     box-sizing: border-box; /* Fix skew/overflow issue */
     background-color: #FDF8F3;
-    border-radius: clamp(40px, 10vw, 80px);
+    border-radius: clamp(30px, 10vw, 80px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    padding: clamp(24px, 6vw, 40px);
+    padding: clamp(20px, 5vw, 40px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -47,7 +47,8 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+    gap: 12px;
 }
 
 .sheep-swipe-card-avatar-wrap {
@@ -86,9 +87,9 @@
 
 .sheep-swipe-card-info-section {
     background-color: #F5F5F5;
-    border-radius: 24px;
-    padding: 20px;
-    margin-bottom: 16px;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
     flex: 1;
     overflow-y: auto;
 }
@@ -130,7 +131,7 @@
 .sheep-swipe-card-btn {
     flex: 1;
     border-radius: 30px;
-    padding: 14px;
+    padding: 12px;
     font-weight: bold;
     font-size: 1rem;
     border: none;

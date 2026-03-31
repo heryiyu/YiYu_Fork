@@ -14,25 +14,44 @@ export const SheepSwipeCardBack = ({ sheep, tags, tagAssignmentsBySheep, onFlipB
     const [note, setNote] = useState(sheep.note || '');
     const [isSaving, setIsSaving] = useState(false);
     
-    const assignedTags = tagAssignmentsBySheep[sheep.id] || [];
+    // Hold tags state locally to prevent immediate remote API updates that lead to race conditions
+    const initialTagIds = (tagAssignmentsBySheep[sheep.id] || []).map(a => a.tagId);
+    const [localTagIds, setLocalTagIds] = useState(initialTagIds);
     
-    const toggleTag = async (tagId) => {
-        const isAssigned = assignedTags.some(a => a.tagId === tagId);
-        let newTagIds;
-        if (isAssigned) {
-            newTagIds = assignedTags.filter(a => a.tagId !== tagId).map(a => a.tagId);
-        } else {
-            newTagIds = [...assignedTags.map(a => a.tagId), tagId];
+    // Sync local state when entering edit mode (just in case)
+    React.useEffect(() => {
+        if (isEditMode) {
+            setNote(sheep.note || '');
+            setLocalTagIds((tagAssignmentsBySheep[sheep.id] || []).map(a => a.tagId));
         }
-        await setSheepTags(sheep.id, newTagIds);
+    }, [isEditMode, sheep.id, sheep.note, tagAssignmentsBySheep]);
+    
+    const toggleTag = (tagId) => {
+        setLocalTagIds(prev => 
+            prev.includes(tagId) 
+                ? prev.filter(id => id !== tagId) 
+                : [...prev, tagId]
+        );
     };
 
     const handleSave = async () => {
         setIsSaving(true);
         try {
+            const promises = [];
+            
             if (sheep.note !== note) {
-                await updateSheep(sheep.id, { note });
+                promises.push(updateSheep(sheep.id, { note }));
             }
+            
+            // Determine if tags actually changed compared to contextual state
+            const currentTagIds = (tagAssignmentsBySheep[sheep.id] || []).map(a => a.tagId);
+            const tagsChanged = localTagIds.length !== currentTagIds.length || localTagIds.some(id => !currentTagIds.includes(id));
+            
+            if (tagsChanged) {
+                promises.push(setSheepTags(sheep.id, localTagIds));
+            }
+
+            await Promise.all(promises);
             setIsEditMode(false); // return to read-only back face
         } catch (error) {
             console.error("保存失敗", error);
@@ -58,7 +77,7 @@ export const SheepSwipeCardBack = ({ sheep, tags, tagAssignmentsBySheep, onFlipB
         <div 
             className="sheep-swipe-card-face back-face" 
             onClick={() => { if (!isEditMode) onFlipBack(); }} 
-            style={{ cursor: isEditMode ? 'default' : 'pointer', padding: isEditMode ? '24px' : '32px 24px', boxSizing: 'border-box' }}
+            style={{ cursor: isEditMode ? 'default' : 'pointer', padding: isEditMode ? '16px' : '24px 16px', boxSizing: 'border-box' }}
         >
             
             {!isEditMode ? (
@@ -123,7 +142,7 @@ export const SheepSwipeCardBack = ({ sheep, tags, tagAssignmentsBySheep, onFlipB
                     </div>
 
                     {/* Basic Info Grid */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(0,0,0,0.03)', padding: '24px 20px', borderRadius: '24px', marginBottom: 'auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(0,0,0,0.03)', padding: '16px', borderRadius: '16px', marginBottom: 'auto', overflowY: 'auto' }}>
                         
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6D6860', fontWeight: 'bold' }}>
@@ -203,7 +222,7 @@ export const SheepSwipeCardBack = ({ sheep, tags, tagAssignmentsBySheep, onFlipB
                         <label className="sheep-swipe-label">分類標籤</label>
                         <div className="sheep-swipe-tags-wrap" style={{ marginTop: '8px' }}>
                             {tags.map(t => {
-                                const isAssigned = assignedTags.some(a => a.tagId === t.id);
+                                const isAssigned = localTagIds.includes(t.id);
                                 return (
                                     <button
                                         key={t.id}
@@ -223,7 +242,7 @@ export const SheepSwipeCardBack = ({ sheep, tags, tagAssignmentsBySheep, onFlipB
                     </div>
 
                     {/* Note Textarea */}
-                    <div className="sheep-swipe-edit-section" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginTop: '16px' }}>
+                    <div className="sheep-swipe-edit-section" style={{ flex: 1, display: 'flex', flexDirection: 'column', marginTop: '12px', minHeight: '100px' }}>
                         <label className="sheep-swipe-label">代禱事項筆記</label>
                         <textarea 
                             className="sheep-swipe-textarea"

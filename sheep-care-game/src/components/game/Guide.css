@@ -16,6 +16,12 @@
   justify-content: center;
 }
 
+@media (max-width: 480px) {
+  .guide-menu-grid {
+    gap: 12px;
+  }
+}
+
 .guide-menu-btn {
   background: transparent;
   border: none;
