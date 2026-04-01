@@ -1,31 +1,16 @@
 
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { generateScene } from '../../utils/SceneGenerator';
 import '../../styles/design-tokens.css';
 
 // Reusable scrolling layer for infinite horizontal panning
-const ScrollingLayer = ({ speed, children, style = {}, reverse = false }) => {
+const ScrollingLayer = ({ speed, children, style = {}, className = '', reverse = false }) => {
     return (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', ...style }}>
-            <motion.div
+        <div className={className} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', ...style }}>
+            <div
+                className={`scroll-layer-anim ${reverse ? 'reverse' : ''}`}
                 style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '200%', // Double width to hold two copies
-                    height: '100%',
-                    display: 'flex',
-                    willChange: 'transform', // Explicitly hint to the browser
-                    transform: 'translate3d(0, 0, 0)' // Initialize hardware layer
-                }}
-                animate={{
-                    x: reverse ? ['-50%', '0%'] : ['0%', '-50%']
-                }}
-                transition={{
-                    duration: speed,
-                    repeat: Infinity,
-                    ease: 'linear'
+                    animationDuration: `${speed}s`,
                 }}
             >
                 {/* Map two identical blocks side-by-side representing 100% viewport each */}
@@ -35,29 +20,29 @@ const ScrollingLayer = ({ speed, children, style = {}, reverse = false }) => {
                 <div style={{ width: '50%', height: '100%', position: 'relative' }}>
                     {children}
                 </div>
-            </motion.div>
+            </div>
         </div >
     );
 };
 
 const getLightingFilter = (timeStatus, isCloud = false) => {
-    if (timeStatus === 'day') return 'none';
+    if (timeStatus === 'day') return '';
     if (timeStatus === 'evening') {
-        return isCloud
-            ? 'brightness(0.9) sepia(0.3) saturate(1.5) hue-rotate(-10deg)'
-            : 'brightness(0.8) sepia(0.5) saturate(2) hue-rotate(-20deg)';
+        return isCloud ? 'lighting-filter-evening-cloud' : 'lighting-filter-evening';
     }
     if (timeStatus === 'night') {
-        return isCloud
-            ? 'brightness(0.4) sepia(0.2) saturate(0.5) hue-rotate(180deg)'
-            : 'brightness(0.3) sepia(0.4) saturate(0.8) hue-rotate(180deg)';
+        return isCloud ? 'lighting-filter-night-cloud' : 'lighting-filter-night';
     }
-    return 'none';
+    return '';
 };
 
 export const AssetBackground = React.memo(({ userId, weather }) => {
     const scene = useMemo(() => generateScene(userId), [userId]);
     const timeStatus = weather?.timeStatus || 'day';
+
+    // Get batch lighting CSS classes
+    const lightingClass = getLightingFilter(timeStatus, false);
+    const lightingClassCloud = getLightingFilter(timeStatus, true);
 
     const getBushVariantSrc = (src) => {
         if (!src.includes('/assets/decorations/bushes/')) return src;
@@ -90,7 +75,7 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
             {/* Split out specific depths into their own ScrollingLayers for parallax */}
 
             {/* Parallax Layer 1: Mountains (Slowest) */}
-            <ScrollingLayer speed={300} style={{ zIndex: 1 }}>
+            <ScrollingLayer speed={300} style={{ zIndex: 1 }} className={lightingClass}>
                 <div style={{ position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%', overflow: 'visible' }}>
                     {scene.elements.filter(e => e.type === 'MOUNTAIN').map(m => (
                         <img
@@ -101,9 +86,7 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
                                 left: `${m.x}%`,
                                 bottom: `${m.y}%`,
                                 transform: `translate(-50%, 20%) scale(${m.scale})`,
-                                filter: getLightingFilter(timeStatus, false),
-                                opacity: 0.9,
-                                transition: 'filter 2s ease'
+                                opacity: 0.9
                             }}
                         />
                     ))}
@@ -111,10 +94,10 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
             </ScrollingLayer>
 
             {/* Parallax Layer 2: Trees (Medium Slow) */}
-            <ScrollingLayer speed={200} style={{ zIndex: 2 }}>
+            <ScrollingLayer speed={200} style={{ zIndex: 2 }} className={lightingClass}>
                 <div style={{ position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%', overflow: 'visible' }}>
                     {scene.elements.filter(e => e.type === 'TREE').map(t => (
-                        <motion.img
+                        <img
                             key={t.id}
                             src={t.src}
                             style={{
@@ -122,11 +105,8 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
                                 left: `${t.x}%`,
                                 bottom: `calc(${t.y}% - ${(150 * t.scale) * 0.1}px)`,
                                 height: `${150 * t.scale}px`,
-                                transformOrigin: 'bottom center',
-                                filter: getLightingFilter(timeStatus, false),
-                                transition: 'filter 2s ease'
+                                transformOrigin: 'bottom center'
                             }}
-                        // Removed rotate animation to save GPU/CPU layout thrashing while layer is scrolling
                         />
                     ))}
                 </div>
@@ -135,29 +115,21 @@ export const AssetBackground = React.memo(({ userId, weather }) => {
             {/* Parallax Layer 3: Clouds (Independent, mostly drifting but also scrolling slightly?)
                 We'll leave clouds as independent motion (they have their own animate) but put them in a slow scrolling container too.
             */}
-            <ScrollingLayer speed={375} style={{ zIndex: 5, pointerEvents: 'none' }}>
+            <ScrollingLayer speed={375} style={{ zIndex: 5, pointerEvents: 'none' }} className={lightingClassCloud}>
                 <div style={{ position: 'absolute', left: '30%', top: '30%', width: '40%', height: '40%', overflow: 'visible' }}>
                     <div className="cloud-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
                         {scene.clouds.map((cloud, i) => (
-                            <motion.img
+                            <img
                                 key={`cloud-${i}`}
                                 src={cloud.src}
+                                className="cloud-float-anim"
                                 style={{
                                     position: 'absolute',
                                     top: `${cloud.y}%`,
                                     left: `${cloud.x}%`,
                                     width: `${10 * cloud.scale}%`,
-                                    filter: getLightingFilter(timeStatus, true),
                                     opacity: 0.8,
-                                    transition: 'filter 2s ease'
-                                }}
-                                initial={{ x: 0 }}
-                                animate={{ x: ['-10%', '10%'] }}
-                                transition={{
-                                    duration: cloud.duration,
-                                    repeat: Infinity,
-                                    repeatType: 'reverse',
-                                    ease: 'easeInOut'
+                                    animationDuration: `${cloud.duration}s`
                                 }}
                             />
                         ))}
