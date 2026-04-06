@@ -56,8 +56,6 @@ export const SheepSwipeCard = ({
                 {/* Front Face */}
                 <div 
                     className="sheep-swipe-card-face front-face"
-                    onClick={onEditClick}
-                    style={{ cursor: 'pointer' }}
                 >
                     <div className="sheep-swipe-card-header">
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -95,13 +93,14 @@ export const SheepSwipeCard = ({
                 </div>
             </div>
 
-            <div className="sheep-swipe-card-info-section">
+            <div className="sheep-swipe-card-info-section" onClick={onEditClick} style={{ cursor: 'pointer' }}>
                 <h3 className="sheep-swipe-card-section-title">
                     <Heart size={18} />
                     關懷與代禱事項
+                    <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: '#0ea5e9' }}>✎ 編輯</span>
                 </h3>
                 <p className="sheep-swipe-card-body-text">
-                    {sheep.note || '目前尚無筆記。滑動卡片來記錄你們的互動吧！或是點擊下方編輯按鈕來新增代禱事項。'}
+                    {sheep.note || '目前尚無筆記。點擊此處編輯代禱事項。'}
                 </p>
                 
                 {(!currentIsSleeping && currentPrayedCount > 0) && (
