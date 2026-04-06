@@ -147,8 +147,9 @@ export const UserProfile = () => {
                         <div
                             className={`toggle-switch ${settings?.liteMode ? 'active' : ''}`}
                             onClick={(e) => {
-                                e.stopPropagation(); // prevent collapsing the widget immediately
+                                e.stopPropagation(); // prevent bubbling to widget wrapper
                                 updateSetting('liteMode', !settings?.liteMode);
+                                setExpanded(false); // Auto-collapse the widget on toggle
                             }}
                             style={{
                                 width: '36px', height: '20px', background: settings?.liteMode ? 'var(--palette-blue-action)' : 'var(--border-subtle)',

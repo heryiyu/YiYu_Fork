@@ -56,8 +56,8 @@ const ManualSection = () => {
                             transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
                             className="guide-menu-btn"
                             style={{
-                                gridColumn: (menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '1 / -1' : 'auto',
-                                width: (menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '50%' : '100%'
+                                gridColumn: (!isMobile && menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '1 / -1' : 'auto',
+                                width: (!isMobile && menuItems.length % 2 !== 0 && index === menuItems.length - 1) ? '50%' : '100%'
                             }}
                         >
                             <motion.img
@@ -90,7 +90,7 @@ const ManualSection = () => {
                 return <SevenStepsMap />;
             case 'BIND_RELEASE':
                 return (
-                    <div className="guide-section">
+                    <div className="guide-section" style={{ padding: isMobile ? '10px' : '20px' }}>
                         <h4 style={{ textAlign: 'center', marginBottom: '8px' }}>🤲 五釋放五綑綁</h4>
 
                         <div className="guide-box-success">
@@ -143,9 +143,9 @@ const ManualSection = () => {
 
                 if (activeScripture) {
                     return (
-                        <div style={{ padding: '20px', textAlign: 'center' }}>
+                        <div style={{ padding: isMobile ? '10px' : '20px', textAlign: 'center' }}>
                             <div style={{
-                                padding: '30px',
+                                padding: isMobile ? '15px' : '30px',
                                 background: '#fdfbf7 url("https://www.transparenttextures.com/patterns/aged-paper.png")', // Parchment texture feel
                                 backgroundColor: '#fdfbf7',
                                 borderRadius: '4px',
@@ -184,10 +184,10 @@ const ManualSection = () => {
 
                                 <p style={{
                                     color: '#4e342e',
-                                    fontSize: '1.2rem',
+                                    fontSize: isMobile ? '1.05rem' : '1.2rem',
                                     lineHeight: '1.8',
                                     fontWeight: '500',
-                                    maxWidth: '90%'
+                                    maxWidth: isMobile ? '100%' : '90%'
                                 }}>
                                     {activeScripture.content}
                                 </p>
@@ -219,13 +219,13 @@ const ManualSection = () => {
                 }
 
                 return (
-                    <div style={{ padding: '10px' }}>
+                    <div style={{ padding: isMobile ? '5px' : '10px' }}>
                         <h4 style={{ textAlign: 'center', marginBottom: '15px', fontFamily: '"Times New Roman", serif', color: '#5d4037' }}>📖 七經文</h4>
                         <div style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '20px',
-                            padding: '0 10px 15px 10px' // Add side padding to container to squeeze grid slightly if needed
+                            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                            gap: '15px',
+                            padding: isMobile ? '0 5px 15px 5px' : '0 10px 15px 10px' // Add side padding to container to squeeze grid slightly if needed
                         }}>
                             {scriptures.map((s, idx) => (
                                 <motion.div
@@ -247,8 +247,8 @@ const ManualSection = () => {
                                         justifyContent: 'center', // Center content vertically
                                         gap: '4px',
                                         minHeight: '110px', // Ensure consistent height but compact
-                                        gridColumn: idx === 6 ? '1 / -1' : 'auto',
-                                        width: idx === 6 ? '60%' : '100%',
+                                        gridColumn: (idx === 6 && !isMobile) ? '1 / -1' : 'auto',
+                                        width: (idx === 6 && !isMobile) ? '60%' : '100%',
                                         justifySelf: 'center',
                                         position: 'relative',
                                         overflow: 'hidden'
@@ -299,11 +299,11 @@ const ManualSection = () => {
                 );
             case 'PRAYERS':
                 return (
-                    <div style={{ padding: '20px' }}>
+                    <div style={{ padding: isMobile ? '10px' : '20px' }}>
                         <h4 style={{ textAlign: 'center', marginBottom: '20px' }}>🙏 認領禱告詞範例</h4>
                         <div style={{
                             background: 'linear-gradient(135deg, #fff3e0 0%, #ffffff 100%)',
-                            padding: '25px',
+                            padding: isMobile ? '15px' : '25px',
                             borderRadius: '15px',
                             boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
                             lineHeight: '1.8',

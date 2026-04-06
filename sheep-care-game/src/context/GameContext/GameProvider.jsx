@@ -292,6 +292,13 @@ export const GameProvider = ({ children }) => {
                     if (user.game_data.settings) {
                         setSettings(prev => ({ ...prev, ...user.game_data.settings }));
                     }
+                    if (user.game_data.lastSave) {
+                        lastSaveTimeRef.current = user.game_data.lastSave;
+                    } else {
+                        lastSaveTimeRef.current = Date.now();
+                    }
+                } else {
+                    lastSaveTimeRef.current = Date.now();
                 }
 
                 setTags(tags || []);
@@ -458,6 +465,7 @@ export const GameProvider = ({ children }) => {
                 setInventory(loadedData.inventory || []);
                 if (loadedData.settings) setSettings(prev => ({ ...prev, ...loadedData.settings }));
                 if (loadedData.introWatched) setIntroWatched(true);
+                lastSaveTimeRef.current = lastSave;
 
                 if (data.nickname) setNickname(data.nickname);
                 setIsDataLoaded(true);

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useGameState, useGameActions, useUserAuth } from './context/GameContext/useGame';
 import { Field } from './components/ui/Field';
 
-import { SheepList } from './components/game/SheepList';
 import { UserProfile } from './components/auth/UserProfile';
+import { SheepSwipeView } from './components/game/SheepSwipeView';
 import { Toast } from './components/ui/Toast';
 import { Tooltip } from './components/ui/Tooltip';
 import { ConnectionErrorOverlay } from './components/ui/ConnectionErrorOverlay';
@@ -26,13 +26,14 @@ function App() {
   // Use specialized hooks to prevent unnecessary rerenders from high-frequency game state (like sheep movement)
   const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus, settings } = useUserAuth();
   const { toggleNotification, markIntroWatched } = useGameActions();
-  const { message, weather, showIntroVideo } = useGameState();
+  const { message, weather, showIntroVideo, sheep, tags, tagAssignmentsBySheep } = useGameState();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
   // showList removed - permanent dock
   const [showSettings, setShowSettings] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
+  const [showSwipeMode, setShowSwipeMode] = useState(false);
   const [isHudMenuOpen, setIsHudMenuOpen] = useState(false);
 
   const [prevUser, setPrevUser] = useState(currentUser);
@@ -59,8 +60,9 @@ function App() {
     setSelectedSheepId(sheep.id);
   }, []);
 
-  const handleSelectFromList = React.useCallback((sheep) => {
+  const handleSelectFromSwipe = React.useCallback((sheep) => {
     setSelectedSheepId(sheep.id);
+    setShowSwipeMode(false); // optionally close swipe UI when viewing details
   }, []);
 
   // 0. Global Loading & Error Interception
@@ -92,7 +94,7 @@ function App() {
 
       {settings.liteMode ? (
         <LiteAppLayout
-          onSelectSheep={handleSelectFromList}
+          onSelectSheep={handleSelectSheep}
         />
       ) : (
         <>
@@ -177,8 +179,57 @@ function App() {
 
           <Field onSelectSheep={handleSelectSheep} />
 
-          <SheepList onSelect={handleSelectFromList} />
+          {/* Swipe Mode FAB */}
+          <div style={{ position: 'absolute', bottom: 'min(40px, 8vh)', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
+            <button 
+                onClick={() => setShowSwipeMode(true)}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '40px',
+                  backgroundColor: '#4A463F',
+                  color: '#FFF',
+                  border: 'none',
+                  fontSize: '1.2rem',
+                  fontWeight: '800',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'transform 0.2s ease, background-color 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              ✨ 開始巡視羊群
+            </button>
+          </div>
         </>
+      )}
+
+      {showSwipeMode && (
+        <SheepSwipeView 
+            sheepList={[...sheep].sort((a,b) => {
+                const todayStr = new Date().toDateString();
+                const aPrayed = a.lastPrayedDate === todayStr;
+                const bPrayed = b.lastPrayedDate === todayStr;
+                
+                // 1. Unprayed sheep at the front
+                if (aPrayed !== bPrayed) return aPrayed ? 1 : -1;
+
+                // 2. Secondary sorts (Pinned, Sick, ID)
+                const aPinned = settings?.pinnedSheepIds?.includes(a.id);
+                const bPinned = settings?.pinnedSheepIds?.includes(b.id);
+                if (aPinned !== bPinned) return aPinned ? -1 : 1;
+                if (a.status === 'sick' && b.status !== 'sick') return -1;
+                if (b.status === 'sick' && a.status !== 'sick') return 1;
+                return a.id - b.id;
+            })}
+            tags={tags}
+            tagAssignmentsBySheep={tagAssignmentsBySheep}
+            onSelect={handleSelectFromSwipe}
+            onClose={() => setShowSwipeMode(false)}
+        />
       )}
 
       <Suspense fallback={null}>

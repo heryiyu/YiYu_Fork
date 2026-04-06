@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Search, CheckSquare, Trash2, RotateCcw, SlidersHorizontal, LayoutGrid, List, Maximize2, Minimize2 } from 'lucide-react';
+import { Plus, Search, CheckSquare, Trash2, RotateCcw, SlidersHorizontal, LayoutGrid, List, Layers, Maximize2, Minimize2 } from 'lucide-react';
 import { Tooltip } from '../ui/Tooltip';
 import { CloseButton } from '../ui/CloseButton';
 import { FilterSettingsMenu } from './FilterSettingsMenu';
@@ -41,7 +41,8 @@ export const SheepListToolbar = ({
     const viewMode = settings.sheepListViewMode || 'card';
 
     const toggleViewMode = () => {
-        updateSetting('sheepListViewMode', viewMode === 'card' ? 'text' : 'card');
+        const nextMode = viewMode === 'card' ? 'text' : viewMode === 'text' ? 'swipe' : 'card';
+        updateSetting('sheepListViewMode', nextMode);
     };
 
     const isExpanded = settings.isSheepListExpanded || false;
@@ -172,7 +173,7 @@ export const SheepListToolbar = ({
 
                         {!isForcedExpand && (
                             <>
-                                <Tooltip content={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'} side="bottom">
+                                <Tooltip content={viewMode === 'card' ? '切換至文字列表' : viewMode === 'text' ? '切換至滑動模式' : '切換至圖卡模式'} side="bottom">
                                     <button
                                         type="button"
                                         className={`dock-toolbar-chip dock-toolbar-chip--view-toggle`}
@@ -188,9 +189,9 @@ export const SheepListToolbar = ({
                                             background: 'rgba(255, 255, 255, 0.8)',
                                             borderColor: 'var(--border-subtle)'
                                         }}
-                                        aria-label={viewMode === 'card' ? '切換至快速列表' : '切換至圖卡模式'}
+                                        aria-label={viewMode === 'card' ? '切換至文字列表' : viewMode === 'text' ? '切換至滑動模式' : '切換至圖卡模式'}
                                     >
-                                        {viewMode === 'card' ? <List size={18} strokeWidth={2.5} /> : <LayoutGrid size={18} strokeWidth={2.5} />}
+                                        {viewMode === 'card' ? <List size={18} strokeWidth={2.5} /> : viewMode === 'text' ? <Layers size={18} strokeWidth={2.5} /> : <LayoutGrid size={18} strokeWidth={2.5} />}
                                     </button>
                                 </Tooltip>
 

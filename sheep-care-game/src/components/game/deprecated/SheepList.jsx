@@ -9,6 +9,7 @@ import { SheepListToolbar } from './SheepListToolbar';
 import '../../styles/design-tokens.css';
 import './SheepList.css';
 import { SheepListTextView } from './SheepListTextView';
+import { SheepSwipeView } from './SheepSwipeView';
 
 
 const TAG_FILTER_PREFIX = 'TAG:';
@@ -212,12 +213,14 @@ export const SheepList = ({ onSelect, forcedViewMode }) => {
         }
     }, [togglePin, settings?.pinnedSheepIds, filteredSheep, prefersReducedMotion]);
 
-    const toggleSelection = (id) => {
-        const newSet = new Set(selectedIds);
-        if (newSet.has(id)) newSet.delete(id);
-        else newSet.add(id);
-        setSelectedIds(newSet);
-    };
+    const toggleSelection = useCallback((id) => {
+        setSelectedIds((prevSelected) => {
+            const newSet = new Set(prevSelected);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    }, []);
 
     const handleLongPress = (id) => {
         if (!isSelectionMode) {
@@ -400,6 +403,28 @@ export const SheepList = ({ onSelect, forcedViewMode }) => {
                                 isLiteMode={false}
                                 onTogglePin={handleTogglePin}
                                 pinnedSheepIds={settings?.pinnedSheepIds || []}
+                            />
+                        ) : activeViewMode === 'swipe' ? (
+                            <SheepSwipeView 
+                                sheepList={filteredSheep}
+                                selectedIds={selectedIds}
+                                onSelect={(sOrId) => {
+                                    const s = typeof sOrId === 'object' ? sOrId : sheep.find(item => item.id === sOrId);
+                                    if (isSelectionMode) {
+                                        toggleSelection(s.id);
+                                    } else {
+                                        if (onSelect && s) onSelect(s);
+                                    }
+                                }}
+                                isSelectionMode={isSelectionMode}
+                                toggleSelection={toggleSelection}
+                                settings={settings}
+                                handleTogglePin={handleTogglePin}
+                                pinFlashId={pinFlashId}
+                                handleLongPress={handleLongPress}
+                                tags={tags}
+                                tagAssignmentsBySheep={tagAssignmentsBySheep}
+                                findSheep={findSheep}
                             />
                         ) : (
                             <div
