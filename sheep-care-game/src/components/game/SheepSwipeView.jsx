@@ -25,9 +25,7 @@ const SwipeableCardWrapper = ({
     return (
         <motion.div
             drag={isEditing ? false : "x"}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.9}
-            dragDirectionLock
+            dragSnapToOrigin={true}
             onDragEnd={handleDragEnd}
             whileTap={{ scale: 1.05 }}
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -41,7 +39,8 @@ const SwipeableCardWrapper = ({
             style={{
                 x,
                 position: 'absolute',
-                zIndex: 1
+                zIndex: 1,
+                touchAction: 'none'
             }}
         >
             {/* Left/Right Overlays */}
