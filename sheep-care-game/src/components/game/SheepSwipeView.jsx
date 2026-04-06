@@ -25,7 +25,8 @@ const SwipeableCardWrapper = ({
     return (
         <motion.div
             drag={isEditing ? false : "x"}
-            dragSnapToOrigin={true}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
             onDragEnd={handleDragEnd}
             whileTap={{ scale: 1.05 }}
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
