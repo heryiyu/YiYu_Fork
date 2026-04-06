@@ -26,7 +26,7 @@ function App() {
   // Use specialized hooks to prevent unnecessary rerenders from high-frequency game state (like sheep movement)
   const { currentUser, nickname, notificationEnabled, isAdmin, isLoading, loginStatus, settings } = useUserAuth();
   const { toggleNotification, markIntroWatched } = useGameActions();
-  const { message, weather, showIntroVideo } = useGameState();
+  const { message, weather, showIntroVideo, sheep, tags, tagAssignmentsBySheep } = useGameState();
   const [selectedSheepId, setSelectedSheepId] = useState(null);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
@@ -209,7 +209,7 @@ function App() {
 
       {showSwipeMode && (
         <SheepSwipeView 
-            sheepList={[...useGameState().sheep].sort((a,b) => {
+            sheepList={[...sheep].sort((a,b) => {
                 const todayStr = new Date().toDateString();
                 const aPrayed = a.lastPrayedDate === todayStr;
                 const bPrayed = b.lastPrayedDate === todayStr;
@@ -225,8 +225,8 @@ function App() {
                 if (b.status === 'sick' && a.status !== 'sick') return 1;
                 return a.id - b.id;
             })}
-            tags={useGameState().tags}
-            tagAssignmentsBySheep={useGameState().tagAssignmentsBySheep}
+            tags={tags}
+            tagAssignmentsBySheep={tagAssignmentsBySheep}
             onSelect={handleSelectFromSwipe}
             onClose={() => setShowSwipeMode(false)}
         />
