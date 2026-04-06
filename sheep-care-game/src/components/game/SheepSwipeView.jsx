@@ -13,9 +13,11 @@ const SwipeableCardWrapper = ({
 
     const handleDragEnd = (event, info) => {
         const SWIPE_THRESHOLD = 80;
-        if (info.offset.x > SWIPE_THRESHOLD) {
+        const VELOCITY_THRESHOLD = 500;
+        
+        if (info.offset.x > SWIPE_THRESHOLD || info.velocity.x > VELOCITY_THRESHOLD) {
             onSwipeRight();
-        } else if (info.offset.x < -SWIPE_THRESHOLD) {
+        } else if (info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -VELOCITY_THRESHOLD) {
             onSwipeLeft();
         }
     };
@@ -24,21 +26,22 @@ const SwipeableCardWrapper = ({
         <motion.div
             drag={isEditing ? false : "x"}
             dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.9}
+            dragDirectionLock
             onDragEnd={handleDragEnd}
             whileTap={{ scale: 1.05 }}
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{
-                x: leaveDirection === 'left' ? -300 : (leaveDirection === 'right' ? 300 : 0),
+                x: leaveDirection === 'left' ? -500 : (leaveDirection === 'right' ? 500 : 0),
                 opacity: 0,
-                rotate: leaveDirection === 'left' ? -20 : (leaveDirection === 'right' ? 20 : 0),
+                rotate: leaveDirection === 'left' ? -30 : (leaveDirection === 'right' ? 30 : 0),
                 transition: { duration: 0.3 }
             }}
             style={{
                 x,
                 position: 'absolute',
-                zIndex: 1,
-                touchAction: 'none'
+                zIndex: 1
             }}
         >
             {/* Left/Right Overlays */}
