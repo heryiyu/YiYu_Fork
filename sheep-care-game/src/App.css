@@ -2398,7 +2398,6 @@ input[type="range"]::-moz-range-thumb:hover {
   }
 
   .modal-card {
-    height: 100% !important;
     max-height: 100% !important;
     border-radius: 20px 20px 0 0 !important;
     border-bottom: none !important;
