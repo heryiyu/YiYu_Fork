@@ -22,7 +22,15 @@ export const CalendarHeader = ({
                     <button className="icon-btn menu-btn" onClick={onToggleSidebar}>
                         <Menu size={24} />
                     </button>
-                    <h2 className="header-title">{monthYearString}</h2>
+                    <h2 className="header-title" style={{ marginRight: '8px' }}>{monthYearString}</h2>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <button className="icon-btn" onClick={onPrev} style={{ padding: '4px', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <ChevronLeft size={20} color="#5f6368" />
+                        </button>
+                        <button className="icon-btn" onClick={onNext} style={{ padding: '4px', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <ChevronRight size={20} color="#5f6368" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="header-right">

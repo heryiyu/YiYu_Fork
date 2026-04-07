@@ -249,13 +249,15 @@
 }
 
 .time-label {
-    height: 60px;
     text-align: right;
     padding-right: 8px;
     font-size: 11px;
     color: #70757a;
     position: relative;
-    top: -8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 2px;
 }
 
 .columns-container {
@@ -271,7 +273,6 @@
 }
 
 .hour-cell {
-    height: 60px;
     border-bottom: 1px solid #f1f3f4;
 }
 
@@ -699,11 +700,26 @@
 }
 
 .time-label {
-    height: 60px;
     font-size: 10px;
     color: #70757a;
     text-align: center;
-    padding-top: 50px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 2px;
+}
+
+.time-label.is-collapsed {
+    justify-content: center;
+    padding-bottom: 0;
+}
+
+.collapsed-tick {
+    width: 6px;
+    height: 1px;
+    background-color: #dadce0;
+    margin: 0 auto;
 }
 
 .columns-container {
@@ -720,8 +736,13 @@
 }
 
 .hour-cell {
-    height: 60px;
     border-bottom: 1px solid #f1f3f4;
+    transition: background-color 0.2s, height 0.2s;
+}
+
+.hour-cell.is-collapsed {
+    border-bottom: 1px dashed #e8eaed;
+    background-color: #fcfcfc;
 }
 
 /* Events */

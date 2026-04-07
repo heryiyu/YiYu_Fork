@@ -26,6 +26,57 @@ export const CalendarGridView = ({
         });
     }, [viewMode, currentDate, weekStart]);
 
+    // --- Elastic Timeline Logic ---
+    const EXPANDED_HEIGHT = 60;
+    const COLLAPSED_HEIGHT = 16; 
+
+    const { hourHeights, hourOffsets, activeHours, totalHeight } = useMemo(() => {
+        if (viewMode === 'month') return { hourHeights: [], hourOffsets: [], activeHours: new Set(), totalHeight: 0 };
+
+        const activeSet = new Set();
+        const visibleDatesStrings = dates.map(d => d.toDateString());
+
+        const visibleEvents = schedules.filter(s => {
+            if (!s.scheduled_time) return false;
+            return visibleDatesStrings.includes(new Date(s.scheduled_time).toDateString());
+        });
+
+        visibleEvents.forEach(event => {
+            const date = new Date(event.scheduled_time);
+            const startHour = date.getHours();
+            // Assuming default 45min duration for collision bounding map
+            const endMins = date.getMinutes() + 45;
+            const endHour = date.getHours() + Math.floor(endMins / 60);
+
+            for (let h = startHour; h <= endHour && h < 24; h++) {
+                activeSet.add(h);
+            }
+        });
+
+        // Current hour is always active if today is visible
+        const now = new Date();
+        if (visibleDatesStrings.includes(now.toDateString())) {
+            activeSet.add(now.getHours());
+            // Optionally add surrounding hours to make current time block feel less squished
+            if (now.getHours() > 0) activeSet.add(now.getHours() - 1);
+        }
+
+        const heights = [];
+        const offsets = [];
+        let currentOffset = 0;
+
+        for (let h = 0; h < 24; h++) {
+            const hStatus = activeSet.has(h);
+            const hHeight = hStatus ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
+            heights.push(hHeight);
+            offsets.push(currentOffset);
+            currentOffset += hHeight;
+        }
+        offsets.push(currentOffset); // Offset for the end of the day
+
+        return { hourHeights: heights, hourOffsets: offsets, activeHours: activeSet, totalHeight: currentOffset };
+    }, [viewMode, dates, schedules]);
+
     // Position "now" indicator
     useEffect(() => {
         const updateNowIndicator = () => {
@@ -38,7 +89,7 @@ export const CalendarGridView = ({
 
             if (isVisible) {
                 const dayIdx = dates.findIndex(d => d.toDateString() === now.toDateString());
-                const top = (hour * 60 + min);
+                const top = hourOffsets[hour] + (min / 60) * hourHeights[hour];
                 nowIndicatorRef.current.style.top = `${top}px`;
                 nowIndicatorRef.current.style.display = 'block';
 
@@ -53,14 +104,16 @@ export const CalendarGridView = ({
         updateNowIndicator();
         const interval = setInterval(updateNowIndicator, 60000);
         return () => clearInterval(interval);
-    }, [dates, viewMode]);
+    }, [dates, viewMode, hourOffsets, hourHeights]);
 
-    // Scroll to 8:00 AM on initial load
+    // Scroll to 8:00 AM or first active hour on initial load
     useEffect(() => {
         if (gridRef.current && viewMode !== 'month') {
-            gridRef.current.scrollTop = 8 * 60; // 8:00 AM
+            const firstActive = Math.max(0, Array.from(activeHours).sort((a,b)=>a-b)[0] || 8);
+            // Scroll to the first active hour, slightly padded
+            gridRef.current.scrollTop = hourOffsets[Math.max(0, firstActive - 1)] || 0;
         }
-    }, [viewMode]);
+    }, [viewMode, hourOffsets, activeHours]);
 
     const renderEvents = (dayDate) => {
         const dStr = dayDate.toDateString();
@@ -73,7 +126,7 @@ export const CalendarGridView = ({
             const date = new Date(event.scheduled_time);
             const startHour = date.getHours();
             const startMin = date.getMinutes();
-            const top = startHour * 60 + startMin;
+            const top = hourOffsets[startHour] + (startMin / 60) * hourHeights[startHour];
             const height = 45;
 
             return (
@@ -168,13 +221,21 @@ export const CalendarGridView = ({
             </div>
 
             <div className="grid-scroll-area" ref={gridRef}>
-                <div className="grid-body">
+                <div className="grid-body" style={{ height: `${totalHeight}px` }}>
                     <div className="time-gutter">
-                        {HOURS.map(h => (
-                            <div key={h} className="time-label">
-                                {h > 0 ? `${h.toString().padStart(2, '0')}:00` : ''}
-                            </div>
-                        ))}
+                        {HOURS.map(h => {
+                            const isActive = activeHours.has(h);
+                            return (
+                                <div 
+                                    key={h} 
+                                    className={`time-label ${!isActive ? 'is-collapsed' : ''}`}
+                                    style={{ height: `${hourHeights[h]}px` }}
+                                >
+                                    {isActive && h > 0 ? `${h.toString().padStart(2, '0')}:00` : ''}
+                                    {!isActive && <div className="collapsed-tick"></div>}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div className="columns-container">
@@ -185,7 +246,11 @@ export const CalendarGridView = ({
                                 onClick={() => onCellClick(date)}
                             >
                                 {HOURS.map(h => (
-                                    <div key={h} className="hour-cell"></div>
+                                    <div 
+                                        key={h} 
+                                        className={`hour-cell ${!activeHours.has(h) ? 'is-collapsed' : ''}`}
+                                        style={{ height: `${hourHeights[h]}px` }}
+                                    ></div>
                                 ))}
                                 {renderEvents(date)}
                             </div>
